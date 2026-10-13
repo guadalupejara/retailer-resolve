@@ -5,7 +5,7 @@ import { DocList, UploadDoc } from "@/components/Docs";
 import { actions, useStore } from "@/lib/store";
 import { daysLeft, deductions, money } from "@/lib/data";
 
-export const Route = createFileRoute("/disputes/$deductionId")({
+export const Route = createFileRoute("/_authenticated/disputes/$deductionId")({
   loader: ({ params }) => {
     if (!deductions.find((d) => d.id === params.deductionId)) throw notFound();
     return { id: params.deductionId };

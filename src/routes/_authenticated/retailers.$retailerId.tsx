@@ -5,7 +5,7 @@ import { alertsFor, useStore } from "@/lib/store";
 import { daysLeft, money, retailers } from "@/lib/data";
 import { DocList, UploadDoc } from "@/components/Docs";
 
-export const Route = createFileRoute("/retailers/$retailerId")({
+export const Route = createFileRoute("/_authenticated/retailers/$retailerId")({
   loader: ({ params }) => {
     const r = retailers.find((x) => x.id === params.retailerId);
     if (!r) throw notFound();
