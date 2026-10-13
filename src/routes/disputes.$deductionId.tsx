@@ -107,7 +107,7 @@ function DisputePage() {
               {missing.length > 0 && <div className="mt-3 text-xs text-warning-foreground">Missing {missing.join(", ")} — dispute may be denied.</div>}
             </div>
             <button className="btn-primary w-full" disabled={left <= 0 || selected.length === 0}
-              onClick={() => actions.submitDispute(d.id, reason, selected, note)}>
+              onClick={() => actions.submitDispute(d.id, reason ?? "", selected, note)}>
               Submit dispute to {r.portal}
             </button>
           </div>

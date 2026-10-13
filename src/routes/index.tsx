@@ -51,6 +51,21 @@ function Dashboard() {
         </div>
       </div>
 
+      <h2 className="mt-12 text-2xl">Recent retailer policy changes</h2>
+      <div className="panel mt-4 divide-y divide-border">
+        {s.retailers
+          .flatMap((r) => r.policy.updates.map((u) => ({ ...u, r })))
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .map((u) => (
+            <div key={u.r.id + u.date} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
+              <span className="num text-xs text-muted-foreground">{u.date}</span>
+              <span className="chip-open">{u.r.name}</span>
+              <span className="flex-1">{u.text}</span>
+              <Link to="/retailers/$retailerId" params={{ retailerId: u.r.id }} className="btn-ghost !py-1 text-xs">See impact</Link>
+            </div>
+          ))}
+      </div>
+
       <h2 className="mt-12 text-2xl">Retailers</h2>
       <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {s.retailers.map((r) => {
