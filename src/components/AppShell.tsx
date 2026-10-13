@@ -42,6 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           {s.quickbooks.connected && <div className="mt-1 text-sidebar-foreground/50">Synced {s.quickbooks.lastSync}</div>}
         </div>
+        <button onClick={signOut} className="mt-2 px-3 py-2 text-left text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground">Sign out</button>
       </aside>
       <main className="flex-1 overflow-x-hidden px-6 py-8 md:px-10">{children}</main>
     </div>
