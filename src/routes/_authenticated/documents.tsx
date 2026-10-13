@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { DocList } from "@/components/Docs";
 import { useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/_authenticated/_authenticated/documents")({
+export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({
     meta: [
       { title: "Documents · Recoup" },

@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { actions, alertsFor, useStore } from "@/lib/store";
 import { money } from "@/lib/data";
 
-export const Route = createFileRoute("/_authenticated/_authenticated/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Dashboard · Recoup Chargeback Recovery" },
