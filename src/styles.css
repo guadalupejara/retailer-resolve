@@ -78,13 +78,14 @@
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 }
 
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none; }
+@utility chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium; }
+
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none; }
   .btn-primary { @apply btn bg-primary text-primary-foreground hover:bg-primary/90; }
   .btn-outline { @apply btn border border-border bg-card text-foreground hover:bg-secondary; }
   .btn-ghost { @apply btn text-muted-foreground hover:bg-secondary hover:text-foreground; }
   .panel { @apply rounded-lg border border-border bg-card; }
-  .chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium; }
   .chip-open { @apply chip bg-warning/20 text-warning-foreground; }
   .chip-disputed { @apply chip bg-primary/10 text-primary; }
   .chip-won { @apply chip bg-success/15 text-success; }
