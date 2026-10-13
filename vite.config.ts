@@ -12,4 +12,7 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Vercel hosting: pin nitro to the vercel preset. Lovable builds are unaffected —
+  // inside a Lovable build the LOVABLE_NITRO_PRESET env var pins Cloudflare regardless.
+  nitro: { preset: "vercel" },
 });
