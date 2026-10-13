@@ -10,33 +10,69 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as DisputesDeductionIdRouteImport } from './routes/disputes.$deductionId'
+import { Route as RetailersRetailerIdRouteImport } from './routes/retailers.$retailerId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocumentsRoute = DocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisputesDeductionIdRoute = DisputesDeductionIdRouteImport.update({
+  id: '/disputes/$deductionId',
+  path: '/disputes/$deductionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RetailersRetailerIdRoute = RetailersRetailerIdRouteImport.update({
+  id: '/retailers/$retailerId',
+  path: '/retailers/$retailerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/documents': typeof DocumentsRoute
+  '/disputes/$deductionId': typeof DisputesDeductionIdRoute
+  '/retailers/$retailerId': typeof RetailersRetailerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/documents': typeof DocumentsRoute
+  '/disputes/$deductionId': typeof DisputesDeductionIdRoute
+  '/retailers/$retailerId': typeof RetailersRetailerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/documents': typeof DocumentsRoute
+  '/disputes/$deductionId': typeof DisputesDeductionIdRoute
+  '/retailers/$retailerId': typeof RetailersRetailerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/documents' | '/disputes/$deductionId' | '/retailers/$retailerId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/documents' | '/disputes/$deductionId' | '/retailers/$retailerId'
+  id:
+    | '__root__'
+    | '/'
+    | '/documents'
+    | '/disputes/$deductionId'
+    | '/retailers/$retailerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DocumentsRoute: typeof DocumentsRoute
+  DisputesDeductionIdRoute: typeof DisputesDeductionIdRoute
+  RetailersRetailerIdRoute: typeof RetailersRetailerIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +84,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/documents': {
+      id: '/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof DocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/disputes/$deductionId': {
+      id: '/disputes/$deductionId'
+      path: '/disputes/$deductionId'
+      fullPath: '/disputes/$deductionId'
+      preLoaderRoute: typeof DisputesDeductionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/retailers/$retailerId': {
+      id: '/retailers/$retailerId'
+      path: '/retailers/$retailerId'
+      fullPath: '/retailers/$retailerId'
+      preLoaderRoute: typeof RetailersRetailerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DocumentsRoute: DocumentsRoute,
+  DisputesDeductionIdRoute: DisputesDeductionIdRoute,
+  RetailersRetailerIdRoute: RetailersRetailerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
