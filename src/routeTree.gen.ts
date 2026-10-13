@@ -9,110 +9,112 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as DocumentsRouteImport } from './routes/documents'
-import { Route as DisputesDeductionIdRouteImport } from './routes/disputes.$deductionId'
-import { Route as RetailersRetailerIdRouteImport } from './routes/retailers.$retailerId'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
+import { Route as AuthenticatedDisputesDeductionIdRouteImport } from './routes/_authenticated/disputes.$deductionId'
+import { Route as AuthenticatedRetailersRetailerIdRouteImport } from './routes/_authenticated/retailers.$retailerId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/_authenticated/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DocumentsRoute = DocumentsRouteImport.update({
-  id: '/documents',
+const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
+  id: '/_authenticated/documents',
   path: '/documents',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DisputesDeductionIdRoute = DisputesDeductionIdRouteImport.update({
-  id: '/disputes/$deductionId',
-  path: '/disputes/$deductionId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RetailersRetailerIdRoute = RetailersRetailerIdRouteImport.update({
-  id: '/retailers/$retailerId',
-  path: '/retailers/$retailerId',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthenticatedDisputesDeductionIdRoute =
+  AuthenticatedDisputesDeductionIdRouteImport.update({
+    id: '/_authenticated/disputes/$deductionId',
+    path: '/disputes/$deductionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedRetailersRetailerIdRoute =
+  AuthenticatedRetailersRetailerIdRouteImport.update({
+    id: '/_authenticated/retailers/$retailerId',
+    path: '/retailers/$retailerId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/documents': typeof DocumentsRoute
-  '/disputes/$deductionId': typeof DisputesDeductionIdRoute
-  '/retailers/$retailerId': typeof RetailersRetailerIdRoute
+  '/documents': typeof AuthenticatedDocumentsRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
+  '/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/documents': typeof DocumentsRoute
-  '/disputes/$deductionId': typeof DisputesDeductionIdRoute
-  '/retailers/$retailerId': typeof RetailersRetailerIdRoute
+  '/documents': typeof AuthenticatedDocumentsRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
+  '/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/documents': typeof DocumentsRoute
-  '/disputes/$deductionId': typeof DisputesDeductionIdRoute
-  '/retailers/$retailerId': typeof RetailersRetailerIdRoute
+  '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
+  '/_authenticated/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/documents' | '/disputes/$deductionId' | '/retailers/$retailerId'
+    '/documents' | '/' | '/disputes/$deductionId' | '/retailers/$retailerId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/documents' | '/disputes/$deductionId' | '/retailers/$retailerId'
+  to: '/documents' | '/' | '/disputes/$deductionId' | '/retailers/$retailerId'
   id:
     | '__root__'
-    | '/'
-    | '/documents'
-    | '/disputes/$deductionId'
-    | '/retailers/$retailerId'
+    | '/_authenticated/documents'
+    | '/_authenticated/'
+    | '/_authenticated/disputes/$deductionId'
+    | '/_authenticated/retailers/$retailerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  DocumentsRoute: typeof DocumentsRoute
-  DisputesDeductionIdRoute: typeof DisputesDeductionIdRoute
-  RetailersRetailerIdRoute: typeof RetailersRetailerIdRoute
+  AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedDisputesDeductionIdRoute: typeof AuthenticatedDisputesDeductionIdRoute
+  AuthenticatedRetailersRetailerIdRoute: typeof AuthenticatedRetailersRetailerIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/documents': {
-      id: '/documents'
+    '/_authenticated/documents': {
+      id: '/_authenticated/documents'
       path: '/documents'
       fullPath: '/documents'
-      preLoaderRoute: typeof DocumentsRouteImport
+      preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/disputes/$deductionId': {
-      id: '/disputes/$deductionId'
+    '/_authenticated/disputes/$deductionId': {
+      id: '/_authenticated/disputes/$deductionId'
       path: '/disputes/$deductionId'
       fullPath: '/disputes/$deductionId'
-      preLoaderRoute: typeof DisputesDeductionIdRouteImport
+      preLoaderRoute: typeof AuthenticatedDisputesDeductionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/retailers/$retailerId': {
-      id: '/retailers/$retailerId'
+    '/_authenticated/retailers/$retailerId': {
+      id: '/_authenticated/retailers/$retailerId'
       path: '/retailers/$retailerId'
       fullPath: '/retailers/$retailerId'
-      preLoaderRoute: typeof RetailersRetailerIdRouteImport
+      preLoaderRoute: typeof AuthenticatedRetailersRetailerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  DocumentsRoute: DocumentsRoute,
-  DisputesDeductionIdRoute: DisputesDeductionIdRoute,
-  RetailersRetailerIdRoute: RetailersRetailerIdRoute,
+  AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedDisputesDeductionIdRoute: AuthenticatedDisputesDeductionIdRoute,
+  AuthenticatedRetailersRetailerIdRoute: AuthenticatedRetailersRetailerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
