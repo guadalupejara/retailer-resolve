@@ -1,0 +1,6 @@
+id,name,required_docs
+shortage_wmt,Shortage (Walmart),"[{""doc"": ""pod"", ""points"": 12, ""when_terms"": ""prepaid""}, {""doc"": ""bol"", ""points"": 12, ""when_terms"": ""collect""}, {""doc"": ""po"", ""points"": 12}, {""doc"": ""invoice"", ""points"": 11}]"
+shortage_amz,Shortage (Amazon),"[{""doc"": ""delivery_confirmation"", ""points"": 18}, {""doc"": ""invoice"", ""points"": 17}]"
+pricing_wmt,Pricing (Walmart),"[{""doc"": ""invoice"", ""points"": 12}, {""doc"": ""claim"", ""points"": 12}, {""doc"": ""po"", ""points"": 11}]"
+asn_amz,ASN compliance (Amazon),"[{""doc"": ""asn_file"", ""points"": 35}]"
+carton_amz,Carton and label (Amazon),"[{""doc"": ""carton_photo"", ""points"": 35}]"
