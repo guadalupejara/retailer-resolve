@@ -7,7 +7,7 @@
 // so no new env vars are needed. Reads only; writes go through a server function later.
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { scoreAll, sortQueue, type SeedLike } from "./scoring";
+import { parseSettings, scoreAll, sortQueue, type SeedLike } from "./scoring";
 
 const TABLES = [
   "settings", "templates", "template_lines", "code_mappings", "purchase_orders",
@@ -29,7 +29,8 @@ export async function loadAndScore() {
   const seed = Object.fromEntries(entries) as unknown as SeedLike;
   const scored = scoreAll(seed);
   const queue = sortQueue(scored.map((x) => ({ result: x.result, amount: Number(x.deduction.amount) })));
-  return { scored, queue };
+  // The case and documents pages also read the raw evidence, code mappings and settings.
+  return { scored, queue, seed, settings: parseSettings(seed.settings) };
 }
 
 /** React hook: const { data, isLoading, error } = useChargebacks(); */

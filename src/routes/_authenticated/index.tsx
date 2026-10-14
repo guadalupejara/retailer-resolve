@@ -2,9 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useChargebacks } from "@/lib/chargebacks";
 import type { Band, Priority } from "@/lib/scoring";
+import type { CaseResult } from "@/lib/scoring";
 import {
-  BANDS, CLOCK_LABEL, PRIORITIES, RECOMMENDATION_LABEL, RETAILER_NAMES, STATE_LABEL,
-  applyFilters, buildQueue, money, queueStats, scoreLabel, type QueueFilters, type QueueRow,
+  BANDS, BAND_CHIP, CLOCK_LABEL, PRIORITIES, PRIORITY_CHIP, RECOMMENDATION_LABEL, RETAILER_NAMES, STATE_LABEL,
+  applyFilters, buildQueue, money, queueStats, type QueueFilters, type QueueRow,
 } from "@/lib/queue";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -23,19 +24,6 @@ export const Route = createFileRoute("/_authenticated/")({
   }),
   component: AlertQueue,
 });
-
-const PRIORITY_CHIP: Record<Priority, string> = {
-  Critical: "chip-lost",
-  High: "chip-open",
-  Normal: "chip-disputed",
-  Low: "chip bg-muted text-muted-foreground",
-};
-
-const BAND_CHIP: Record<Band, string> = {
-  Ready: "chip-won",
-  "Needs work": "chip-open",
-  Weak: "chip-lost",
-};
 
 function AlertQueue() {
   const filters = Route.useSearch();
@@ -113,7 +101,7 @@ function AlertQueue() {
                           </>
                         )}
                       </td>
-                      <td className="num px-4 py-3">{scoreLabel(r.result)}</td>
+                      <td className="num px-4 py-3"><ScoreCell r={r.result} /></td>
                       <td className="px-4 py-3">{r.result.band && <span className={BAND_CHIP[r.result.band]}>{r.result.band}</span>}</td>
                       <td className="px-4 py-3">{r.result.recommendation && RECOMMENDATION_LABEL[r.result.recommendation]}</td>
                     </tr>
@@ -160,6 +148,17 @@ function AlertQueue() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+/** Score on one line, "raw N" small underneath when the fatal-defect cap applies. */
+function ScoreCell({ r }: { r: CaseResult }) {
+  if (r.display == null) return <>—</>;
+  return (
+    <div className="whitespace-nowrap">
+      <div>{r.display}</div>
+      {r.capped && r.raw != null && <div className="text-xs text-muted-foreground">raw {r.raw}</div>}
+    </div>
   );
 }
 

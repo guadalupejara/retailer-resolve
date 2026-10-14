@@ -13,8 +13,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedCasesIdRouteImport } from './routes/_authenticated/cases.$id'
-import { Route as AuthenticatedDisputesDeductionIdRouteImport } from './routes/_authenticated/disputes.$deductionId'
-import { Route as AuthenticatedRetailersRetailerIdRouteImport } from './routes/_authenticated/retailers.$retailerId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -35,32 +33,16 @@ const AuthenticatedCasesIdRoute = AuthenticatedCasesIdRouteImport.update({
   path: '/cases/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDisputesDeductionIdRoute =
-  AuthenticatedDisputesDeductionIdRouteImport.update({
-    id: '/disputes/$deductionId',
-    path: '/disputes/$deductionId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRetailersRetailerIdRoute =
-  AuthenticatedRetailersRetailerIdRouteImport.update({
-    id: '/retailers/$retailerId',
-    path: '/retailers/$retailerId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/cases/$id': typeof AuthenticatedCasesIdRoute
-  '/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
-  '/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
 }
 export interface FileRoutesByTo {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/': typeof AuthenticatedIndexRoute
   '/cases/$id': typeof AuthenticatedCasesIdRoute
-  '/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
-  '/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,32 +50,18 @@ export interface FileRoutesById {
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/cases/$id': typeof AuthenticatedCasesIdRoute
-  '/_authenticated/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
-  '/_authenticated/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/documents'
-    | '/cases/$id'
-    | '/disputes/$deductionId'
-    | '/retailers/$retailerId'
+  fullPaths: '/' | '/documents' | '/cases/$id'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/documents'
-    | '/'
-    | '/cases/$id'
-    | '/disputes/$deductionId'
-    | '/retailers/$retailerId'
+  to: '/documents' | '/' | '/cases/$id'
   id:
     | '__root__'
     | '/_authenticated'
     | '/_authenticated/documents'
     | '/_authenticated/'
     | '/_authenticated/cases/$id'
-    | '/_authenticated/disputes/$deductionId'
-    | '/_authenticated/retailers/$retailerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -130,20 +98,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCasesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/disputes/$deductionId': {
-      id: '/_authenticated/disputes/$deductionId'
-      path: '/disputes/$deductionId'
-      fullPath: '/disputes/$deductionId'
-      preLoaderRoute: typeof AuthenticatedDisputesDeductionIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/retailers/$retailerId': {
-      id: '/_authenticated/retailers/$retailerId'
-      path: '/retailers/$retailerId'
-      fullPath: '/retailers/$retailerId'
-      preLoaderRoute: typeof AuthenticatedRetailersRetailerIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
   }
 }
 
@@ -151,16 +105,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedCasesIdRoute: typeof AuthenticatedCasesIdRoute
-  AuthenticatedDisputesDeductionIdRoute: typeof AuthenticatedDisputesDeductionIdRoute
-  AuthenticatedRetailersRetailerIdRoute: typeof AuthenticatedRetailersRetailerIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedCasesIdRoute: AuthenticatedCasesIdRoute,
-  AuthenticatedDisputesDeductionIdRoute: AuthenticatedDisputesDeductionIdRoute,
-  AuthenticatedRetailersRetailerIdRoute: AuthenticatedRetailersRetailerIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

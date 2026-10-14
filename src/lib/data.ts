@@ -30,16 +30,6 @@ export interface Deduction {
   dispute?: { submittedAt: string; reason: string; docIds: string[]; note: string };
 }
 
-export interface Doc {
-  id: string;
-  retailerId: string;
-  name: string;
-  kind: DocKind;
-  po: string;
-  date: string;
-  source: "Retailer portal" | "QuickBooks" | "Upload";
-}
-
 export const retailers: Retailer[] = [
   {
     id: "walmart", name: "Walmart", portal: "Retail Link / APDP", connected: true,
@@ -116,20 +106,6 @@ export const deductions: Deduction[] = [
   { id: "D-30055", retailerId: "kroger", invoice: "INV-88220", po: "PO-K77812", amount: 2975.0, type: "Promo", code: "MCB-PROMO", date: d(24), status: "open", qbSynced: true },
   { id: "D-30056", retailerId: "kroger", invoice: "INV-88221", po: "PO-K77813", amount: 640.75, type: "Pricing", code: "PRC-DIFF", date: d(5), status: "open", qbSynced: false },
   { id: "D-30011", retailerId: "kroger", invoice: "INV-87511", po: "PO-K77001", amount: 1530.0, type: "Promo", code: "MCB-PROMO", date: d(95), status: "lost", qbSynced: true },
-];
-
-export const documents: Doc[] = [
-  { id: "F-1", retailerId: "walmart", name: "BOL_PO-4470113.pdf", kind: "BOL", po: "PO-4470113", date: d(72), source: "Retailer portal" },
-  { id: "F-2", retailerId: "walmart", name: "POD_PO-4471871_signed.pdf", kind: "POD", po: "PO-4471871", date: d(53), source: "Upload" },
-  { id: "F-3", retailerId: "walmart", name: "INV-88190.pdf", kind: "Invoice", po: "PO-4471871", date: d(54), source: "QuickBooks" },
-  { id: "F-4", retailerId: "walmart", name: "INV-88213.pdf", kind: "Invoice", po: "PO-4471920", date: d(15), source: "QuickBooks" },
-  { id: "F-5", retailerId: "walmart", name: "BOL_PO-4471920.pdf", kind: "BOL", po: "PO-4471920", date: d(14), source: "Retailer portal" },
-  { id: "F-6", retailerId: "target", name: "POD_PO-0092811.pdf", kind: "POD", po: "PO-0092811", date: d(62), source: "Upload" },
-  { id: "F-7", retailerId: "target", name: "ASN_856_PO-0093318.edi", kind: "ASN", po: "PO-0093318", date: d(10), source: "Retailer portal" },
-  { id: "F-8", retailerId: "target", name: "BOL_PO-0093290.pdf", kind: "BOL", po: "PO-0093290", date: d(83), source: "Retailer portal" },
-  { id: "F-9", retailerId: "kroger", name: "Q3_Promo_Agreement_signed.pdf", kind: "Promo agreement", po: "PO-K77812", date: d(90), source: "Upload" },
-  { id: "F-10", retailerId: "kroger", name: "INV-88220.pdf", kind: "Invoice", po: "PO-K77812", date: d(26), source: "QuickBooks" },
-  { id: "F-11", retailerId: "kroger", name: "INV-88221.pdf", kind: "Invoice", po: "PO-K77813", date: d(6), source: "QuickBooks" },
 ];
 
 export const money = (n: number) =>

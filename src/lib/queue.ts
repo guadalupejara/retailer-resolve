@@ -14,6 +14,19 @@ export interface QueueFilters {
   band?: Band | undefined;
 }
 
+export const PRIORITY_CHIP: Record<Priority, string> = {
+  Critical: "chip-lost",
+  High: "chip-open",
+  Normal: "chip-disputed",
+  Low: "chip bg-muted text-muted-foreground",
+};
+
+export const BAND_CHIP: Record<Band, string> = {
+  Ready: "chip-won",
+  "Needs work": "chip-open",
+  Weak: "chip-lost",
+};
+
 export const RETAILER_NAMES: Record<string, string> = { walmart: "Walmart", amazon: "Amazon" };
 export const PRIORITIES: Priority[] = ["Critical", "High", "Normal", "Low"];
 export const BANDS: Band[] = ["Ready", "Needs work", "Weak"];
@@ -44,12 +57,6 @@ export const STATE_LABEL: Record<CaseState, string> = {
 
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 export const money = (n: number) => usd.format(n);
-
-/** "40 (raw 91)" when the fatal-defect cap is applied, otherwise just the displayed score. */
-export function scoreLabel(r: CaseResult) {
-  if (r.display == null) return "—";
-  return r.capped && r.raw != null ? `${r.display} (raw ${r.raw})` : `${r.display}`;
-}
 
 /** Joins the engine's ordered queue back to the deduction rows, then splits scorable from not scorable. */
 export function buildQueue(
