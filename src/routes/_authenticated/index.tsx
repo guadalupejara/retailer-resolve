@@ -2,13 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { actions, alertsFor, useStore } from "@/lib/store";
-import { money } from "@/lib/data";
+import { inScope, money } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Dashboard · Recoup Chargeback Recovery" },
-      { name: "description", content: "Track retailer deductions and chargebacks across Walmart, Target, Kroger and more." },
+      { name: "description", content: "Track Walmart and Amazon deductions and chargebacks in one place." },
       { property: "og:title", content: "Dashboard · Recoup Chargeback Recovery" },
       { property: "og:description", content: "Track retailer deductions and chargebacks in one place." },
     ],
@@ -19,9 +19,11 @@ export const Route = createFileRoute("/_authenticated/")({
 function Dashboard() {
   const s = useStore();
   const [connecting, setConnecting] = useState<string | null>(null);
-  const open = s.deductions.filter((d) => d.status === "open");
-  const disputed = s.deductions.filter((d) => d.status === "disputed");
-  const won = s.deductions.filter((d) => d.status === "won");
+  const retailers = s.retailers.filter(inScope);
+  const deductions = s.deductions.filter((d) => retailers.some((r) => r.id === d.retailerId));
+  const open = deductions.filter((d) => d.status === "open");
+  const disputed = deductions.filter((d) => d.status === "disputed");
+  const won = deductions.filter((d) => d.status === "won");
   const sum = (a: typeof open) => a.reduce((t, d) => t + d.amount, 0);
 
   const connect = (id: string) => {
@@ -34,26 +36,15 @@ function Dashboard() {
       <div className="eyebrow">Overview</div>
       <h1 className="mt-1 text-4xl">Deductions at a glance</h1>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Stat label="Open, not disputed" value={money(sum(open))} sub={`${open.length} deductions`} tone="warning" />
         <Stat label="In dispute" value={money(sum(disputed))} sub={`${disputed.length} pending`} />
         <Stat label="Recovered" value={money(sum(won))} sub={`${won.length} won`} tone="success" />
-        <div className="panel p-5">
-          <div className="eyebrow">QuickBooks Online</div>
-          <div className="mt-2 text-sm font-medium">{s.quickbooks.connected ? s.quickbooks.company : "Not connected"}</div>
-          <div className="mt-1 text-xs text-muted-foreground">{s.quickbooks.connected ? `Last sync: ${s.quickbooks.lastSync}` : "Connect to match short-payments to invoices"}</div>
-          <div className="mt-3 flex gap-2">
-            {s.quickbooks.connected && <button className="btn-outline !py-1 text-xs" onClick={actions.syncQuickBooks}>Sync now</button>}
-            <button className={s.quickbooks.connected ? "btn-ghost !py-1 text-xs" : "btn-primary !py-1 text-xs"} onClick={actions.toggleQuickBooks}>
-              {s.quickbooks.connected ? "Disconnect" : "Connect"}
-            </button>
-          </div>
-        </div>
       </div>
 
       <h2 className="mt-12 text-2xl">Recent retailer policy changes</h2>
       <div className="panel mt-4 divide-y divide-border">
-        {s.retailers
+        {retailers
           .flatMap((r) => r.policy.updates.map((u) => ({ ...u, r })))
           .sort((a, b) => b.date.localeCompare(a.date))
           .map((u) => (
@@ -68,8 +59,8 @@ function Dashboard() {
 
       <h2 className="mt-12 text-2xl">Retailers</h2>
       <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {s.retailers.map((r) => {
-          const mine = s.deductions.filter((d) => d.retailerId === r.id);
+        {retailers.map((r) => {
+          const mine = deductions.filter((d) => d.retailerId === r.id);
           const active = mine.filter((d) => d.status === "open" || d.status === "disputed");
           const crit = r.connected ? alertsFor(s, r).filter((a) => a.level === "critical").length : 0;
           return (

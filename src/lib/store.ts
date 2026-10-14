@@ -7,57 +7,20 @@ interface State {
   retailers: Retailer[];
   deductions: Deduction[];
   documents: Doc[];
-  quickbooks: { connected: boolean; company: string; lastSync: string };
 }
 
 let state: State = {
   retailers: seed.retailers,
   deductions: seed.deductions,
   documents: seed.documents,
-  quickbooks: { connected: true, company: "Northfield Provisions Co.", lastSync: "Today, 6:00 AM" },
 };
 const initial = state;
 const listeners = new Set<() => void>();
-let ownerId: string | null = null;
-let saveTimer: ReturnType<typeof setTimeout> | undefined;
 const emit = () => listeners.forEach((l) => l());
 const set = (fn: (s: State) => State) => {
   state = fn(state);
   emit();
-  if (!ownerId) return;
-  const uid = ownerId;
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    const { error } = await supabase
-      .from("seller_workspaces")
-      .upsert({ user_id: uid, state: state as never, updated_at: new Date().toISOString() });
-    if (error) console.error("Save failed", error);
-  }, 400);
 };
-
-/** Load the signed-in seller's saved workspace, creating it from starter data on first sign-in. */
-export async function loadWorkspace(userId: string) {
-  if (ownerId === userId) return;
-  const { supabase } = await import("@/integrations/supabase/client");
-  const { data, error } = await supabase.from("seller_workspaces").select("state").eq("user_id", userId).maybeSingle();
-  if (error) throw error;
-  ownerId = userId;
-  if (data?.state) {
-    state = data.state as unknown as State;
-    emit();
-  } else {
-    state = initial;
-    await supabase.from("seller_workspaces").insert({ user_id: userId, state: initial as never });
-    emit();
-  }
-}
-
-export function resetWorkspace() {
-  ownerId = null;
-  state = initial;
-  emit();
-}
 
 export function useStore() {
   return useSyncExternalStore(
@@ -72,14 +35,6 @@ export const actions = {
     set((s) => ({ ...s, retailers: s.retailers.map((r) => (r.id === id ? { ...r, connected: true } : r)) })),
   disconnectRetailer: (id: string) =>
     set((s) => ({ ...s, retailers: s.retailers.map((r) => (r.id === id ? { ...r, connected: false } : r)) })),
-  toggleQuickBooks: () =>
-    set((s) => ({ ...s, quickbooks: { ...s.quickbooks, connected: !s.quickbooks.connected, lastSync: "Just now" } })),
-  syncQuickBooks: () =>
-    set((s) => ({
-      ...s,
-      quickbooks: { ...s.quickbooks, lastSync: "Just now" },
-      deductions: s.deductions.map((d) => ({ ...d, qbSynced: true })),
-    })),
   uploadDoc: (retailerId: string, name: string, kind: DocKind, po: string) => {
     const doc: Doc = { id: `F-${Date.now()}`, retailerId, name, kind, po, date: TODAY.toISOString().slice(0, 10), source: "Upload" };
     set((s) => ({ ...s, documents: [doc, ...s.documents] }));

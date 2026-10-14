@@ -51,6 +51,15 @@ export const retailers: Retailer[] = [
     },
   },
   {
+    id: "amazon", name: "Amazon", portal: "Vendor Central", connected: true,
+    policy: {
+      disputeWindowDays: 30,
+      requiredDocs: ["ASN", "Photo", "Invoice"],
+      rules: ["ASN accuracy and carton content chargebacks: 30-day window", "Two disputes per chargeback, then final"],
+      updates: [],
+    },
+  },
+  {
     id: "target", name: "Target", portal: "Partners Online", connected: true,
     policy: {
       disputeWindowDays: 90,
@@ -87,6 +96,10 @@ export const retailers: Retailer[] = [
     },
   },
 ];
+
+/** Retailers in scope for this prototype. Sidebar and dashboard show only these. */
+export const SCOPE_RETAILER_IDS = ["walmart", "amazon"];
+export const inScope = (r: Retailer) => SCOPE_RETAILER_IDS.includes(r.id);
 
 const d = (n: number) => new Date(TODAY.getTime() - n * 864e5).toISOString().slice(0, 10);
 
