@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mt-6 px-3 eyebrow !text-sidebar-foreground/50">Retailers</div>
         <nav className="mt-2 space-y-1">
           {s.retailers.filter((r) => r.connected && inScope(r)).map((r) => (
-            <Link key={r.id} to="/retailers/$retailerId" params={{ retailerId: r.id }} className={nav} activeProps={active}>
+            <Link key={r.id} to="/" search={{ retailer: r.id }} className={nav} activeProps={active} activeOptions={{ includeSearch: true }}>
               {r.name}
             </Link>
           ))}
@@ -31,7 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <label htmlFor="role-switcher" className="eyebrow !text-sidebar-foreground/50">Working as</label>
           <select
             id="role-switcher"
-            className="input mt-2 !py-1.5 text-xs"
+            className="input mt-2 !py-1.5 text-xs text-foreground"
             value={currentUser?.id ?? ""}
             disabled={users.length === 0}
             onChange={(e) => setCurrentUserId(e.target.value)}

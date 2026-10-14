@@ -1,112 +1,187 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { actions, alertsFor, useStore } from "@/lib/store";
-import { inScope, money } from "@/lib/data";
+import { useChargebacks } from "@/lib/chargebacks";
+import type { Band, Priority } from "@/lib/scoring";
+import {
+  BANDS, CLOCK_LABEL, PRIORITIES, RECOMMENDATION_LABEL, RETAILER_NAMES, STATE_LABEL,
+  applyFilters, buildQueue, money, queueStats, scoreLabel, type QueueFilters, type QueueRow,
+} from "@/lib/queue";
 
 export const Route = createFileRoute("/_authenticated/")({
+  validateSearch: (s: Record<string, unknown>): QueueFilters => ({
+    retailer: typeof s["retailer"] === "string" && s["retailer"] in RETAILER_NAMES ? s["retailer"] : undefined,
+    priority: PRIORITIES.find((p) => p === s["priority"]),
+    band: BANDS.find((b) => b === s["band"]),
+  }),
   head: () => ({
     meta: [
-      { title: "Dashboard · Recoup Chargeback Recovery" },
-      { name: "description", content: "Track Walmart and Amazon deductions and chargebacks in one place." },
-      { property: "og:title", content: "Dashboard · Recoup Chargeback Recovery" },
-      { property: "og:description", content: "Track retailer deductions and chargebacks in one place." },
+      { title: "Alert queue · Recoup" },
+      { name: "description", content: "Walmart and Amazon chargebacks ranked by deadline, dollars and dispute readiness." },
+      { property: "og:title", content: "Alert queue · Recoup" },
+      { property: "og:description", content: "Chargebacks to act on, ranked by deadline and dispute readiness." },
     ],
   }),
-  component: Dashboard,
+  component: AlertQueue,
 });
 
-function Dashboard() {
-  const s = useStore();
-  const [connecting, setConnecting] = useState<string | null>(null);
-  const retailers = s.retailers.filter(inScope);
-  const deductions = s.deductions.filter((d) => retailers.some((r) => r.id === d.retailerId));
-  const open = deductions.filter((d) => d.status === "open");
-  const disputed = deductions.filter((d) => d.status === "disputed");
-  const won = deductions.filter((d) => d.status === "won");
-  const sum = (a: typeof open) => a.reduce((t, d) => t + d.amount, 0);
+const PRIORITY_CHIP: Record<Priority, string> = {
+  Critical: "chip-lost",
+  High: "chip-open",
+  Normal: "chip-disputed",
+  Low: "chip bg-muted text-muted-foreground",
+};
 
-  const connect = (id: string) => {
-    setConnecting(id);
-    setTimeout(() => { actions.connectRetailer(id); setConnecting(null); }, 1200);
-  };
+const BAND_CHIP: Record<Band, string> = {
+  Ready: "chip-won",
+  "Needs work": "chip-open",
+  Weak: "chip-lost",
+};
+
+function AlertQueue() {
+  const filters = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const q = useChargebacks();
+
+  const setFilter = (patch: QueueFilters) =>
+    navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true });
+
+  const data = q.data ? buildQueue(q.data.scored, q.data.queue) : null;
+  // Stats and the not-scorable list follow the retailer filter only. Priority and band filter the table.
+  const byRetailer = data ? applyFilters(data.scorable, { retailer: filters.retailer }) : [];
+  const stats = queueStats(byRetailer);
+  const table = applyFilters(byRetailer, { priority: filters.priority, band: filters.band });
+  const notScorable = data ? applyFilters(data.notScorable, { retailer: filters.retailer }) : [];
+  const shown = (n: number) => (data ? n : "—");
 
   return (
     <AppShell>
-      <div className="eyebrow">Overview</div>
-      <h1 className="mt-1 text-4xl">Deductions at a glance</h1>
+      <div className="eyebrow">Alert queue</div>
+      <h1 className="mt-1 text-4xl">Chargebacks to act on</h1>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Stat label="Open, not disputed" value={money(sum(open))} sub={`${open.length} deductions`} tone="warning" />
-        <Stat label="In dispute" value={money(sum(disputed))} sub={`${disputed.length} pending`} />
-        <Stat label="Recovered" value={money(sum(won))} sub={`${won.length} won`} tone="success" />
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Open dollars at stake" value={data ? money(stats.openDollars) : "—"} tone="warning" />
+        <Stat label="Critical" value={String(shown(stats.critical))} tone="danger" />
+        <Stat label="Ready to submit" value={String(shown(stats.readyToSubmit))} tone="success" />
+        <Stat label="Expiring in 7 days or less" value={String(shown(stats.expiringWithin7))} tone="danger" />
       </div>
 
-      <h2 className="mt-12 text-2xl">Recent retailer policy changes</h2>
-      <div className="panel mt-4 divide-y divide-border">
-        {retailers
-          .flatMap((r) => r.policy.updates.map((u) => ({ ...u, r })))
-          .sort((a, b) => b.date.localeCompare(a.date))
-          .map((u) => (
-            <div key={u.r.id + u.date} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
-              <span className="num text-xs text-muted-foreground">{u.date}</span>
-              <span className="chip-open">{u.r.name}</span>
-              <span className="flex-1">{u.text}</span>
-              <Link to="/retailers/$retailerId" params={{ retailerId: u.r.id }} className="btn-ghost !py-1 text-xs">See impact</Link>
-            </div>
-          ))}
+      <div className="mt-10 flex flex-wrap gap-4">
+        <FilterSelect label="Retailer" value={filters.retailer ?? ""} onChange={(v) => setFilter({ retailer: v || undefined })}
+          options={[["", "All retailers"], ...Object.entries(RETAILER_NAMES)]} />
+        <FilterSelect label="Priority" value={filters.priority ?? ""} onChange={(v) => setFilter({ priority: (v || undefined) as Priority | undefined })}
+          options={[["", "All priorities"], ...PRIORITIES.map((p): [string, string] => [p, p])]} />
+        <FilterSelect label="Band" value={filters.band ?? ""} onChange={(v) => setFilter({ band: (v || undefined) as Band | undefined })}
+          options={[["", "All bands"], ...BANDS.map((b): [string, string] => [b, b])]} />
       </div>
 
-      <h2 className="mt-12 text-2xl">Retailers</h2>
-      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {retailers.map((r) => {
-          const mine = deductions.filter((d) => d.retailerId === r.id);
-          const active = mine.filter((d) => d.status === "open" || d.status === "disputed");
-          const crit = r.connected ? alertsFor(s, r).filter((a) => a.level === "critical").length : 0;
-          return (
-            <div key={r.id} className="panel flex flex-col p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-xl">{r.name}</h3>
-                  <div className="text-xs text-muted-foreground">{r.portal}</div>
-                </div>
-                {r.connected
-                  ? <span className="chip-won">Connected</span>
-                  : <span className="chip bg-muted text-muted-foreground">Not connected</span>}
-              </div>
-              {r.connected ? (
-                <>
-                  <div className="mt-5 grid grid-cols-3 gap-2 text-sm">
-                    <div><div className="eyebrow">Active</div><div className="num mt-1">{active.length}</div></div>
-                    <div><div className="eyebrow">At risk</div><div className="num mt-1">{money(active.reduce((t, d) => t + d.amount, 0))}</div></div>
-                    <div><div className="eyebrow">Window</div><div className="num mt-1">{r.policy.disputeWindowDays}d</div></div>
-                  </div>
-                  {crit > 0 && <div className="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{crit} urgent alert{crit > 1 ? "s" : ""}</div>}
-                  <Link to="/retailers/$retailerId" params={{ retailerId: r.id }} className="btn-outline mt-5">Open {r.name}</Link>
-                </>
-              ) : (
-                <>
-                  <p className="mt-4 flex-1 text-sm text-muted-foreground">Connect your vendor portal to pull deductions, remittances and backup automatically.</p>
-                  <button className="btn-primary mt-5" disabled={connecting === r.id} onClick={() => connect(r.id)}>
-                    {connecting === r.id ? "Connecting…" : `Connect ${r.portal}`}
-                  </button>
-                </>
-              )}
+      <div className="mt-6">
+        {q.isPending && <div className="panel p-10 text-center text-sm text-muted-foreground">Loading cases from Supabase…</div>}
+
+        {q.isError && (
+          <div className="panel border-l-4 border-l-destructive p-5 text-sm">
+            <div className="font-medium text-destructive">Couldn't load the queue</div>
+            <div className="mt-1 text-muted-foreground">{q.error.message}</div>
+          </div>
+        )}
+
+        {data && (
+          <>
+            <div className="panel overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-border text-left">
+                  <tr className="eyebrow">
+                    <th className="px-4 py-3">Priority</th><th className="px-4 py-3">Case</th><th className="px-4 py-3">Retailer</th>
+                    <th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3">Days left</th>
+                    <th className="px-4 py-3">Score</th><th className="px-4 py-3">Band</th><th className="px-4 py-3">Recommendation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {table.map((r) => (
+                    <tr key={r.deduction.id} className="border-b border-border last:border-0 hover:bg-secondary/50">
+                      <td className="px-4 py-3">{r.result.priority && <span className={PRIORITY_CHIP[r.result.priority]}>{r.result.priority}</span>}</td>
+                      <td className="px-4 py-3">
+                        <Link to="/cases/$id" params={{ id: r.deduction.id }} className="num font-medium text-primary hover:underline">{r.deduction.id}</Link>
+                        <div className="text-xs text-muted-foreground">{r.deduction.title}</div>
+                      </td>
+                      <td className="px-4 py-3">{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</td>
+                      <td className="num px-4 py-3 text-right">{money(r.amount)}</td>
+                      <td className="num px-4 py-3">
+                        {r.result.days_left == null ? "—" : (
+                          <>
+                            <span className={r.result.days_left <= 7 ? "font-semibold text-destructive" : ""}>{r.result.days_left}d</span>
+                            {r.result.clock && <div className="text-xs text-muted-foreground">{CLOCK_LABEL[r.result.clock]}</div>}
+                          </>
+                        )}
+                      </td>
+                      <td className="num px-4 py-3">{scoreLabel(r.result)}</td>
+                      <td className="px-4 py-3">{r.result.band && <span className={BAND_CHIP[r.result.band]}>{r.result.band}</span>}</td>
+                      <td className="px-4 py-3">{r.result.recommendation && RECOMMENDATION_LABEL[r.result.recommendation]}</td>
+                    </tr>
+                  ))}
+                  {table.length === 0 && (
+                    <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">No cases match these filters.</td></tr>
+                  )}
+                </tbody>
+              </table>
             </div>
-          );
-        })}
+
+            <h2 className="mt-12 text-2xl">Not scorable</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Expired, final, routed, or needing human review. These have no score or priority.
+            </p>
+            <div className="panel mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-border text-left">
+                  <tr className="eyebrow">
+                    <th className="px-4 py-3">Case</th><th className="px-4 py-3">Retailer</th>
+                    <th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3">State</th><th className="px-4 py-3">Recommendation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {notScorable.map((r: QueueRow) => (
+                    <tr key={r.deduction.id} className="border-b border-border last:border-0 hover:bg-secondary/50">
+                      <td className="px-4 py-3">
+                        <Link to="/cases/$id" params={{ id: r.deduction.id }} className="num font-medium text-primary hover:underline">{r.deduction.id}</Link>
+                        <div className="text-xs text-muted-foreground">{r.deduction.title}</div>
+                      </td>
+                      <td className="px-4 py-3">{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</td>
+                      <td className="num px-4 py-3 text-right">{money(r.amount)}</td>
+                      <td className="px-4 py-3">{STATE_LABEL[r.result.state]}</td>
+                      <td className="px-4 py-3">{r.result.recommendation && RECOMMENDATION_LABEL[r.result.recommendation]}</td>
+                    </tr>
+                  ))}
+                  {notScorable.length === 0 && (
+                    <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">Nothing here.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
     </AppShell>
   );
 }
 
-function Stat({ label, value, sub, tone }: { label: string; value: string; sub: string; tone?: "warning" | "success" }) {
-  const c = tone === "warning" ? "text-warning-foreground" : tone === "success" ? "text-success" : "text-primary";
+function FilterSelect({ label, value, onChange, options }: {
+  label: string; value: string; onChange: (v: string) => void; options: [string, string][];
+}) {
+  return (
+    <label className="min-w-40">
+      <span className="eyebrow">{label}</span>
+      <select className="input mt-1.5" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map(([v, text]) => <option key={v} value={v}>{text}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function Stat({ label, value, tone }: { label: string; value: string; tone?: "warning" | "success" | "danger" }) {
+  const c = tone === "warning" ? "text-warning-foreground" : tone === "success" ? "text-success" : tone === "danger" ? "text-destructive" : "text-primary";
   return (
     <div className="panel p-5">
       <div className="eyebrow">{label}</div>
       <div className={`num mt-2 text-2xl ${c}`}>{value}</div>
-      <div className="mt-1 text-xs text-muted-foreground">{sub}</div>
     </div>
   );
 }

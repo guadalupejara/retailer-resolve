@@ -58,7 +58,7 @@ export interface Invoice { invoice_number: string; po_number: string; item_sku: 
 export interface Shipment { po_number: string; terms: Terms; carrier_id: string; pro_number: string; delivery_date: string }
 export interface Carrier { id: string; name: string; pod_retention_days: number }
 export interface Asn { po_number: string; sent_at: string; received_at: string; carton_ids_present: boolean }
-export interface Evidence { id: string; deduction_id: string; doc_type: string; extracted: Record<string, any> }
+export interface Evidence { id: string; deduction_id: string; doc_type: string; extracted: any }
 export interface DisputeHistory {
   deduction_id: string; attempt_no: number; outcome: string;
   denial_reason: string | null; denial_check_key: string | null;
@@ -135,7 +135,7 @@ function runCheck(key: string, b: CaseBundle): CheckOut {
       let sources: { label: string; po: string | null | undefined }[] = [];
       if (tid === "shortage_wmt" || tid === "shortage_amz") {
         sources = b.evidence.filter((e) => CARRIER_DOCS.includes(e.doc_type))
-          .map((e) => ({ label: DOC_LABEL[e.doc_type], po: e.extracted.po_number }));
+          .map((e) => ({ label: DOC_LABEL[e.doc_type] ?? e.doc_type, po: e.extracted.po_number }));
       } else if (tid === "pricing_wmt") {
         const c = ev(b, "claim");
         if (!c) return { pass: false, reason: "Claim not attached, so the PO can't be checked" };
@@ -372,7 +372,7 @@ export function parseSettings(raw: SeedLike["settings"]): Settings {
   const o: Record<string, string> = Object.fromEntries(raw.map((r) => [r.key, r.value]));
   const n = (k: string) => Number(o[k]);
   return {
-    demo_today: o.demo_today, write_off_threshold: n("write_off_threshold"),
+    demo_today: o["demo_today"] ?? "", write_off_threshold: n("write_off_threshold"),
     high_value_threshold: n("high_value_threshold"), critical_days: n("critical_days"),
     high_days: n("high_days"), cap_score: n("cap_score"), band_ready_min: n("band_ready_min"),
     band_needs_work_min: n("band_needs_work_min"),

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
+import { Route as AuthenticatedCasesIdRouteImport } from './routes/_authenticated/cases.$id'
 import { Route as AuthenticatedDisputesDeductionIdRouteImport } from './routes/_authenticated/disputes.$deductionId'
 import { Route as AuthenticatedRetailersRetailerIdRouteImport } from './routes/_authenticated/retailers.$retailerId'
 
@@ -27,6 +28,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
 const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCasesIdRoute = AuthenticatedCasesIdRouteImport.update({
+  id: '/cases/$id',
+  path: '/cases/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDisputesDeductionIdRoute =
@@ -45,12 +51,14 @@ const AuthenticatedRetailersRetailerIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/documents': typeof AuthenticatedDocumentsRoute
+  '/cases/$id': typeof AuthenticatedCasesIdRoute
   '/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
   '/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
 }
 export interface FileRoutesByTo {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/': typeof AuthenticatedIndexRoute
+  '/cases/$id': typeof AuthenticatedCasesIdRoute
   '/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
   '/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
 }
@@ -59,20 +67,31 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/cases/$id': typeof AuthenticatedCasesIdRoute
   '/_authenticated/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
   '/_authenticated/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/documents' | '/disputes/$deductionId' | '/retailers/$retailerId'
+    | '/'
+    | '/documents'
+    | '/cases/$id'
+    | '/disputes/$deductionId'
+    | '/retailers/$retailerId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/documents' | '/' | '/disputes/$deductionId' | '/retailers/$retailerId'
+  to:
+    | '/documents'
+    | '/'
+    | '/cases/$id'
+    | '/disputes/$deductionId'
+    | '/retailers/$retailerId'
   id:
     | '__root__'
     | '/_authenticated'
     | '/_authenticated/documents'
     | '/_authenticated/'
+    | '/_authenticated/cases/$id'
     | '/_authenticated/disputes/$deductionId'
     | '/_authenticated/retailers/$retailerId'
   fileRoutesById: FileRoutesById
@@ -104,6 +123,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cases/$id': {
+      id: '/_authenticated/cases/$id'
+      path: '/cases/$id'
+      fullPath: '/cases/$id'
+      preLoaderRoute: typeof AuthenticatedCasesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/disputes/$deductionId': {
       id: '/_authenticated/disputes/$deductionId'
       path: '/disputes/$deductionId'
@@ -124,6 +150,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedCasesIdRoute: typeof AuthenticatedCasesIdRoute
   AuthenticatedDisputesDeductionIdRoute: typeof AuthenticatedDisputesDeductionIdRoute
   AuthenticatedRetailersRetailerIdRoute: typeof AuthenticatedRetailersRetailerIdRoute
 }
@@ -131,6 +158,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedCasesIdRoute: AuthenticatedCasesIdRoute,
   AuthenticatedDisputesDeductionIdRoute: AuthenticatedDisputesDeductionIdRoute,
   AuthenticatedRetailersRetailerIdRoute: AuthenticatedRetailersRetailerIdRoute,
 }
