@@ -28,6 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="space-y-1">
           <Link to="/" className={nav} activeProps={active} activeOptions={{ exact: true }}>Dashboard</Link>
           <Link to="/documents" className={nav} activeProps={active}>Documents</Link>
+          <Link to="/insights" className={nav} activeProps={active}>Insights</Link>
         </nav>
         <div className="mt-6 px-3 eyebrow !text-sidebar-foreground/50">Retailers</div>
         <nav className="mt-2 space-y-1">

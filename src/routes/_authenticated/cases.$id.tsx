@@ -62,6 +62,12 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
     <>
       <Header d={d} r={r} mappingLabel={mapping ? `${mapping.code} · ${mapping.code_name}` : d.raw_code} amount={Number(d.amount)} />
 
+      {d.status === "submitted" && (
+        <div className="mt-4">
+          <Link to="/cases/$id/packet" params={{ id }} target="_blank" className="btn-outline">Export packet</Link>
+        </div>
+      )}
+
       {r.warnings.length > 0 && (
         <div className="mt-6 space-y-2">
           {r.warnings.map((w) => {

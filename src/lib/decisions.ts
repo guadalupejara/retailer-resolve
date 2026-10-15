@@ -23,6 +23,18 @@ export const takeCaseAction = createServerFn({ method: "POST" })
     return runAction(data);
   });
 
+export const saveDraft = createServerFn({ method: "POST" })
+  .validator((d: { caseId: string; userId: string; text: string }) => {
+    if (typeof d?.caseId !== "string" || !/^[A-Za-z0-9-]{1,32}$/.test(d.caseId)) throw new Error("Invalid case id");
+    if (typeof d.userId !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(d.userId)) throw new Error("Invalid user id");
+    if (typeof d.text !== "string") throw new Error("Draft must be text");
+    return d;
+  })
+  .handler(async ({ data }) => {
+    const { runSaveDraft } = await import("./decisions.server");
+    return runSaveDraft(data);
+  });
+
 export const resetDemo = createServerFn({ method: "POST" }).handler(async () => {
   const { runReset, serviceDb } = await import("./decisions.server");
   const { resetEvidence } = await import("./evidence.server");

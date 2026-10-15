@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCurrentUser } from "@/lib/current-user";
+import { saveDraft } from "@/lib/decisions";
 import { useState } from "react";
 import type { AiOutcome } from "@/lib/ai-explain";
 import { explainCase } from "@/lib/explain-case";
@@ -21,6 +23,11 @@ export function AiExplanation({ id, result }: { id: string; result: CaseResult }
   const [outcome, setOutcome] = useState<AiOutcome | null>(null);
   const [draft, setDraft] = useState("");
   const qc = useQueryClient();
+  const { currentUser } = useCurrentUser();
+  const save = useMutation({
+    mutationFn: () => saveDraft({ data: { caseId: id, userId: currentUser?.id ?? "", text: draft } }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["audit", id] }),
+  });
   const generate = useMutation({
     mutationFn: () => explainCase({ data: id }),
     onSuccess: (o) => {
@@ -107,6 +114,13 @@ export function AiExplanation({ id, result }: { id: string; result: CaseResult }
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                 />
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <button className="btn-outline !py-1 text-xs" disabled={!draft.trim() || save.isPending || !currentUser} onClick={() => save.mutate()}>
+                    {save.isPending ? "Saving…" : "Save draft"}
+                  </button>
+                  {save.isSuccess && <span className="text-xs text-muted-foreground">Draft saved. The packet will use it.</span>}
+                  {save.isError && <span className="text-xs text-destructive">{save.error.message}</span>}
+                </div>
               </div>
             </>
           )}

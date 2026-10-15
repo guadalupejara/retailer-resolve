@@ -28,6 +28,7 @@ charge of every money decision. Pitch line: **"AI does the investigation, humans
 - `public/evidence/`: the mock evidence files (PODs, BOLs, ASN files, photos).
 - `src/lib/ai-explain.ts`: the Gemini call, reply validation and cache fallback. `scripts/generate-ai-cache.ts`: writes the cache.
 - Evidence: `src/lib/evidence.server.ts` (add or replace a document, then rescore). `scoring.ts` reads only the first evidence row of each doc type, so a new document replaces the existing row; it is inserted only when none exists. Uploads go to the `evidence` bucket at `<case id>/<doc>-<timestamp>.<ext>`. `evidenceUrl()` serves `evidence/...` paths from `public/evidence/` and everything else from the bucket.
+- Insights (`/insights`): `src/lib/insights.ts` (pure numbers), `src/lib/archive.ts` (outcomes_archive read). Packet (`/cases/$id/packet`): print-friendly, submitted cases only. The saved AI draft is the newest `draft_saved` audit row; the packet uses it, then the AI cache, then generates one.
 - Decisions: `src/lib/decision-rules.ts` (who can do what; shared by server and UI). `src/lib/decisions.ts`: server functions (`takeCaseAction`, `resetDemo`). `src/lib/decisions.server.ts`: the only file that uses `SUPABASE_SERVICE_ROLE_KEY`; never import it from client code.
 - `src/lib/data.ts`, `src/lib/store.ts`: Lupe's original mock data (5 retailers, QuickBooks).
   **Being replaced** by the Supabase data. Do not add new features on top of them.
@@ -40,7 +41,7 @@ charge of every money decision. Pitch line: **"AI does the investigation, humans
    (`createServerFn`) using `SUPABASE_SERVICE_ROLE_KEY`**, which must never be imported in client code
    or prefixed with `VITE_`.
 5. Every human action writes a row to `audit_log` (actions: approved, write_off_requested,
-   write_off_approved, requested_document, evidence_added, rescored, outcome_recorded, override).
+   write_off_approved, requested_document, evidence_added, rescored, outcome_recorded, override, draft_saved).
 6. Write-offs above `settings.manager_approval_write_off_above` ($1,000) need the manager role.
 7. Label all AI text "AI-suggested, review before sending".
 8. Supabase returns numeric columns as strings: wrap money in `Number()`.

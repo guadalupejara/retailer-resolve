@@ -9,6 +9,35 @@ import {
   type DecisionAction, type OwnerKey, type Person, type Role,
 } from "./decision-rules";
 
+/** Saved drafts are audit rows (action draft_saved, note = the text). The newest one is the packet's summary. */
+export async function runSaveDraft(input: { caseId: string; userId: string; text: string }): Promise<{ savedAt: string }> {
+  const db = serviceDb();
+  try {
+    const user = await actorFor(db, input.userId);
+    requireRole(user, "save_draft", "a deductions analyst or AR manager");
+    const text = input.text.trim();
+    if (!text) throw new ActionError("The draft is empty.");
+    if (text.length > 2000) throw new ActionError("Drafts are limited to 2000 characters.");
+
+    const seed = (await fetchSeed(db as unknown as SeedDb)) as SeedLike;
+    const bundle = bundleFor(seed, input.caseId);
+    const d = bundle.deduction;
+    if (isDone(d.status) && d.status !== "submitted") throw new ActionError(`This case is already ${STATUS_LABEL[d.status]?.toLowerCase()}.`);
+    const result = scoreCase(bundle, parseSettings(seed.settings));
+
+    const at = new Date().toISOString();
+    const { error } = await db.from("audit_log").insert({
+      deduction_id: d.id, actor: user.id, action: "draft_saved", note: text, score_at_action: result.display ?? null, at,
+    });
+    if (error) throw error;
+    return { savedAt: at };
+  } catch (e) {
+    if (e instanceof ActionError) throw e;
+    console.error("[decisions] save draft failed", input.caseId, e);
+    throw new Error("Couldn't save the draft. Try again.");
+  }
+}
+
 export interface ActionInput {
   caseId: string;
   userId: string;
@@ -122,6 +151,9 @@ export async function runAction(input: ActionInput): Promise<{ status: string }>
         audit_action = "override";
         auditNote = `Write-off rejected by ${user.name}: ${note}`;
         break;
+      }
+      case "save_draft": {
+        throw new ActionError("Drafts are saved with Save draft, not a decision.");
       }
       case "record_outcome": {
         requireRole(user, "record_outcome", "a deductions analyst or AR manager");

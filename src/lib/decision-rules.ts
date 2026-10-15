@@ -17,7 +17,8 @@ export type DecisionAction =
   | "request_write_off"
   | "approve_write_off"
   | "reject_write_off"
-  | "record_outcome";
+  | "record_outcome"
+  | "save_draft";
 
 export const ROLE_TITLE: Record<Role, string> = {
   deductions_analyst: "deductions analyst",
@@ -34,6 +35,7 @@ const ACTOR_ROLES: Record<DecisionAction, Role[]> = {
   approve_write_off: ["ar_manager"],
   reject_write_off: ["ar_manager"],
   record_outcome: ["deductions_analyst", "ar_manager"],
+  save_draft: ["deductions_analyst", "ar_manager"],
 };
 
 export function canAct(role: Role, action: DecisionAction): boolean {
@@ -76,6 +78,7 @@ export const ACTION_LABEL: Record<string, string> = {
   write_off_approved: "Wrote off",
   override: "Rejected write-off",
   outcome_recorded: "Recorded outcome",
+  draft_saved: "Saved draft summary",
 };
 
 /** Reads a value from the settings table. Accepts the key/value rows from Supabase or the seed object. */
