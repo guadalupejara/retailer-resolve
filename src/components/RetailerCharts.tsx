@@ -9,16 +9,13 @@ import {
 } from "recharts";
 import { money } from "@/lib/queue";
 
-/**
- * One fixed color per retailer, used on every chart. Categorical slots 1 and 5 of the dataviz reference
- * palette; validated as a pair (CVD separation, normal-vision floor, 3:1 contrast on white all pass).
- * Neither is a status color or the brand accent.
- */
-export const RETAILER_COLOR: Record<string, string> = { walmart: "#2a78d6", amazon: "#d55181" };
-const colorOf = (id: string) => RETAILER_COLOR[id] ?? "#8a8f98";
+/** One fixed color per retailer, used on every chart: the --walmart and --amazon tokens in styles.css. */
+export const RETAILER_COLOR: Record<string, string> = { walmart: "var(--walmart)", amazon: "var(--amazon)" };
+const colorOf = (id: string) => RETAILER_COLOR[id] ?? "var(--tertiary)";
 
-const SURFACE = "#ffffff";
-const INK_MUTED = "oklch(0.52 0.015 260)";
+const SURFACE = "var(--card)";
+const INK_MUTED = "var(--muted-foreground)";
+const HOVER_FILL = "var(--secondary)";
 
 export interface Slice { id: string; name: string; count: number; dollars: number }
 
@@ -114,7 +111,7 @@ export function RetailerBars({ slices }: { slices: Slice[] }) {
           <XAxis type="number" hide domain={[0, max * 2.2]} allowDecimals={false} />
           <YAxis type="category" dataKey="name" width={64} axisLine={false} tickLine={false}
             tick={{ fontSize: 13, fill: INK_MUTED }} />
-          <Tooltip content={<SliceTip />} cursor={{ fill: "oklch(0.955 0.005 255)" }} />
+          <Tooltip content={<SliceTip />} cursor={{ fill: HOVER_FILL }} />
           <Bar dataKey="count" barSize={14} radius={[0, 4, 4, 0]} minPointSize={2} isAnimationActive={false}
             onClick={(d: { payload?: Slice }) => d.payload && open(d.payload.id)} className="cursor-pointer">
             {slices.map((s) => <Cell key={s.id} fill={colorOf(s.id)} />)}
@@ -192,7 +189,7 @@ export function ReadinessChart({ rows, retailers }: {
         <BarChart data={data} margin={{ top: 8, right: 0, bottom: 0, left: -24 }} barGap={2} barCategoryGap="28%" accessibilityLayer>
           <XAxis dataKey="band" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: INK_MUTED }} />
           <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: INK_MUTED }} width={48} />
-          <Tooltip cursor={{ fill: "oklch(0.955 0.005 255)" }} content={({ active, label }) => {
+          <Tooltip cursor={{ fill: HOVER_FILL }} content={({ active, label }) => {
             const row = active ? rows.find((r) => r.band === label) : undefined;
             if (!row) return null;
             return (

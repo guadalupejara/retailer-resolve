@@ -70,7 +70,7 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
             const urgent = w.startsWith("Last attempt");
             return (
               <div key={w} role={urgent ? "alert" : undefined}
-                className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm ${urgent ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-warning/40 bg-warning/15"}`}>
+                className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm ${urgent ? "border-transparent bg-destructive-soft text-destructive" : "border-transparent bg-warning-soft"}`}>
                 <AlertTriangle className={`mt-0.5 size-4 shrink-0 ${urgent ? "" : "text-warning-foreground"}`} />
                 <div>
                   <span className="font-semibold">{urgent ? "Last attempt" : "Heads up"}</span>{" "}

@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Montserrat", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -32,6 +32,17 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-tertiary: var(--tertiary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-tint: var(--primary-tint);
+  --color-charcoal: var(--charcoal);
+  --color-sand: var(--sand);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-warning-soft: var(--warning-soft);
+  --color-success-soft: var(--success-soft);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-walmart: var(--walmart);
+  --color-amazon: var(--amazon);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-border: var(--border);
@@ -41,35 +52,47 @@
 
 :root {
   --radius: 0.625rem;
-  /* Neutrals: light cool grey page, white cards. */
-  --background: oklch(0.972 0.004 255);
-  --foreground: oklch(0.22 0.02 262);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 262);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 262);
-  --secondary: oklch(0.955 0.005 255);
-  --secondary-foreground: oklch(0.28 0.02 262);
-  --muted: oklch(0.955 0.005 255);
-  --muted-foreground: oklch(0.52 0.015 260);
-  --border: oklch(0.925 0.005 255);
-  --input: oklch(0.9 0.006 255);
-  /* Brand: primary buttons, links, active nav. */
-  --primary: oklch(0.52 0.2 265);
-  --primary-foreground: oklch(1 0 0);
-  --accent: oklch(0.95 0.03 265);
-  --accent-foreground: oklch(0.42 0.18 265);
-  --ring: oklch(0.52 0.2 265);
-  /* Status: red = Critical/Weak/Fatal, amber = High/Needs work, green = Ready/Won. Grey = muted. */
-  --destructive: oklch(0.57 0.21 25);
-  --destructive-foreground: oklch(1 0 0);
-  --warning: oklch(0.8 0.15 75);
-  --warning-foreground: oklch(0.5 0.12 60);
-  --success: oklch(0.55 0.14 152);
-  --success-foreground: oklch(1 0 0);
-  /* Sidebar: light surface, a touch lighter than the page, so the white active pill reads. */
-  --sidebar: oklch(0.985 0.003 255);
-  --sidebar-foreground: oklch(0.3 0.02 262);
+  /* Neutrals: warm light grey page, white cards. Text: primary, secondary, tertiary. */
+  --background: #E9E8E3;
+  --foreground: #1F2421;
+  --card: #FFFFFF;
+  --card-foreground: #1F2421;
+  --popover: #FFFFFF;
+  --popover-foreground: #1F2421;
+  --secondary: #EEEDE8;
+  --secondary-foreground: #1F2421;
+  --muted: #EEEDE8;
+  --muted-foreground: #6B7069;
+  --tertiary: #9A9E97;
+  --border: #E6E5DF;
+  --input: #DCDBD4;
+  /* Brand: sage. Primary buttons, links, focus. */
+  --primary: #5B7B67;
+  --primary-foreground: #FFFFFF;
+  --primary-dark: #3F5A49;
+  --primary-tint: #E4ECE6;
+  --accent: #E4ECE6;
+  --accent-foreground: #3F5A49;
+  --ring: #5B7B67;
+  /* Dark action (circular icon buttons, active nav pill) and the warm accent (icon circles). */
+  --charcoal: #1F2421;
+  --sand: #F1E7D6;
+  /* Status: soft pills with dark text. Red = Critical/Weak/Denied, amber = High/Needs work, sage = Ready/Won. */
+  --destructive: #B4413C;
+  --destructive-foreground: #FFFFFF;
+  --destructive-soft: #F7E3E1;
+  --warning: #9A6B1F;
+  --warning-foreground: #9A6B1F;
+  --warning-soft: #F4EAD6;
+  --success: #3F5A49;
+  --success-foreground: #FFFFFF;
+  --success-soft: #E4ECE6;
+  --neutral-soft: #EEEDE8;
+  /* Retailer comparison, used in every chart. */
+  --walmart: #3F5A49;
+  --amazon: #A9C2B2;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #6B7069;
 }
 
 @layer base {
@@ -80,7 +103,7 @@
     font-family: var(--font-sans);
     font-size: 14px;
   }
-  /* Headings, page titles, card titles and the wordmark use Montserrat. Body, tables, labels and numbers stay Inter. */
+  /* DM Sans everywhere; numbers use tabular figures (.num). */
   h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; }
   th { font-size: 12px; font-weight: 500; color: var(--color-muted-foreground); }
   /* Charts (recharts accessibilityLayer): a visible ring for keyboard focus, none for mouse clicks. */
@@ -96,12 +119,13 @@
   .btn-primary { @apply btn bg-primary text-primary-foreground shadow-sm hover:bg-primary/90; }
   .btn-outline { @apply btn border border-border bg-card text-foreground hover:bg-secondary; }
   .btn-ghost { @apply btn text-muted-foreground hover:bg-secondary hover:text-foreground; }
-  .panel { @apply rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.03)]; }
-  .chip-open { @apply chip bg-warning/20 text-warning-foreground; }
-  .chip-disputed { @apply chip bg-primary/10 text-primary; }
-  .chip-won { @apply chip bg-success/12 text-success; }
-  .chip-lost { @apply chip bg-destructive/10 text-destructive; }
-  .chip-neutral { @apply chip bg-muted text-muted-foreground; }
+  .btn-dark { @apply btn bg-charcoal text-primary-foreground hover:bg-charcoal/85; }
+  .panel { @apply rounded-[20px] bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]; }
+  .chip-open { @apply chip bg-warning-soft text-warning; }
+  .chip-disputed { @apply chip bg-primary-tint text-primary-dark; }
+  .chip-won { @apply chip bg-success-soft text-success; }
+  .chip-lost { @apply chip bg-destructive-soft text-destructive; }
+  .chip-neutral { @apply chip bg-neutral-soft text-muted-foreground; }
   .input { @apply w-full rounded-[10px] border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20; }
   .eyebrow { @apply text-[13px] font-medium text-muted-foreground; }
   .num { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }

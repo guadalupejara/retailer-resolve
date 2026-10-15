@@ -18,12 +18,12 @@ export const Route = createFileRoute("/_authenticated/insights")({
   component: InsightsPage,
 });
 
-// Theme colors, as in styles.css.
+// Theme tokens from styles.css.
 const SERIES = [
-  { key: "won", label: "Won", fill: "oklch(0.55 0.12 155)" },
-  { key: "denied", label: "Denied", fill: "oklch(0.55 0.19 30)" },
-  { key: "written_off", label: "Written off", fill: "oklch(0.75 0.14 75)" },
-  { key: "expired", label: "Expired", fill: "oklch(0.5 0.02 160)" },
+  { key: "won", label: "Won", fill: "var(--primary)" },
+  { key: "denied", label: "Denied", fill: "var(--destructive)" },
+  { key: "written_off", label: "Written off", fill: "var(--warning)" },
+  { key: "expired", label: "Expired", fill: "var(--tertiary)" },
 ] as const;
 
 const pct = (x: number | null) => (x == null ? "—" : `${Math.round(x * 100)}%`);
@@ -72,7 +72,7 @@ function InsightsPage() {
       <div className="panel mt-4 h-80 p-4">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chart} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.01 160)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="group" tick={{ fontSize: 12 }} />
             <YAxis tickFormatter={(v) => `$${Math.round(Number(v) / 1000)}k`} tick={{ fontSize: 12 }} />
             <Tooltip formatter={(v) => money(Number(v))} />
