@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { AiExplanation } from "@/components/AiExplanation";
 import { evidenceUrl, useChargebacks } from "@/lib/chargebacks";
 import type { CaseResult, CodeMapping, Deduction, Settings } from "@/lib/scoring";
-import { BAND_CHIP, PRIORITY_CHIP, RECOMMENDATION_LABEL, RETAILER_NAMES, STATE_LABEL, money } from "@/lib/queue";
+import { PRIORITY_CHIP, RETAILER_NAMES, STATE_LABEL, money } from "@/lib/queue";
 import { STATUS_LABEL, settingValue } from "@/lib/decision-rules";
 import { DecisionCard } from "@/components/DecisionCard";
 import { AddEvidence } from "@/components/AddEvidence";
@@ -14,7 +14,7 @@ import { isEvidenceDocType, type EvidenceDocType } from "@/lib/evidence-fields";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
-  CLOCK_NAME, DOC_LABEL, RECOMMENDATION_TEXT, basename, deadlineRows, evidenceFields, lineStatus,
+  CLOCK_NAME, DOC_LABEL, basename, deadlineRows, evidenceFields, lineStatus,
   notScoredReason, type EvidenceRow,
 } from "@/lib/case-view";
 
@@ -91,15 +91,18 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
           <EvidenceCard id={id} evidence={evidence} docOptions={docOptions} />
         </div>
 
-        {/* Right column: the call. Sticks under the top bar and scrolls on its own if it's taller than the screen. */}
-        <aside className="min-w-0 space-y-6 lg:sticky lg:top-22 lg:max-h-[calc(100vh-6.5rem)] lg:overflow-y-auto lg:pb-2">
+        {/* Right column: the call. Normal page flow, so everything in it is always fully visible. */}
+        <aside className="min-w-0 space-y-6">
           {scored
             ? <DecisionCard caseId={id} d={d} result={r} threshold={threshold} />
             : <PlaceholderCard title="Decision" note="Decisions are made on scored cases. This case is not scored." />}
           <DeadlinesCard r={r} />
-          <RecommendationCard r={r} />
-          <ActivityTimeline caseId={id} limit={6} />
         </aside>
+      </div>
+
+      {/* Activity spans both columns at the bottom. */}
+      <div className="mt-6">
+        <ActivityTimeline caseId={id} limit={6} />
       </div>
     </>
   );
@@ -348,18 +351,6 @@ function DeadlinesCard({ r }: { r: CaseResult }) {
           </div>
         ))}
       </div>
-    </section>
-  );
-}
-
-function RecommendationCard({ r }: { r: CaseResult }) {
-  return (
-    <section className="panel p-5">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="section-title">Recommendation</h2>
-        {r.band && <span className={BAND_CHIP[r.band]}>{r.band}</span>}
-      </div>
-      <p className="mt-2 text-sm" title={RECOMMENDATION_LABEL[r.recommendation]}>{RECOMMENDATION_TEXT[r.recommendation]}</p>
     </section>
   );
 }

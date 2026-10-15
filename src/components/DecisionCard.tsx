@@ -76,6 +76,8 @@ export function DecisionCard({ caseId, d, result, threshold }: {
   const block = approveBlock(result);
   const statusLabel = STATUS_LABEL[d.status] ?? d.status;
   const submitted = d.status === "submitted";
+  // Which main action the card shows. The recommendation comes from scoring.ts.
+  const recommendsSubmit = result.recommendation === "submit";
 
   return (
     <section className="panel p-5">
@@ -99,8 +101,9 @@ export function DecisionCard({ caseId, d, result, threshold }: {
 
       {currentUser && (!isDone(d.status) || submitted) && (
         <div className="mt-3 divide-y divide-border">
-          {/* Approve packet: once submitted, the only action left is recording the outcome */}
-          {!submitted && <div className="py-4">
+          {/* Approve packet: shown only when the engine recommends submit. Once submitted, the only action left
+              is recording the outcome. Display only: the server still checks every action. */}
+          {!submitted && recommendsSubmit && <div className="py-4">
             <div className="font-medium">Approve dispute packet</div>
             {can("approve") ? (
               <>
@@ -115,9 +118,9 @@ export function DecisionCard({ caseId, d, result, threshold }: {
             )}
           </div>}
 
-          {/* Request document */}
-          {!submitted && <div className="py-4">
-            <div className="font-medium">Request a document</div>
+          {/* Request evidence: the main action whenever the engine does not recommend submit */}
+          {!submitted && !recommendsSubmit && <div className="py-4">
+            <div className="font-medium">Request evidence</div>
             {can("request_document") ? (
               <div className="mt-2 space-y-2">
                 <select className="input" value={owner} onChange={(e) => setOwnerPick(e.target.value as OwnerKey)}>
@@ -127,9 +130,9 @@ export function DecisionCard({ caseId, d, result, threshold }: {
                 <div className="text-xs text-muted-foreground">
                   {topAi ? SUGGESTED_LABEL : "Suggested from the scoring engine"}. Status stays {statusLabel.toLowerCase()}.
                 </div>
-                <button className="btn-outline" disabled={busy || !note.trim()}
+                <button className="btn-primary w-full" disabled={busy || !note.trim()}
                   onClick={() => act.mutate({ action: "request_document", owner, note: note.trim() }, { onSuccess: () => setDocNote(null) })}>
-                  Request document
+                  Request evidence
                 </button>
               </div>
             ) : (
