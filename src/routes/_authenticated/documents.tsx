@@ -27,7 +27,7 @@ function DocumentsPage() {
       <div className="eyebrow">Library</div>
       <h1 className="mt-1 page-title">Case documents</h1>
       <input
-        className="input mt-6 max-w-md"
+        className="input mt-6 max-w-md rounded-full border-transparent px-5 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
         placeholder="Search by case, PO, document type or file name…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
@@ -50,13 +50,13 @@ function DocumentsPage() {
           <section key={g.retailerId}>
             <div className="mb-3 flex items-baseline gap-3">
               <h2 className="section-title">{g.name}</h2>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-tertiary">
                 {g.cases.length} cases · {g.cases.reduce((t, c) => t + c.files.length, 0)} files
               </span>
             </div>
             <div className="space-y-4">
               {g.cases.map(({ deduction: d, files }) => (
-                <div key={d.id} className="panel p-4">
+                <div key={d.id} className="panel p-5">
                   <div className="flex min-w-0 items-baseline gap-3">
                     <Link to="/cases/$id" params={{ id: d.id }} className="num shrink-0 font-medium text-primary hover:underline">{d.id}</Link>
                     <span className="min-w-0 flex-1 truncate text-sm" title={d.title}>{d.title}</span>

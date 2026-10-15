@@ -62,7 +62,7 @@ function InsightsPage() {
       <h1 className="mt-1 page-title">What your disputes have done</h1>
       <p className="mt-2 text-sm text-muted-foreground">Read-only. Built from closed disputes and the live queue.</p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Recovered (won)" value={compactMoney(totals.recovered)} full={money(totals.recovered)} sub={`${totals.won.n} disputes`} tone="success" />
         <Stat label="Lost (denied + expired)" value={compactMoney(totals.lost)} full={money(totals.lost)} sub={`${totals.denied.n} denied, ${totals.expired.n} expired`} tone="danger" />
         <Stat label="Written off" value={compactMoney(totals.writtenOff)} full={money(totals.writtenOff)} sub={`${totals.written_off.n} write-off`} />
@@ -74,11 +74,13 @@ function InsightsPage() {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chart} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="group" tick={{ fontSize: 12 }} />
-            <YAxis tickFormatter={(v) => `$${Math.round(Number(v) / 1000)}k`} tick={{ fontSize: 12 }} />
-            <Tooltip formatter={(v) => money(Number(v))} />
-            <Legend />
-            {SERIES.map((s) => <Bar key={s.key} dataKey={s.key} name={s.label} stackId="a" fill={s.fill} />)}
+            <XAxis dataKey="group" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+            <YAxis tickFormatter={(v) => `$${Math.round(Number(v) / 1000)}k`} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+            <Tooltip formatter={(v) => money(Number(v))} cursor={{ fill: "var(--secondary)" }}
+              contentStyle={{ background: "var(--popover)", border: "none", borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.08)", fontSize: 12 }}
+              labelStyle={{ color: "var(--foreground)", fontWeight: 500 }} />
+            <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ color: "var(--muted-foreground)", fontSize: 12 }}>{v}</span>} />
+            {SERIES.map((s) => <Bar key={s.key} dataKey={s.key} name={s.label} stackId="a" fill={s.fill} stroke="var(--card)" strokeWidth={1} />)}
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -107,7 +109,7 @@ function InsightsPage() {
         </table>
       </div>
       {excluded.length > 0 && (
-        <div className="mt-3 rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
+        <div className="mt-3 rounded-2xl border border-dashed border-input p-3 text-xs text-muted-foreground">
           <div className="font-medium">Left out: dispute history dated after {today} (fix in the data)</div>
           <ul className="mt-1 list-disc pl-5">
             {excluded.map((h) => <li key={h.id} className="num">{h.id}: {h.deduction_id}, attempt {h.attempt_no}, submitted {h.submitted_on}</li>)}
@@ -116,7 +118,7 @@ function InsightsPage() {
       )}
 
       <h2 className="mt-12 section-title">What's at stake now</h2>
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+      <div className="mt-4 grid gap-6 sm:grid-cols-3">
         {(["Ready", "Needs work", "Weak"] as const).map((b) => (
           <Stat key={b} label={`Open, ${b.toLowerCase()}`} value={compactMoney(stake.byBand[b]?.amount ?? 0)} full={money(stake.byBand[b]?.amount ?? 0)} sub={`${stake.byBand[b]?.n ?? 0} cases`} />
         ))}
@@ -144,12 +146,12 @@ function InsightsPage() {
 }
 
 function Stat({ label, value, full, sub, tone }: { label: string; value: string; full?: string; sub: string; tone?: "success" | "danger" }) {
-  const c = tone === "success" ? "text-success" : tone === "danger" ? "text-destructive" : "text-primary";
+  const c = tone === "success" ? "text-success" : tone === "danger" ? "text-destructive" : "text-foreground";
   return (
-    <div className="panel min-w-0 p-5">
-      <div className="eyebrow">{label}</div>
-      <div className={`num mt-3 kpi-num truncate ${c}`} title={full}>{value}</div>
-      <div className="mt-1 text-xs text-muted-foreground">{sub}</div>
+    <div className="panel min-w-0 px-5 py-4">
+      <div className="truncate text-[13px] font-medium text-muted-foreground" title={label}>{label}</div>
+      <div className={`num mt-1.5 truncate text-[26px] leading-none font-semibold tracking-[-0.02em] ${c}`} title={full}>{value}</div>
+      <div className="mt-1.5 truncate text-xs text-tertiary" title={sub}>{sub}</div>
     </div>
   );
 }
