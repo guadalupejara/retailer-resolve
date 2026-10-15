@@ -17,7 +17,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/cases/$id")({
   head: ({ params }) => ({
-    meta: [{ title: `${params.id} · Recoup` }],
+    meta: [{ title: `${params.id} · Recoverly` }],
   }),
   component: CasePage,
 });

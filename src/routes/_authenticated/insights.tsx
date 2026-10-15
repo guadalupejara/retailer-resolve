@@ -9,9 +9,9 @@ import { buildQueue, money } from "@/lib/queue";
 export const Route = createFileRoute("/_authenticated/insights")({
   head: () => ({
     meta: [
-      { title: "Insights · Recoup" },
+      { title: "Insights · Recoverly" },
       { name: "description", content: "Recovered and lost dollars, denial reasons and what is at stake." },
-      { property: "og:title", content: "Insights · Recoup" },
+      { property: "og:title", content: "Insights · Recoverly" },
       { property: "og:description", content: "Past outcomes and what is at stake now." },
     ],
   }),

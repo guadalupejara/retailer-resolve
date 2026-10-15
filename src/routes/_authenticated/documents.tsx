@@ -8,9 +8,9 @@ import { money } from "@/lib/queue";
 export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({
     meta: [
-      { title: "Documents · Recoup" },
+      { title: "Documents · Recoverly" },
       { name: "description", content: "Walmart and Amazon case evidence, grouped by retailer and case." },
-      { property: "og:title", content: "Documents · Recoup" },
+      { property: "og:title", content: "Documents · Recoverly" },
       { property: "og:description", content: "Case evidence grouped by retailer." },
     ],
   }),

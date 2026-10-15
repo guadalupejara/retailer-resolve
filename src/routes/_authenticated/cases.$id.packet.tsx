@@ -12,7 +12,7 @@ import { RETAILER_NAMES, money } from "@/lib/queue";
 
 export const Route = createFileRoute("/_authenticated/cases/$id/packet")({
   head: ({ params }) => ({
-    meta: [{ title: `Dispute packet ${params.id} · Recoup` }],
+    meta: [{ title: `Dispute packet ${params.id} · Recoverly` }],
   }),
   component: PacketPage,
 });
