@@ -47,14 +47,14 @@ export function QueueScreen({ filters, retailerFromPath }: {
       <div className="eyebrow">{retailerName ? `${retailerName} alert queue` : "All retailers"}</div>
       <h1 className="mt-1 page-title">{retailerName ? `${retailerName} chargebacks to act on` : "Chargebacks to act on"}</h1>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Open dollars at stake" value={data ? compactMoney(stats.openDollars) : "—"} full={data ? money(stats.openDollars) : undefined} tone="warning" />
-        <Stat label="Critical" value={String(shown(stats.critical))} tone="danger" />
-        <Stat label="Ready to submit" value={String(shown(stats.readyToSubmit))} tone="success" />
-        <Stat label="Expiring in 7 days or less" value={String(shown(stats.expiringWithin7))} tone="danger" />
+      <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Open dollars at stake" value={data ? compactMoney(stats.openDollars) : "—"} full={data ? money(stats.openDollars) : undefined} />
+        <Stat label="Critical" value={String(shown(stats.critical))} filled />
+        <Stat label="Ready to submit" value={String(shown(stats.readyToSubmit))} />
+        <Stat label="Expiring in 7 days or less" value={String(shown(stats.expiringWithin7))} />
       </div>
 
-      <div className="mt-10 flex flex-wrap gap-4">
+      <div className="mt-8 flex flex-wrap gap-4">
         {!retailerFromPath && (
           <FilterSelect label="Retailer" value={filters.retailer ?? ""} onChange={(v) => setFilter({ retailer: v || undefined })}
             options={[["", "All retailers"], ...Object.entries(RETAILER_NAMES)]} />
@@ -66,7 +66,7 @@ export function QueueScreen({ filters, retailerFromPath }: {
         {extra.length > 0 && (
           <div className="flex items-end gap-2 pb-1">
             {extra.map((x) => (
-              <button key={x.label} type="button" onClick={() => setFilter(x.clear)} className="chip-disputed hover:bg-primary/15" aria-label={`Remove filter ${x.label}`}>
+              <button key={x.label} type="button" onClick={() => setFilter(x.clear)} className="chip-disputed hover:bg-primary/20" aria-label={`Remove filter ${x.label}`}>
                 {x.label} <span aria-hidden>×</span>
               </button>
             ))}
@@ -138,7 +138,7 @@ export function QueueScreen({ filters, retailerFromPath }: {
                       <td className="px-4 py-3"><CaseCell r={r} /></td>
                       <td className="px-4 py-3">{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</td>
                       <td className="num px-4 py-3 text-right whitespace-nowrap">{money(r.amount)}</td>
-                      <td className="px-4 py-3"><span className="chip-neutral">{STATUS_LABEL[r.deduction.status] ?? r.deduction.status}</span></td>
+                      <td className="px-4 py-3"><span className={STATUS_CHIP[r.deduction.status] ?? "chip-neutral"}>{STATUS_LABEL[r.deduction.status] ?? r.deduction.status}</span></td>
                     </tr>
                   ))}
                   {doneRows.length === 0 && (
@@ -200,19 +200,27 @@ function FilterSelect({ label, value, onChange, options }: {
   return (
     <label className="min-w-40">
       <span className="eyebrow">{label}</span>
-      <select className="input mt-1.5" value={value} onChange={(e) => onChange(e.target.value)}>
+      <select className="input mt-1.5 cursor-pointer rounded-full border-transparent shadow-[0_1px_2px_rgba(0,0,0,0.04)]" value={value} onChange={(e) => onChange(e.target.value)}>
         {options.map(([v, text]) => <option key={v} value={v}>{text}</option>)}
       </select>
     </label>
   );
 }
 
-function Stat({ label, value, full, tone }: { label: string; value: string; full?: string | undefined; tone?: "warning" | "success" | "danger" }) {
-  const c = tone === "warning" ? "text-warning-foreground" : tone === "success" ? "text-success" : tone === "danger" ? "text-destructive" : "text-primary";
+/** Done-table status chips, in the soft status colors. */
+const STATUS_CHIP: Record<string, string> = {
+  submitted: "chip-disputed",
+  won: "chip-won",
+  denied: "chip-lost",
+  written_off: "chip-neutral",
+};
+
+/** Same anatomy as the dashboard KPIs: small label, one value. Critical is the one filled card. */
+function Stat({ label, value, full, filled = false }: { label: string; value: string; full?: string | undefined; filled?: boolean }) {
   return (
-    <div className="panel min-w-0 p-5">
-      <div className="eyebrow">{label}</div>
-      <div className={`num mt-3 kpi-num truncate ${c}`} title={full}>{value}</div>
+    <div className={`panel flex min-h-24 min-w-0 flex-col justify-center px-5 py-4 ${filled ? "!bg-primary-dark text-primary-foreground" : ""}`}>
+      <div className={`truncate text-[13px] font-medium ${filled ? "text-primary-foreground/80" : "text-muted-foreground"}`} title={label}>{label}</div>
+      <div className="num mt-1.5 truncate text-[26px] leading-none font-semibold tracking-[-0.02em]" title={full}>{value}</div>
     </div>
   );
 }
