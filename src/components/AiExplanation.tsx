@@ -16,7 +16,7 @@ const PATH_LABEL: Record<"primary" | "backup", string> = {
 };
 
 /**
- * AI explanation card. Gemini explains the engine's points and drafts text. Scores and points come
+ * AI explanation card, titled "Recommendation" on the case page. Gemini explains the engine's points and drafts text. Scores and points come
  * from scoring.ts (the points badges below use the engine's numbers, not the AI's effect text).
  * Generation happens on click, never on page load.
  */
@@ -53,7 +53,7 @@ export function AiExplanation({ id, result }: { id: string; result: CaseResult }
       <div className="flex flex-wrap items-start gap-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Sparkles className="size-4" /></span>
         <div className="min-w-0">
-          <h2 className="section-title">AI explanation</h2>
+          <h2 className="section-title">Recommendation</h2>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <span className="chip-disputed">{LABEL}</span>
             {pathLabel && <span className="chip-neutral">{pathLabel}</span>}
