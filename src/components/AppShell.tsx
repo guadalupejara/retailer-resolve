@@ -41,7 +41,7 @@ function Sidebar() {
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-sidebar px-3 py-5 md:flex">
-      <Link to="/" className="mb-8 px-3 text-xl font-semibold tracking-[-0.02em] text-foreground">Recoverly</Link>
+      <Link to="/" className="wordmark mb-8 px-3 text-foreground">Recoverly</Link>
 
       <SectionLabel>Main</SectionLabel>
       <nav className="space-y-0.5">
