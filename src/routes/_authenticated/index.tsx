@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useChargebacks } from "@/lib/chargebacks";
 import type { Band, Priority } from "@/lib/scoring";
 import type { CaseResult } from "@/lib/scoring";
+import { STATUS_LABEL } from "@/lib/decision-rules";
 import {
   BANDS, BAND_CHIP, CLOCK_LABEL, PRIORITIES, PRIORITY_CHIP, RECOMMENDATION_LABEL, RETAILER_NAMES, STATE_LABEL,
   applyFilters, buildQueue, money, queueStats, type QueueFilters, type QueueRow,
@@ -39,6 +40,7 @@ function AlertQueue() {
   const stats = queueStats(byRetailer);
   const table = applyFilters(byRetailer, { priority: filters.priority, band: filters.band });
   const notScorable = data ? applyFilters(data.notScorable, { retailer: filters.retailer }) : [];
+  const doneRows = data ? applyFilters(data.done, { retailer: filters.retailer }) : [];
   const shown = (n: number) => (data ? n : "—");
 
   return (
@@ -108,6 +110,35 @@ function AlertQueue() {
                   ))}
                   {table.length === 0 && (
                     <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">No cases match these filters.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <h2 className="mt-12 text-2xl">Done</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Submitted, written off, won or denied. No further action here.</p>
+            <div className="panel mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-border text-left">
+                  <tr className="eyebrow">
+                    <th className="px-4 py-3">Case</th><th className="px-4 py-3">Retailer</th>
+                    <th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3">Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {doneRows.map((r: QueueRow) => (
+                    <tr key={r.deduction.id} className="border-b border-border last:border-0 hover:bg-secondary/50">
+                      <td className="px-4 py-3">
+                        <Link to="/cases/$id" params={{ id: r.deduction.id }} className="num font-medium text-primary hover:underline">{r.deduction.id}</Link>
+                        <div className="text-xs text-muted-foreground">{r.deduction.title}</div>
+                      </td>
+                      <td className="px-4 py-3">{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</td>
+                      <td className="num px-4 py-3 text-right">{money(r.amount)}</td>
+                      <td className="px-4 py-3"><span className="chip bg-muted text-muted-foreground">{STATUS_LABEL[r.deduction.status] ?? r.deduction.status}</span></td>
+                    </tr>
+                  ))}
+                  {doneRows.length === 0 && (
+                    <tr><td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">Nothing done yet.</td></tr>
                   )}
                 </tbody>
               </table>

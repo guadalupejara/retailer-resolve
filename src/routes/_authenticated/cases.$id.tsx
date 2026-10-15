@@ -4,6 +4,9 @@ import { AiExplanation } from "@/components/AiExplanation";
 import { evidenceUrl, useChargebacks } from "@/lib/chargebacks";
 import type { CaseResult, CodeMapping, Deduction, Settings } from "@/lib/scoring";
 import { BAND_CHIP, RECOMMENDATION_LABEL, RETAILER_NAMES, STATE_LABEL, money } from "@/lib/queue";
+import { settingValue } from "@/lib/decision-rules";
+import { DecisionCard } from "@/components/DecisionCard";
+import { ActivityTimeline } from "@/components/ActivityTimeline";
 import {
   DOC_LABEL, RECOMMENDATION_TEXT, basename, deadlineRows, evidenceFields, groupLines, lineStatus,
   notScoredReason, type EvidenceRow,
@@ -44,6 +47,7 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
   const mapping = data.seed.code_mappings.find((m) => m.id === d.code_mapping_id);
   const evidence = (data.seed.evidence as unknown as EvidenceRow[]).filter((e) => e.deduction_id === d.id);
   const scored = r.state === "scored";
+  const threshold = settingValue(data.seed.settings as unknown as { key: string; value: string }[], "manager_approval_write_off_above");
 
   return (
     <>
@@ -149,8 +153,15 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
 
       <div className="mt-10 space-y-4">
         {scored ? <AiExplanation id={id} result={r} /> : <PlaceholderCard title="AI explanation" note="The AI explanation covers scored cases only." />}
-        <PlaceholderCard title="Decision" />
       </div>
+
+      <div className="mt-10 space-y-4">
+        {scored
+          ? <DecisionCard caseId={id} d={d} result={r} threshold={threshold} />
+          : <PlaceholderCard title="Decision" note="Decisions are made on scored cases. This case is not scored." />}
+      </div>
+
+      <ActivityTimeline caseId={id} />
     </>
   );
 }

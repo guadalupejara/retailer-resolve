@@ -1,6 +1,7 @@
 // Pure view-model for the alert queue. Takes what useChargebacks() returns and shapes it for the page.
 // No scoring happens here: score, band, priority, days left and recommendation all come from scoring.ts.
 import type { Band, CaseResult, CaseState, Deduction, Priority, Recommendation, Clock } from "./scoring";
+import { isDone } from "./decision-rules";
 
 export interface QueueRow {
   deduction: Deduction;
@@ -58,7 +59,7 @@ export const STATE_LABEL: Record<CaseState, string> = {
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 export const money = (n: number) => usd.format(n);
 
-/** Joins the engine's ordered queue back to the deduction rows, then splits scorable from not scorable. */
+/** Joins the engine's ordered queue back to the deduction rows, then splits them into active, not scorable and done. */
 export function buildQueue(
   scored: { deduction: Deduction; result: CaseResult }[],
   queue: { result: CaseResult; amount: number }[],
@@ -70,8 +71,9 @@ export function buildQueue(
     amount: q.amount,
   }));
   return {
-    scorable: rows.filter((r) => r.result.state === "scored"),
-    notScorable: rows.filter((r) => r.result.state !== "scored"),
+    scorable: rows.filter((r) => r.result.state === "scored" && !isDone(r.deduction.status)),
+    notScorable: rows.filter((r) => r.result.state !== "scored" && !isDone(r.deduction.status)),
+    done: rows.filter((r) => isDone(r.deduction.status)),
   };
 }
 

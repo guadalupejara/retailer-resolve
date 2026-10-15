@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import type { AiOutcome } from "@/lib/ai-explain";
 import { explainCase } from "@/lib/explain-case";
@@ -20,10 +20,13 @@ const PATH_LABEL: Record<"primary" | "backup", string> = {
 export function AiExplanation({ id, result }: { id: string; result: CaseResult }) {
   const [outcome, setOutcome] = useState<AiOutcome | null>(null);
   const [draft, setDraft] = useState("");
+  const qc = useQueryClient();
   const generate = useMutation({
     mutationFn: () => explainCase({ data: id }),
     onSuccess: (o) => {
       setOutcome(o);
+      // The Decision card suggests its note from the top AI fix, so it reads this result too.
+      qc.setQueryData(["ai-explain", id], o);
       if (o.mode !== "unavailable") setDraft(o.explanation.summary);
     },
     // A failed request is shown as the busy message too. The raw error stays out of the UI.

@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { resetDemo } from "@/lib/decisions";
 import type { ReactNode } from "react";
 import { useStore } from "@/lib/store";
 import { inScope } from "@/lib/data";
@@ -7,6 +9,8 @@ import { ROLE_LABELS, useCurrentUser } from "@/lib/current-user";
 export function AppShell({ children }: { children: ReactNode }) {
   const s = useStore();
   const { users, currentUser, setCurrentUserId } = useCurrentUser();
+  const qc = useQueryClient();
+  const reset = useMutation({ mutationFn: () => resetDemo(), onSuccess: () => qc.invalidateQueries() });
   const nav = "block rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-foreground/10 hover:text-sidebar-foreground";
   const active = { className: "block rounded-md px-3 py-2 text-sm bg-sidebar-foreground/15 text-sidebar-foreground" };
   return (
@@ -41,6 +45,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </select>
         </div>
+        <button
+          className="mt-3 px-3 py-2 text-left text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground disabled:opacity-50"
+          disabled={reset.isPending}
+          onClick={() => {
+            if (window.confirm("Reset demo data? Every case goes back to its seed status and all activity except imports is deleted.")) reset.mutate();
+          }}
+        >
+          {reset.isPending ? "Resetting…" : reset.isError ? "Reset failed. Try again." : reset.isSuccess ? "Demo reset" : "Reset demo data"}
+        </button>
       </aside>
       <main className="flex-1 overflow-x-hidden px-6 py-8 md:px-10">{children}</main>
     </div>
