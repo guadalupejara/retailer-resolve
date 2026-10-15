@@ -128,14 +128,14 @@ function Header({ id, d, r, mapping }: { id: string; d: Deduction; r: CaseResult
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          {r.priority && <span className={PRIORITY_CHIP[r.priority]}>{r.priority}</span>}
-          <span className="num text-sm font-semibold text-muted-foreground">{d.id}</span>
-          <h1 className="min-w-0 font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]">{d.title}</h1>
-          <span className="chip-neutral">{STATUS_LABEL[d.status] ?? d.status}</span>
-          {r.state !== "scored" && <span className="chip-neutral">{STATE_LABEL[r.state]}</span>}
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+          {r.priority && <span className={`${PRIORITY_CHIP[r.priority]} shrink-0`}>{r.priority}</span>}
+          <span className="num shrink-0 text-sm font-semibold text-muted-foreground">{d.id}</span>
+          <h1 className="max-w-full min-w-0 truncate font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]" title={d.title}>{d.title}</h1>
+          <span className="chip-neutral shrink-0">{STATUS_LABEL[d.status] ?? d.status}</span>
+          {r.state !== "scored" && <span className="chip-neutral shrink-0">{STATE_LABEL[r.state]}</span>}
         </div>
-        <p className="num mt-1.5 text-[13px] text-muted-foreground">
+        <p className="num mt-1.5 text-[13px] break-words text-muted-foreground">
           {meta.map((m, i) => <Fragment key={i}>{i > 0 && <span className="mx-1.5" aria-hidden>·</span>}{m}</Fragment>)}
         </p>
       </div>
@@ -191,6 +191,7 @@ function PointsBreakdown({ r }: { r: CaseResult }) {
         <h2 className="section-title">Points breakdown</h2>
         {r.capped && r.raw != null && <span className="num text-sm text-muted-foreground">{r.raw} before cap</span>}
       </div>
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="border-y border-border bg-secondary/40 text-left">
           <tr>
@@ -243,6 +244,7 @@ function PointsBreakdown({ r }: { r: CaseResult }) {
           })}
         </tbody>
       </table>
+      </div>
     </section>
   );
 }
@@ -275,9 +277,9 @@ function EvidenceCard({ id, evidence, docOptions }: { id: string; evidence: Evid
                   <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : e.id)}
                     className="flex min-w-0 flex-1 items-center gap-2 text-left">
                     {isOpen ? <ChevronDown className="size-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="size-4 shrink-0 text-muted-foreground" />}
-                    <span className="text-sm font-medium">{DOC_LABEL[e.doc_type] ?? e.doc_type}</span>
+                    <span className="shrink-0 text-sm font-medium">{DOC_LABEL[e.doc_type] ?? e.doc_type}</span>
                     {e.variant && <span className="chip-neutral">{e.variant}</span>}
-                    <span className="num truncate text-xs text-muted-foreground">{basename(e.storage_path)}</span>
+                    <span className="num min-w-0 truncate text-xs text-muted-foreground" title={basename(e.storage_path)}>{basename(e.storage_path)}</span>
                   </button>
                   <a href={evidenceUrl(e.storage_path)} target="_blank" rel="noopener noreferrer" className="btn-ghost !px-2 !py-1 text-xs">
                     Open <ExternalLink className="size-3.5" />
@@ -289,7 +291,7 @@ function EvidenceCard({ id, evidence, docOptions }: { id: string; evidence: Evid
                       <div className="eyebrow">AI-read, please verify</div>
                       <dl className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
                         {evidenceFields(e.extracted).map(([k, v]) => (
-                          <div key={k} className="flex gap-2">
+                          <div key={k} className="flex min-w-0 gap-2 break-words">
                             <dt className="text-muted-foreground">{k}:</dt>
                             <dd className="num">{v}</dd>
                           </div>

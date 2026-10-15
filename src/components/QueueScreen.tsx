@@ -2,6 +2,7 @@
 // On a retailer page the retailer comes only from the URL path, so there is no retailer filter there.
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useChargebacks } from "@/lib/chargebacks";
+import { compactMoney } from "@/components/RetailerCharts";
 import type { Band, CaseResult, Priority } from "@/lib/scoring";
 import { STATUS_LABEL } from "@/lib/decision-rules";
 import {
@@ -47,7 +48,7 @@ export function QueueScreen({ filters, retailerFromPath }: {
       <h1 className="mt-1 page-title">{retailerName ? `${retailerName} chargebacks to act on` : "Chargebacks to act on"}</h1>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Open dollars at stake" value={data ? money(stats.openDollars) : "—"} tone="warning" />
+        <Stat label="Open dollars at stake" value={data ? compactMoney(stats.openDollars) : "—"} full={data ? money(stats.openDollars) : undefined} tone="warning" />
         <Stat label="Critical" value={String(shown(stats.critical))} tone="danger" />
         <Stat label="Ready to submit" value={String(shown(stats.readyToSubmit))} tone="success" />
         <Stat label="Expiring in 7 days or less" value={String(shown(stats.expiringWithin7))} tone="danger" />
@@ -98,13 +99,10 @@ export function QueueScreen({ filters, retailerFromPath }: {
                   {table.map((r) => (
                     <tr key={r.deduction.id} className="border-b border-border last:border-0 hover:bg-secondary/50">
                       <td className="px-4 py-3">{r.result.priority && <span className={PRIORITY_CHIP[r.result.priority]}>{r.result.priority}</span>}</td>
-                      <td className="px-4 py-3">
-                        <Link to="/cases/$id" params={{ id: r.deduction.id }} className="num font-medium text-primary hover:underline">{r.deduction.id}</Link>
-                        <div className="text-xs text-muted-foreground">{r.deduction.title}</div>
-                      </td>
+                      <td className="px-4 py-3"><CaseCell r={r} /></td>
                       <td className="px-4 py-3">{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</td>
-                      <td className="num px-4 py-3 text-right">{money(r.amount)}</td>
-                      <td className="num px-4 py-3">
+                      <td className="num px-4 py-3 text-right whitespace-nowrap">{money(r.amount)}</td>
+                      <td className="num px-4 py-3 whitespace-nowrap">
                         {r.result.days_left == null ? "—" : (
                           <>
                             <span className={r.result.days_left <= 7 ? "font-semibold text-destructive" : ""}>{r.result.days_left}d</span>
@@ -137,12 +135,9 @@ export function QueueScreen({ filters, retailerFromPath }: {
                 <tbody>
                   {doneRows.map((r: QueueRow) => (
                     <tr key={r.deduction.id} className="border-b border-border last:border-0 hover:bg-secondary/50">
-                      <td className="px-4 py-3">
-                        <Link to="/cases/$id" params={{ id: r.deduction.id }} className="num font-medium text-primary hover:underline">{r.deduction.id}</Link>
-                        <div className="text-xs text-muted-foreground">{r.deduction.title}</div>
-                      </td>
+                      <td className="px-4 py-3"><CaseCell r={r} /></td>
                       <td className="px-4 py-3">{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</td>
-                      <td className="num px-4 py-3 text-right">{money(r.amount)}</td>
+                      <td className="num px-4 py-3 text-right whitespace-nowrap">{money(r.amount)}</td>
                       <td className="px-4 py-3"><span className="chip-neutral">{STATUS_LABEL[r.deduction.status] ?? r.deduction.status}</span></td>
                     </tr>
                   ))}
@@ -168,12 +163,9 @@ export function QueueScreen({ filters, retailerFromPath }: {
                 <tbody>
                   {notScorable.map((r: QueueRow) => (
                     <tr key={r.deduction.id} className="border-b border-border last:border-0 hover:bg-secondary/50">
-                      <td className="px-4 py-3">
-                        <Link to="/cases/$id" params={{ id: r.deduction.id }} className="num font-medium text-primary hover:underline">{r.deduction.id}</Link>
-                        <div className="text-xs text-muted-foreground">{r.deduction.title}</div>
-                      </td>
+                      <td className="px-4 py-3"><CaseCell r={r} /></td>
                       <td className="px-4 py-3">{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</td>
-                      <td className="num px-4 py-3 text-right">{money(r.amount)}</td>
+                      <td className="num px-4 py-3 text-right whitespace-nowrap">{money(r.amount)}</td>
                       <td className="px-4 py-3">{STATE_LABEL[r.result.state]}</td>
                       <td className="px-4 py-3">{r.result.recommendation && RECOMMENDATION_LABEL[r.result.recommendation]}</td>
                     </tr>
@@ -215,12 +207,22 @@ function FilterSelect({ label, value, onChange, options }: {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "warning" | "success" | "danger" }) {
+function Stat({ label, value, full, tone }: { label: string; value: string; full?: string | undefined; tone?: "warning" | "success" | "danger" }) {
   const c = tone === "warning" ? "text-warning-foreground" : tone === "success" ? "text-success" : tone === "danger" ? "text-destructive" : "text-primary";
   return (
-    <div className="panel p-5">
+    <div className="panel min-w-0 p-5">
       <div className="eyebrow">{label}</div>
-      <div className={`num mt-3 kpi-num ${c}`}>{value}</div>
+      <div className={`num mt-3 kpi-num truncate ${c}`} title={full}>{value}</div>
+    </div>
+  );
+}
+
+/** Case ID link with its title under it; a long title ends in an ellipsis and shows in full on hover. */
+function CaseCell({ r }: { r: QueueRow }) {
+  return (
+    <div className="max-w-[24rem] min-w-0">
+      <Link to="/cases/$id" params={{ id: r.deduction.id }} className="num font-medium text-primary hover:underline">{r.deduction.id}</Link>
+      <div className="truncate text-xs text-muted-foreground" title={r.deduction.title}>{r.deduction.title}</div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useChargebacks } from "@/lib/chargebacks";
 import { useOutcomes } from "@/lib/archive";
 import { atStake, denialReasons, outcomeChart, outcomeTotals, splitHistory, type HistoryRow } from "@/lib/insights";
 import { buildQueue, money } from "@/lib/queue";
+import { compactMoney } from "@/components/RetailerCharts";
 
 export const Route = createFileRoute("/_authenticated/insights")({
   head: () => ({
@@ -62,9 +63,9 @@ function InsightsPage() {
       <p className="mt-2 text-sm text-muted-foreground">Read-only. Built from closed disputes and the live queue.</p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Recovered (won)" value={money(totals.recovered)} sub={`${totals.won.n} disputes`} tone="success" />
-        <Stat label="Lost (denied + expired)" value={money(totals.lost)} sub={`${totals.denied.n} denied, ${totals.expired.n} expired`} tone="danger" />
-        <Stat label="Written off" value={money(totals.writtenOff)} sub={`${totals.written_off.n} write-off`} />
+        <Stat label="Recovered (won)" value={compactMoney(totals.recovered)} full={money(totals.recovered)} sub={`${totals.won.n} disputes`} tone="success" />
+        <Stat label="Lost (denied + expired)" value={compactMoney(totals.lost)} full={money(totals.lost)} sub={`${totals.denied.n} denied, ${totals.expired.n} expired`} tone="danger" />
+        <Stat label="Written off" value={compactMoney(totals.writtenOff)} full={money(totals.writtenOff)} sub={`${totals.written_off.n} write-off`} />
         <Stat label="Win rate, by count" value={pct(totals.winRate)} sub="won ÷ (won + denied + expired)" />
       </div>
 
@@ -117,7 +118,7 @@ function InsightsPage() {
       <h2 className="mt-12 section-title">What's at stake now</h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         {(["Ready", "Needs work", "Weak"] as const).map((b) => (
-          <Stat key={b} label={`Open, ${b.toLowerCase()}`} value={money(stake.byBand[b]?.amount ?? 0)} sub={`${stake.byBand[b]?.n ?? 0} cases`} />
+          <Stat key={b} label={`Open, ${b.toLowerCase()}`} value={compactMoney(stake.byBand[b]?.amount ?? 0)} full={money(stake.byBand[b]?.amount ?? 0)} sub={`${stake.byBand[b]?.n ?? 0} cases`} />
         ))}
       </div>
       <div className="panel mt-4 overflow-x-auto">
@@ -142,12 +143,12 @@ function InsightsPage() {
   );
 }
 
-function Stat({ label, value, sub, tone }: { label: string; value: string; sub: string; tone?: "success" | "danger" }) {
+function Stat({ label, value, full, sub, tone }: { label: string; value: string; full?: string; sub: string; tone?: "success" | "danger" }) {
   const c = tone === "success" ? "text-success" : tone === "danger" ? "text-destructive" : "text-primary";
   return (
-    <div className="panel p-5">
+    <div className="panel min-w-0 p-5">
       <div className="eyebrow">{label}</div>
-      <div className={`num mt-3 kpi-num ${c}`}>{value}</div>
+      <div className={`num mt-3 kpi-num truncate ${c}`} title={full}>{value}</div>
       <div className="mt-1 text-xs text-muted-foreground">{sub}</div>
     </div>
   );

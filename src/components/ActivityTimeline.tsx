@@ -36,7 +36,7 @@ export function ActivityTimeline({ caseId, limit }: { caseId: string; limit?: nu
                 <span className="font-medium">{nameOf(row.actor)}</span>{" "}
                 <span className="text-muted-foreground">{(ACTION_LABEL[row.action] ?? row.action).toLowerCase()}</span>
               </div>
-              {row.note && <div className="mt-0.5 text-xs text-muted-foreground">{row.note}</div>}
+              {row.note && <div className="mt-0.5 text-xs break-words text-muted-foreground">{row.note}</div>}
               <div className="num mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                 <span>{new Date(row.at).toLocaleString("en-US", { timeZone: "America/Los_Angeles", dateStyle: "medium", timeStyle: "short" })} PT</span>
                 <span>Score {row.score_at_action ?? "—"}</span>

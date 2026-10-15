@@ -57,17 +57,17 @@ function DocumentsPage() {
             <div className="space-y-4">
               {g.cases.map(({ deduction: d, files }) => (
                 <div key={d.id} className="panel p-4">
-                  <div className="flex flex-wrap items-baseline gap-3">
-                    <Link to="/cases/$id" params={{ id: d.id }} className="num font-medium text-primary hover:underline">{d.id}</Link>
-                    <span className="text-sm">{d.title}</span>
-                    <span className="num ml-auto text-xs text-muted-foreground">{money(Number(d.amount))}</span>
+                  <div className="flex min-w-0 items-baseline gap-3">
+                    <Link to="/cases/$id" params={{ id: d.id }} className="num shrink-0 font-medium text-primary hover:underline">{d.id}</Link>
+                    <span className="min-w-0 flex-1 truncate text-sm" title={d.title}>{d.title}</span>
+                    <span className="num shrink-0 text-xs text-muted-foreground">{money(Number(d.amount))}</span>
                   </div>
                   <ul className="mt-3 divide-y divide-border">
                     {files.map((f) => (
                       <li key={f.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
                         <span className="w-44">{DOC_LABEL[f.doc_type] ?? f.doc_type}</span>
                         <span className="chip-neutral">{f.variant ?? "—"}</span>
-                        <span className="num flex-1 truncate text-xs text-muted-foreground">{f.storage_path.split("/").pop()}</span>
+                        <span className="num min-w-0 flex-1 truncate text-xs text-muted-foreground" title={f.storage_path.split("/").pop()}>{f.storage_path.split("/").pop()}</span>
                         <a href={evidenceUrl(f.storage_path)} target="_blank" rel="noopener noreferrer" className="btn-ghost !py-1 text-xs">Open ↗</a>
                       </li>
                     ))}
