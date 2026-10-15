@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { AiExplanation } from "@/components/AiExplanation";
 import { evidenceUrl, useChargebacks } from "@/lib/chargebacks";
 import type { CaseResult, CodeMapping, Deduction, Settings } from "@/lib/scoring";
 import { BAND_CHIP, RECOMMENDATION_LABEL, RETAILER_NAMES, STATE_LABEL, money } from "@/lib/queue";
@@ -146,8 +147,8 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
         )}
       </section>
 
-      <div className="mt-10 grid gap-4 md:grid-cols-2">
-        <PlaceholderCard title="AI explanation" />
+      <div className="mt-10 space-y-4">
+        {scored ? <AiExplanation id={id} result={r} /> : <PlaceholderCard title="AI explanation" note="The AI explanation covers scored cases only." />}
         <PlaceholderCard title="Decision" />
       </div>
     </>
@@ -240,11 +241,11 @@ function RecommendationPanel({ r }: { r: CaseResult }) {
   );
 }
 
-function PlaceholderCard({ title }: { title: string }) {
+function PlaceholderCard({ title, note = "Coming next." }: { title: string; note?: string }) {
   return (
     <div className="panel p-6">
       <div className="eyebrow">{title}</div>
-      <p className="mt-3 text-sm text-muted-foreground">Coming next.</p>
+      <p className="mt-3 text-sm text-muted-foreground">{note}</p>
     </div>
   );
 }

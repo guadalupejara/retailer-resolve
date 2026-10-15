@@ -8,6 +8,11 @@ charge of every money decision. Pitch line: **"AI does the investigation, humans
 ## Stack
 - TanStack Start (React 19, TypeScript, Vite), Tailwind v4, shadcn/ui. Not Next.js.
 - Supabase (our own project). Client: `src/integrations/supabase/client.ts`, env in `.env.local`.
+- AI layer: Google Gemini via `@google/genai`. Server only: `GEMINI_API_KEY`, `GEMINI_MODEL` and
+  `GEMINI_FALLBACK_MODEL` (never `VITE_`-prefixed), read in the `explainCase` server function
+  (`src/lib/explain-case.ts`). Attempts share a 20 s budget: primary model, one retry after 1.5 s on
+  503/429/timeout, then the fallback model once. If all fail, the saved reply in `src/lib/ai-cache.ts`
+  answers. Regenerate the cache with `npm run ai:cache`.
 - Hosting: Vercel (nitro `vercel` preset already set in `vite.config.ts`).
 - Lovable is no longer used for editing. Keep `@lovable.dev/vite-tanstack-config` in `vite.config.ts`
   (it is just the build config); do not add plugins it already includes.
@@ -21,6 +26,7 @@ charge of every money decision. Pitch line: **"AI does the investigation, humans
 - `src/lib/chargebacks.ts`: loads all tables from Supabase and returns `{ scored, queue }`.
   Hook: `useChargebacks()`. Evidence URLs: `evidenceUrl(storage_path)` -> `/evidence/...`.
 - `public/evidence/`: the mock evidence files (PODs, BOLs, ASN files, photos).
+- `src/lib/ai-explain.ts`: the Gemini call, reply validation and cache fallback. `scripts/generate-ai-cache.ts`: writes the cache.
 - `src/lib/data.ts`, `src/lib/store.ts`: Lupe's original mock data (5 retailers, QuickBooks).
   **Being replaced** by the Supabase data. Do not add new features on top of them.
 

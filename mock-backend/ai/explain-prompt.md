@@ -20,6 +20,12 @@ Then:
 - If recommendation is accept_write_off, say why the deduction looks valid and stop.
 - If a warning starts with "Last attempt", lead with it.
 - Draft a dispute summary of at most 80 words in a neutral, factual tone, citing only facts present in the input.
+- Headline: the single most important next action, 15 words at most, using short names ("Ridgeline", not "Ridgeline Freight"). Name who or what to contact and
+  the deadline, then the score effect. Example: "Get a stamped POD from Ridgeline by Oct 22: lifts
+  score from 40 to 100". Write the score effect as "lifts score from {display} to {score_if_fixed}". Write dates as "Oct 22", not ISO format. Take the deadline from scoring.deadlines and the score effect from the
+  score_if_fixed of the failing line. For a Ready case, say it is ready to approve and why. For an
+  accept_write_off case, state why the retailer appears correct. Don't restate the case header: no
+  title, retailer name, amount, code or PO in the headline.
 
 Return JSON: {"fixes":[{"line_no","why","fix","owner","effect"}],"summary":"...","headline":"..."}
 

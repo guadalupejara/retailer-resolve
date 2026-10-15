@@ -7,26 +7,14 @@
 // so no new env vars are needed. Reads only; writes go through a server function later.
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { parseSettings, scoreAll, sortQueue, type SeedLike } from "./scoring";
+import { parseSettings, scoreAll, sortQueue } from "./scoring";
+import { fetchSeed, type SeedDb } from "./seed";
 
-const TABLES = [
-  "settings", "templates", "template_lines", "code_mappings", "purchase_orders",
-  "invoices", "shipments", "carriers", "asns", "deductions", "evidence", "dispute_history",
-] as const;
-
+/** Loads the case tables from Supabase, scores every case and builds the queue. */
 export async function loadAndScore() {
   // These tables aren't in the generated Database types yet, so skip the typed client here.
-  const db = supabase as unknown as {
-    from: (t: string) => { select: (c: string) => Promise<{ data: unknown[] | null; error: { message: string } | null }> };
-  };
-  const entries = await Promise.all(
-    TABLES.map(async (t) => {
-      const { data, error } = await db.from(t).select("*");
-      if (error) throw new Error(`${t}: ${error.message}`);
-      return [t, data ?? []] as const;
-    }),
-  );
-  const seed = Object.fromEntries(entries) as unknown as SeedLike;
+  const db = supabase as unknown as SeedDb;
+  const seed = await fetchSeed(db);
   const scored = scoreAll(seed);
   const queue = sortQueue(scored.map((x) => ({ result: x.result, amount: Number(x.deduction.amount) })));
   // The case and documents pages also read the raw evidence, code mappings and settings.
