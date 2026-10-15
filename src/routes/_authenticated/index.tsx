@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import { ArrowRight, Store } from "lucide-react";
 import { AppShell, ProfileMenu } from "@/components/AppShell";
 import { CaseSearch } from "@/components/CaseSearch";
+import { KpiCard } from "@/components/KpiCard";
 import { ScoreCell } from "@/components/QueueScreen";
 import { Gauge, KpiSplit, StackedComparison, compactMoney, type Segment, type Slice } from "@/components/RetailerCharts";
 import { useChargebacks } from "@/lib/chargebacks";
@@ -98,16 +99,16 @@ function Home() {
 
       <div className="mt-6 grid grid-cols-12 gap-6">
         {/* Row 1: four KPIs, one value each, with the Walmart / Amazon split under it. */}
-        <KpiCard label="Money at stake" link={{ to: "/cases" }}
+        <Kpi label="Money at stake" link={{ to: "/cases" }}
           value={o ? compactMoney(o.open.dollars) : "—"} full={o ? money(o.open.dollars) : undefined}
           slices={kpi((r) => r.o.open)} empty="Nothing at stake" />
-        <KpiCard label="Critical" urgent link={{ to: "/cases", search: { priority: "Critical" } }}
+        <Kpi label="Critical" urgent link={{ to: "/cases", search: { priority: "Critical" } }}
           value={o ? String(o.critical.count) : "—"} full={o ? money(o.critical.dollars) : undefined}
           slices={kpi((r) => r.o.critical)} empty="No critical cases" />
-        <KpiCard label="Due in 7 days" link={{ to: "/cases", search: { recommendation: "submit", maxDays: 7 } }}
+        <Kpi label="Due in 7 days" link={{ to: "/cases", search: { recommendation: "submit", maxDays: 7 } }}
           value={o ? String(o.approvalsNeeded.count) : "—"} full={o ? `Ready to file, due in 7 days or less · ${money(o.approvalsNeeded.dollars)}` : undefined}
           slices={kpi((r) => r.o.approvalsNeeded)} empty="Nothing due in 7 days" />
-        <KpiCard label="Submitted" link={{ to: "/cases", hash: "done" }}
+        <Kpi label="Submitted" link={{ to: "/cases", hash: "done" }}
           value={o ? String(o.packetsSubmitted.count) : "—"} full={o ? money(o.packetsSubmitted.dollars) : undefined}
           slices={kpi((r) => r.o.packetsSubmitted)} empty="Nothing submitted yet" />
 
@@ -172,22 +173,16 @@ function Card({ title, link, className = "", children }: { title: string; link?:
 
 type KpiLink = { to: "/cases"; search?: { priority?: "Critical"; recommendation?: "submit"; maxDays?: number }; hash?: string };
 
-/** 112px KPI: label, one 28px value, then the Walmart / Amazon split bar (or a muted line at 0). */
-function KpiCard({ label, value, full, link, slices: s, empty, urgent = false }: {
+/** Shared 112px KPI card, with the label linking to its list and the Walmart / Amazon split bar (or a muted line at 0). */
+function Kpi({ label, value, full, link, slices: s, empty, urgent = false }: {
   label: string; value: string; full?: string | undefined; link: KpiLink; slices: Slice[] | undefined; empty: string; urgent?: boolean;
 }) {
   const total = s?.reduce((t, x) => t + x.count, 0) ?? 0;
   return (
-    <section className="panel col-span-12 flex h-28 min-w-0 flex-col px-6 py-4 sm:col-span-6 xl:col-span-3">
-      <Link {...link} className="flex min-w-0 items-center gap-1.5 text-[13px] leading-4 font-medium text-muted-foreground hover:text-foreground hover:underline focus-visible:underline focus-visible:outline-none">
-        <span className="truncate">{label}</span>
-        {urgent && <span className="size-2 shrink-0 rounded-full bg-destructive/70" aria-hidden />}
-      </Link>
-      <div className="num mt-1 truncate text-[28px] leading-7 font-semibold tracking-[-0.02em]" title={full}>{value}</div>
-      <div className="mt-auto">
-        {!s ? null : total === 0 ? <p className="text-xs text-muted-foreground">{empty}</p> : <KpiSplit slices={s} />}
-      </div>
-    </section>
+    <KpiCard value={value} full={full} urgent={urgent}
+      label={<Link {...link} className="truncate hover:text-foreground hover:underline focus-visible:underline focus-visible:outline-none">{label}</Link>}>
+      {!s ? <span /> : total === 0 ? <p className="text-xs text-muted-foreground">{empty}</p> : <KpiSplit slices={s} />}
+    </KpiCard>
   );
 }
 

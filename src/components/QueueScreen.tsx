@@ -3,6 +3,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useChargebacks } from "@/lib/chargebacks";
 import { compactMoney } from "@/components/RetailerCharts";
+import { KpiCard } from "@/components/KpiCard";
 import type { Band, CaseResult, Priority } from "@/lib/scoring";
 import { STATUS_LABEL } from "@/lib/decision-rules";
 import {
@@ -47,14 +48,15 @@ export function QueueScreen({ filters, retailerFromPath }: {
       <div className="eyebrow">{retailerName ? `${retailerName} alert queue` : "All retailers"}</div>
       <h1 className="mt-1 page-title">{retailerName ? `${retailerName} chargebacks to act on` : "Chargebacks to act on"}</h1>
 
-      <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Open dollars at stake" value={data ? compactMoney(stats.openDollars) : "—"} full={data ? money(stats.openDollars) : undefined} />
-        <Stat label="Critical" value={String(shown(stats.critical))} filled />
-        <Stat label="Ready to submit" value={String(shown(stats.readyToSubmit))} />
-        <Stat label="Expiring in 7 days or less" value={String(shown(stats.expiringWithin7))} />
+      {/* Same KPI cards, row and spacing as the home dashboard. */}
+      <div className="mt-6 grid grid-cols-12 gap-6">
+        <KpiCard label="Open dollars at stake" value={data ? compactMoney(stats.openDollars) : "—"} full={data ? money(stats.openDollars) : undefined} />
+        <KpiCard label="Critical" value={String(shown(stats.critical))} urgent />
+        <KpiCard label="Ready to submit" value={String(shown(stats.readyToSubmit))} />
+        <KpiCard label="Expiring in 7 days or less" value={String(shown(stats.expiringWithin7))} />
       </div>
 
-      <div className="mt-8 flex flex-wrap gap-4">
+      <div className="mt-6 flex flex-wrap gap-4">
         {!retailerFromPath && (
           <FilterSelect label="Retailer" value={filters.retailer ?? ""} onChange={(v) => setFilter({ retailer: v || undefined })}
             options={[["", "All retailers"], ...Object.entries(RETAILER_NAMES)]} />
@@ -214,16 +216,6 @@ const STATUS_CHIP: Record<string, string> = {
   denied: "chip-lost",
   written_off: "chip-neutral",
 };
-
-/** Same anatomy as the dashboard KPIs: small label, one value. Critical is the one filled card. */
-function Stat({ label, value, full, filled = false }: { label: string; value: string; full?: string | undefined; filled?: boolean }) {
-  return (
-    <div className={`panel flex min-h-24 min-w-0 flex-col justify-center px-5 py-4 ${filled ? "!bg-primary-dark text-primary-foreground" : ""}`}>
-      <div className={`truncate text-[13px] font-medium ${filled ? "text-primary-foreground/80" : "text-muted-foreground"}`} title={label}>{label}</div>
-      <div className="num mt-1.5 truncate text-[26px] leading-none font-semibold tracking-[-0.02em]" title={full}>{value}</div>
-    </div>
-  );
-}
 
 /** Case ID link with its title under it; a long title ends in an ellipsis and shows in full on hover. */
 function CaseCell({ r }: { r: QueueRow }) {
