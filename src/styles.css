@@ -83,6 +83,10 @@
   /* Headings, page titles, card titles and the wordmark use Montserrat. Body, tables, labels and numbers stay Inter. */
   h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; }
   th { font-size: 12px; font-weight: 500; color: var(--color-muted-foreground); }
+  /* Charts (recharts accessibilityLayer): a visible ring for keyboard focus, none for mouse clicks. */
+  .recharts-wrapper:focus-visible, .recharts-surface:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 3px; border-radius: 8px; }
+  .recharts-wrapper:focus:not(:focus-visible), .recharts-surface:focus:not(:focus-visible),
+  .recharts-sector:focus, .recharts-rectangle:focus { outline: none; }
 }
 
 @utility btn { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none; }

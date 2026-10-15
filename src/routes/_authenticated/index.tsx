@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowRight, ClipboardCheck, Send, Wallet } from "lucide-
 import { AppShell } from "@/components/AppShell";
 import { CaseSearch } from "@/components/CaseSearch";
 import { ScoreCell } from "@/components/QueueScreen";
+import { RETAILER_COLOR, ReadinessChart, RetailerBars, RetailerDonut, RetailerSplitBar, type Slice } from "@/components/RetailerCharts";
 import { useChargebacks } from "@/lib/chargebacks";
 import { useCurrentUser } from "@/lib/current-user";
 import { overview } from "@/lib/overview";
@@ -77,25 +78,25 @@ function Home() {
         <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={Wallet} label="Money at stake"
           value={o ? money(o.open.dollars) : "—"}
           link={<Link to="/cases" className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
-          {split && <SplitRows rows={split.map((r) => ({ id: r.id, name: r.name, primary: money(r.o.open.dollars), secondary: plural(r.o.open.count, "case") }))} />}
+          {split && o && (o.open.count === 0 ? <NoneYet /> : <RetailerDonut slices={slices(split, (r) => r.o.open)} total={o.open.dollars} />)}
         </KpiCard>
         <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={AlertTriangle} label="Critical"
           value={o ? String(o.critical.count) : "—"}
           link={<Link to="/cases" search={{ priority: "Critical" }} className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
           {split && o && (o.critical.count === 0 ? <NoneYet /> :
-            <SplitRows rows={split.map((r) => ({ id: r.id, name: r.name, primary: String(r.o.critical.count), secondary: money(r.o.critical.dollars) }))} />)}
+            <RetailerBars slices={slices(split, (r) => r.o.critical)} />)}
         </KpiCard>
         <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={ClipboardCheck} label="Approvals needed, next 7 days"
           value={o ? String(o.approvalsNeeded.count) : "—"}
           link={<Link to="/cases" search={{ recommendation: "submit", maxDays: 7 }} className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
           {split && o && (o.approvalsNeeded.count === 0 ? <NoneYet /> :
-            <SplitRows rows={split.map((r) => ({ id: r.id, name: r.name, primary: String(r.o.approvalsNeeded.count), secondary: money(r.o.approvalsNeeded.dollars) }))} />)}
+            <RetailerBars slices={slices(split, (r) => r.o.approvalsNeeded)} />)}
         </KpiCard>
         <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={Send} label="Packets submitted"
           value={o ? String(o.packetsSubmitted.count) : "—"}
           link={<Link to="/cases" hash="done" className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
           {split && o && (o.packetsSubmitted.count === 0 ? <NoneYet /> :
-            <SplitRows rows={split.map((r) => ({ id: r.id, name: r.name, primary: String(r.o.packetsSubmitted.count), secondary: money(r.o.packetsSubmitted.dollars) }))} />)}
+            <RetailerSplitBar slices={slices(split, (r) => r.o.packetsSubmitted)} />)}
         </KpiCard>
 
         {/* Row 2: the work, and the retailer comparison. */}
@@ -124,6 +125,10 @@ function Home() {
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+/** One { count, dollars } total per retailer, in chart form. */
+const slices = (split: RetailerSplit[], pick: (r: RetailerSplit) => { count: number; dollars: number }): Slice[] =>
+  split.map((r) => ({ id: r.id, name: r.name, ...pick(r) }));
 
 /* ---------- Card anatomy: title row (title left, optional link right), then content ---------- */
 
@@ -164,24 +169,6 @@ const linkCls = "inline-flex shrink-0 items-center gap-1 rounded-md text-[13px] 
 
 const Muted = ({ children }: { children: ReactNode }) => <p className="text-sm text-muted-foreground">{children}</p>;
 const NoneYet = () => <Muted>None yet</Muted>;
-
-/** Walmart and Amazon, one row each: name left, numbers right-aligned. */
-function SplitRows({ rows }: { rows: { id: string; name: string; primary: string; secondary: string }[] }) {
-  return (
-    <ul className="space-y-1.5">
-      {rows.map((r) => (
-        <li key={r.id}>
-          <Link to="/retailers/$retailerId" params={{ retailerId: r.id }}
-            className="flex items-baseline gap-2 rounded-md text-sm hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none">
-            <span className="flex-1">{r.name}</span>
-            <span className="num font-medium">{r.primary}</span>
-            <span className="num w-24 text-right text-muted-foreground">{r.secondary}</span>
-          </Link>
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 /* ---------- Row 2 ---------- */
 
@@ -230,23 +217,39 @@ function AttentionList({ rows }: { rows: QueueRow[] }) {
 }
 
 function RetailerRows({ split }: { split: RetailerSplit[] }) {
+  const total = split.reduce((t, r) => t + r.o.open.count, 0);
   return (
-    <ul className="divide-y divide-border">
-      {split.map((r) => (
-        <li key={r.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium">{r.name}</div>
-            <div className="num text-xs text-muted-foreground">
-              {plural(r.o.open.count, "open case")} · {money(r.o.open.dollars)}
+    <div className="flex h-full flex-col">
+      <div className="text-[13px] font-medium text-muted-foreground">Walmart vs Amazon by readiness</div>
+      {total === 0 ? <div className="mt-2"><NoneYet /></div> : (
+        <div className="mt-2">
+          <ReadinessChart
+            retailers={split.map((r) => ({ id: r.id, name: r.name }))}
+            rows={BANDS.map((band) => ({
+              band,
+              byRetailer: Object.fromEntries(split.map((r) => {
+                const b = r.bands.find((x) => x.band === band);
+                return [r.id, { count: b?.count ?? 0, dollars: b?.dollars ?? 0 }];
+              })),
+            }))}
+          />
+        </div>
+      )}
+      <ul className="mt-auto divide-y divide-border border-t border-border pt-1">
+        {split.map((r) => (
+          <li key={r.id} className="flex items-center gap-3 py-2.5 last:pb-0">
+            <span className="size-2.5 shrink-0 rounded-[3px]" style={{ backgroundColor: RETAILER_COLOR[r.id] }} aria-hidden />
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium">{r.name}</div>
+              <div className="num text-xs text-muted-foreground">{plural(r.o.open.count, "open case")} · {money(r.o.open.dollars)}</div>
             </div>
-          </div>
-          <Link to="/retailers/$retailerId" params={{ retailerId: r.id }}
-            className={linkCls}>
-            Open <ArrowRight className="size-3.5" />
-          </Link>
-        </li>
-      ))}
-    </ul>
+            <Link to="/retailers/$retailerId" params={{ retailerId: r.id }} className={linkCls}>
+              Open <ArrowRight className="size-3.5" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
