@@ -1,17 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Fragment, useState } from "react";
+import { AlertTriangle, ChevronDown, ChevronRight, ExternalLink, FileDown, Plus } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AiExplanation } from "@/components/AiExplanation";
 import { evidenceUrl, useChargebacks } from "@/lib/chargebacks";
 import type { CaseResult, CodeMapping, Deduction, Settings } from "@/lib/scoring";
-import { BAND_CHIP, RECOMMENDATION_LABEL, RETAILER_NAMES, STATE_LABEL, money } from "@/lib/queue";
-import { settingValue } from "@/lib/decision-rules";
+import { BAND_CHIP, PRIORITY_CHIP, RECOMMENDATION_LABEL, RETAILER_NAMES, STATE_LABEL, money } from "@/lib/queue";
+import { STATUS_LABEL, settingValue } from "@/lib/decision-rules";
 import { DecisionCard } from "@/components/DecisionCard";
 import { AddEvidence } from "@/components/AddEvidence";
 import { ScoreReadout } from "@/components/ScoreReadout";
 import { isEvidenceDocType, type EvidenceDocType } from "@/lib/evidence-fields";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
-  DOC_LABEL, RECOMMENDATION_TEXT, basename, deadlineRows, evidenceFields, groupLines, lineStatus,
+  CLOCK_NAME, DOC_LABEL, RECOMMENDATION_TEXT, basename, deadlineRows, evidenceFields, lineStatus,
   notScoredReason, type EvidenceRow,
 } from "@/lib/case-view";
 
@@ -27,10 +30,9 @@ function CasePage() {
   const q = useChargebacks();
   return (
     <AppShell>
-      <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">← Alert queue</Link>
-      {q.isPending && <div className="panel mt-6 p-10 text-center text-sm text-muted-foreground">Loading case…</div>}
+      {q.isPending && <div className="panel p-10 text-center text-sm text-muted-foreground">Loading case…</div>}
       {q.isError && (
-        <div className="panel mt-6 border-l-4 border-l-destructive p-5 text-sm">
+        <div className="panel border-l-4 border-l-destructive p-5 text-sm">
           <div className="font-medium text-destructive">Couldn't load this case</div>
           <div className="mt-1 text-muted-foreground">{q.error.message}</div>
         </div>
@@ -43,7 +45,7 @@ function CasePage() {
 function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typeof useChargebacks>["data"]> }) {
   const item = data.scored.find((x) => x.deduction.id === id);
   if (!item) {
-    return <div className="panel mt-6 p-10 text-center text-sm text-muted-foreground">No case {id}.</div>;
+    return <div className="panel p-10 text-center text-sm text-muted-foreground">No case {id}.</div>;
   }
   const { deduction: d, result: r } = item;
   const s: Settings = data.settings;
@@ -60,214 +62,313 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
 
   return (
     <>
-      <Header d={d} r={r} mappingLabel={mapping ? `${mapping.code} · ${mapping.code_name}` : d.raw_code} amount={Number(d.amount)} />
-
-      {d.status === "submitted" && (
-        <div className="mt-4">
-          <Link to="/cases/$id/packet" params={{ id }} target="_blank" className="btn-outline">Export packet</Link>
-        </div>
-      )}
+      <Header id={id} d={d} r={r} mapping={mapping} />
 
       {r.warnings.length > 0 && (
         <div className="mt-6 space-y-2">
           {r.warnings.map((w) => {
             const urgent = w.startsWith("Last attempt");
             return (
-              <div key={w} className={`panel flex gap-3 border-l-4 p-4 text-sm ${urgent ? "border-l-destructive text-destructive" : "border-l-warning"}`}>
-                <span className="font-semibold">{urgent ? "Last attempt" : "Heads up"}</span>
-                <span className={urgent ? "" : "text-muted-foreground"}>{urgent ? w.replace(/^Last attempt:?\s*/, "") : w}</span>
+              <div key={w} role={urgent ? "alert" : undefined}
+                className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm ${urgent ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-warning/40 bg-warning/15"}`}>
+                <AlertTriangle className={`mt-0.5 size-4 shrink-0 ${urgent ? "" : "text-warning-foreground"}`} />
+                <div>
+                  <span className="font-semibold">{urgent ? "Last attempt" : "Heads up"}</span>{" "}
+                  <span className={urgent ? "" : "text-muted-foreground"}>{urgent ? w.replace(/^Last attempt:?\s*/, "") : w}</span>
+                </div>
               </div>
             );
           })}
         </div>
       )}
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-3">
-        {scored ? <ScorePanel id={id} r={r} s={s} /> : <NotScoredPanel r={r} d={d} mapping={mapping} s={s} />}
-        <DeadlinesPanel r={r} />
-        <RecommendationPanel r={r} />
-      </div>
-
-      {scored && (
-        <section className="mt-10">
-          <h2 className="section-title">Scoring breakdown</h2>
-          <div className="mt-4 space-y-6">
-            {groupLines(r.lines).map((g) => (
-              <div key={g.bucket}>
-                <div className="flex items-baseline justify-between">
-                  <div className="eyebrow">{g.bucket}</div>
-                  <div className="num text-xs text-muted-foreground">{g.earned}/{g.points}</div>
-                </div>
-                <div className="panel mt-2 divide-y divide-border">
-                  {g.lines.map((l) => {
-                    const status = lineStatus(l);
-                    return (
-                      <div key={l.line_no} className="grid gap-2 px-4 py-3 text-sm md:grid-cols-[1fr_auto]">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-medium">{l.label}</span>
-                            {l.fatal && <span className="chip-lost">Fatal</span>}
-                          </div>
-                          <div className="mt-0.5 text-xs text-muted-foreground">{l.reason}</div>
-                          {status === "fail" && l.fix && (
-                            <div className="mt-1 text-xs">
-                              <span className="text-foreground">Fix:</span> {l.fix}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-start gap-3 md:justify-end">
-                          <span className={status === "pass" ? "chip-won" : status === "fail" ? "chip-lost" : "chip-neutral"}>
-                            {status === "pass" ? "Pass" : status === "fail" ? "Fail" : "N/A"}
-                          </span>
-                          <span className="num text-xs">{l.earned}/{l.points}</span>
-                          {status === "fail" && l.points_recovered > 0 && (
-                            <span className="num text-xs font-semibold text-success">+{l.points_recovered} if fixed</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="mt-10">
-        <h2 className="section-title">Evidence</h2>
-        <div className="mt-4">
-          <AddEvidence caseId={id} docOptions={docOptions} evidence={evidence} />
+      <div className="mt-6 grid items-start gap-6 lg:grid-cols-3">
+        {/* Left column: the investigation. */}
+        <div className="min-w-0 space-y-6 lg:col-span-2">
+          {scored ? <ReadinessHero id={id} r={r} s={s} /> : <NotScoredHero r={r} d={d} mapping={mapping} s={s} />}
+          {scored && <PointsBreakdown r={r} />}
+          {scored && <AiExplanation id={id} result={r} />}
+          <EvidenceCard id={id} evidence={evidence} docOptions={docOptions} />
         </div>
-        {evidence.length === 0 ? (
-          <div className="panel mt-4 p-6 text-sm text-muted-foreground">No evidence files for this case yet.</div>
-        ) : (
-          <div className="mt-4 space-y-4">
-            {evidence.map((e) => (
-              <div key={e.id} className="panel p-5">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="font-medium">{DOC_LABEL[e.doc_type] ?? e.doc_type}</span>
-                  {e.variant && <span className="chip-neutral">{e.variant}</span>}
-                  <span className="num text-xs text-muted-foreground">{basename(e.storage_path)}</span>
-                  <a href={evidenceUrl(e.storage_path)} target="_blank" rel="noopener noreferrer" className="btn-outline ml-auto !py-1 text-xs">Open ↗</a>
-                </div>
-                <div className="mt-4 rounded-md border border-dashed border-border p-4">
-                  <div className="eyebrow">AI-read, please verify</div>
-                  <dl className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-                    {evidenceFields(e.extracted).map(([k, v]) => (
-                      <div key={k} className="flex gap-2">
-                        <dt className="text-muted-foreground">{k}:</dt>
-                        <dd className="num">{v}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                  {e.extraction_note && <div className="mt-2 text-xs text-muted-foreground">{e.extraction_note}</div>}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
 
-      <div className="mt-10 space-y-4">
-        {scored ? <AiExplanation id={id} result={r} /> : <PlaceholderCard title="AI explanation" note="The AI explanation covers scored cases only." />}
+        {/* Right column: the call. Sticks under the top bar and scrolls on its own if it's taller than the screen. */}
+        <aside className="min-w-0 space-y-6 lg:sticky lg:top-22 lg:max-h-[calc(100vh-6.5rem)] lg:overflow-y-auto lg:pb-2">
+          {scored
+            ? <DecisionCard caseId={id} d={d} result={r} threshold={threshold} />
+            : <PlaceholderCard title="Decision" note="Decisions are made on scored cases. This case is not scored." />}
+          <DeadlinesCard r={r} />
+          <RecommendationCard r={r} />
+          <ActivityTimeline caseId={id} limit={6} />
+        </aside>
       </div>
-
-      <div className="mt-10 space-y-4">
-        {scored
-          ? <DecisionCard caseId={id} d={d} result={r} threshold={threshold} />
-          : <PlaceholderCard title="Decision" note="Decisions are made on scored cases. This case is not scored." />}
-      </div>
-
-      <ActivityTimeline caseId={id} />
     </>
   );
 }
 
-function Header({ d, r, mappingLabel, amount }: { d: Deduction; r: CaseResult; mappingLabel: string; amount: number }) {
-  const fields: [string, string][] = [
-    ["Retailer", RETAILER_NAMES[d.retailer_id] ?? d.retailer_id],
-    ["Code", mappingLabel],
-    ["Amount", money(amount)],
-    ["PO", d.po_number],
-    ["Invoice", d.invoice_number],
-    ["Status", d.status],
-    ["State", STATE_LABEL[r.state]],
+/* ---------- Header ---------- */
+
+function Header({ id, d, r, mapping }: { id: string; d: Deduction; r: CaseResult; mapping: CodeMapping | undefined }) {
+  const meta = [
+    RETAILER_NAMES[d.retailer_id] ?? d.retailer_id,
+    mapping ? `${mapping.code} · ${mapping.code_name}` : d.raw_code,
+    `PO ${d.po_number}`,
+    `Invoice ${d.invoice_number}`,
   ];
+  const limit = mapping?.attempt_limit;
+  const urgent = r.days_left != null && r.days_left <= 7;
   return (
-    <div className="mt-4">
-      <div className="eyebrow">Case</div>
-      <h1 className="mt-1 page-title"><span className="num">{d.id}</span></h1>
-      <div className="mt-2 text-base text-muted-foreground">{d.title}</div>
-      <dl className="panel mt-6 grid grid-cols-2 gap-4 p-5 text-sm md:grid-cols-4 xl:grid-cols-7">
-        {fields.map(([k, v]) => (
-          <div key={k}>
-            <dt className="eyebrow">{k}</dt>
-            <dd className="num mt-1 break-words">{v}</dd>
-          </div>
-        ))}
-      </dl>
+    <header className="flex flex-wrap items-start justify-between gap-6">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          {r.priority && <span className={PRIORITY_CHIP[r.priority]}>{r.priority}</span>}
+          <span className="num text-sm font-medium text-muted-foreground">{d.id}</span>
+          <span className="chip-neutral">{STATUS_LABEL[d.status] ?? d.status}</span>
+          {r.state !== "scored" && <span className="chip-neutral">{STATE_LABEL[r.state]}</span>}
+        </div>
+        <h1 className="mt-2 page-title">{d.title}</h1>
+        <p className="num mt-1.5 text-sm text-muted-foreground">
+          {meta.map((m, i) => <Fragment key={m}>{i > 0 && <span className="mx-1.5 text-border">•</span>}{m}</Fragment>)}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-start gap-3">
+        <dl className="panel flex divide-x divide-border">
+          <Figure k="Amount" v={money(Number(d.amount))} />
+          <Figure k="Days left" v={r.days_left == null ? "—" : `${r.days_left}`} tone={urgent ? "text-destructive" : undefined}
+            sub={r.clock ? CLOCK_NAME[r.clock] : undefined} />
+          <Figure k="Attempt" v={limit != null ? `${Math.min(d.attempts_used + 1, limit)} of ${limit}` : `${d.attempts_used + 1}`}
+            sub={`${d.attempts_used} used`} />
+        </dl>
+        {d.status === "submitted" && (
+          <Link to="/cases/$id/packet" params={{ id }} target="_blank" className="btn-outline">
+            <FileDown className="size-4" /> Export packet
+          </Link>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function Figure({ k, v, sub, tone }: { k: string; v: string; sub?: string | undefined; tone?: string | undefined }) {
+  return (
+    <div className="min-w-28 px-5 py-3">
+      <dt className="text-xs text-muted-foreground">{k}</dt>
+      <dd className={`num mt-0.5 text-xl font-semibold tracking-[-0.02em] ${tone ?? ""}`}>{v}</dd>
+      {sub && <dd className="text-xs text-muted-foreground">{sub}</dd>}
     </div>
   );
 }
 
-function ScorePanel({ id, r, s }: { id: string; r: CaseResult; s: Settings }) {
+/* ---------- Left column ---------- */
+
+const BAND_TINT: Record<string, string> = {
+  Ready: "bg-success/[0.05] border-success/25",
+  "Needs work": "bg-warning/[0.08] border-warning/35",
+  Weak: "bg-destructive/[0.05] border-destructive/20",
+};
+
+function ReadinessHero({ id, r, s }: { id: string; r: CaseResult; s: Settings }) {
   return (
-    <div className="panel p-6">
+    <section className={`panel p-6 ${r.band ? BAND_TINT[r.band] : ""}`}>
       <div className="eyebrow">Readiness score</div>
       <div className="mt-3">
-        <ScoreReadout id={id} r={r} cap={s.cap_score} />
+        <ScoreReadout id={id} r={r} cap={s.cap_score} needsWorkMin={s.band_needs_work_min} readyMin={s.band_ready_min} />
       </div>
-    </div>
+    </section>
   );
 }
 
-function NotScoredPanel({ r, d, mapping, s }: { r: CaseResult; d: Deduction; mapping: CodeMapping | undefined; s: Settings }) {
+function NotScoredHero({ r, d, mapping, s }: { r: CaseResult; d: Deduction; mapping: CodeMapping | undefined; s: Settings }) {
   const reason = notScoredReason(r, d, mapping, s);
   return (
-    <div className="panel p-6">
+    <section className="panel bg-secondary/40 p-6">
       <div className="eyebrow">Not scored</div>
-      <div className="mt-3 text-2xl font-semibold tracking-[-0.02em]">{STATE_LABEL[r.state]}</div>
-      {reason && <p className="mt-3 text-sm text-muted-foreground">{reason}</p>}
-    </div>
+      <div className="mt-2 text-2xl font-semibold tracking-[-0.02em]">{STATE_LABEL[r.state]}</div>
+      {reason && <p className="mt-2 text-sm text-muted-foreground">{reason}</p>}
+    </section>
   );
 }
 
-function DeadlinesPanel({ r }: { r: CaseResult }) {
+function PointsBreakdown({ r }: { r: CaseResult }) {
+  const [open, setOpen] = useState<Set<number>>(new Set());
+  const toggle = (n: number) => setOpen((prev) => {
+    const next = new Set(prev);
+    if (next.has(n)) next.delete(n); else next.add(n);
+    return next;
+  });
   return (
-    <div className="panel p-6">
-      <div className="eyebrow">Deadlines</div>
-      <div className="mt-3 space-y-3">
+    <section className="panel overflow-hidden">
+      <div className="flex items-baseline justify-between px-5 pt-5 pb-3">
+        <h2 className="section-title">Points breakdown</h2>
+        {r.capped && r.raw != null && <span className="num text-sm text-muted-foreground">{r.raw} before cap</span>}
+      </div>
+      <table className="w-full text-sm">
+        <thead className="border-y border-border bg-secondary/40 text-left">
+          <tr>
+            <th className="px-5 py-2.5">Check</th><th className="px-3 py-2.5">Result</th>
+            <th className="px-3 py-2.5 text-right">Points</th><th className="px-5 py-2.5 text-right"><span className="sr-only">If fixed</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {r.lines.map((l) => {
+            const status = lineStatus(l);
+            const failed = status === "fail";
+            const isOpen = open.has(l.line_no);
+            return (
+              <Fragment key={l.line_no}>
+                <tr className={`border-b border-border last:border-0 ${failed ? "cursor-pointer hover:bg-secondary/50" : ""}`}
+                  onClick={failed ? () => toggle(l.line_no) : undefined}>
+                  <td className="px-5 py-3">
+                    <div className="text-[11px] font-medium text-muted-foreground">{l.bucket}</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {failed ? (
+                        <button type="button" aria-expanded={isOpen} className="inline-flex items-center gap-1 text-left font-medium"
+                          onClick={(e) => { e.stopPropagation(); toggle(l.line_no); }}>
+                          {isOpen ? <ChevronDown className="size-4 text-muted-foreground" /> : <ChevronRight className="size-4 text-muted-foreground" />}
+                          {l.label}
+                        </button>
+                      ) : <span className="pl-5 font-medium">{l.label}</span>}
+                      {l.fatal && <span className="chip-lost">Fatal</span>}
+                    </div>
+                  </td>
+                  <td className="px-3 py-3">
+                    <span className={status === "pass" ? "chip-won" : failed ? "chip-lost" : "chip-neutral"}>
+                      {status === "pass" ? "Pass" : failed ? "Fail" : "N/A"}
+                    </span>
+                  </td>
+                  <td className="num px-3 py-3 text-right">{l.earned}/{l.points}</td>
+                  <td className="num px-5 py-3 text-right text-xs font-semibold whitespace-nowrap text-success">
+                    {failed && l.points_recovered > 0 ? `+${l.points_recovered} if fixed` : ""}
+                  </td>
+                </tr>
+                {failed && isOpen && (
+                  <tr className="border-b border-border bg-secondary/30 last:border-0">
+                    <td colSpan={4} className="px-5 pt-1 pb-4 pl-10 text-sm">
+                      <div><span className="text-muted-foreground">Found: </span>{l.reason}</div>
+                      {l.fix && <div className="mt-1"><span className="text-muted-foreground">Fix: </span>{l.fix}</div>}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+function EvidenceCard({ id, evidence, docOptions }: { id: string; evidence: EvidenceRow[]; docOptions: EvidenceDocType[] }) {
+  const [adding, setAdding] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
+  return (
+    <section className="panel overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-3">
+        <h2 className="section-title">Evidence</h2>
+        {docOptions.length > 0 && (
+          <button type="button" className="btn-primary !py-1.5 text-xs" onClick={() => setAdding(true)}>
+            <Plus className="size-4" /> Add evidence
+          </button>
+        )}
+      </div>
+
+      {evidence.length === 0 ? (
+        <div className="border-t border-border px-5 py-6 text-sm text-muted-foreground">
+          {docOptions.length > 0 ? "No evidence files for this case yet." : "This case doesn't need any evidence documents."}
+        </div>
+      ) : (
+        <ul className="divide-y divide-border border-t border-border">
+          {evidence.map((e) => {
+            const isOpen = open === e.id;
+            return (
+              <li key={e.id}>
+                <div className="flex items-center gap-3 px-5 py-3">
+                  <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : e.id)}
+                    className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                    {isOpen ? <ChevronDown className="size-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="size-4 shrink-0 text-muted-foreground" />}
+                    <span className="text-sm font-medium">{DOC_LABEL[e.doc_type] ?? e.doc_type}</span>
+                    {e.variant && <span className="chip-neutral">{e.variant}</span>}
+                    <span className="num truncate text-xs text-muted-foreground">{basename(e.storage_path)}</span>
+                  </button>
+                  <a href={evidenceUrl(e.storage_path)} target="_blank" rel="noopener noreferrer" className="btn-ghost !px-2 !py-1 text-xs">
+                    Open <ExternalLink className="size-3.5" />
+                  </a>
+                </div>
+                {isOpen && (
+                  <div className="px-5 pb-4 pl-11">
+                    <div className="rounded-xl border border-dashed border-border p-4">
+                      <div className="eyebrow">AI-read, please verify</div>
+                      <dl className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+                        {evidenceFields(e.extracted).map(([k, v]) => (
+                          <div key={k} className="flex gap-2">
+                            <dt className="text-muted-foreground">{k}:</dt>
+                            <dd className="num">{v}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      {e.extraction_note && <div className="mt-2 text-xs text-muted-foreground">{e.extraction_note}</div>}
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <Sheet open={adding} onOpenChange={setAdding}>
+        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Add evidence</SheetTitle>
+            <SheetDescription>Saving replaces this case's document of that type and rescores the case.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6">
+            <AddEvidence caseId={id} docOptions={docOptions} evidence={evidence} embedded onSaved={() => setAdding(false)} />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </section>
+  );
+}
+
+/* ---------- Right column ---------- */
+
+function DeadlinesCard({ r }: { r: CaseResult }) {
+  return (
+    <section className="panel p-5">
+      <h2 className="section-title">Deadlines</h2>
+      <div className="mt-3 space-y-2">
         {deadlineRows(r).map((row) => (
-          <div key={row.key} className={`rounded-md p-3 text-sm ${row.driving ? "bg-destructive/10 ring-1 ring-destructive/40" : ""}`}>
+          <div key={row.key} className={`rounded-xl px-3 py-2.5 text-sm ${row.driving ? "bg-destructive/10 ring-1 ring-destructive/30" : "bg-secondary/60"}`}>
             <div className="flex items-center justify-between gap-2">
-              <span>{row.label}</span>
-              {row.driving && <span className="chip-lost">Drives days left</span>}
+              <span className={row.driving ? "font-medium text-destructive" : ""}>{row.label}</span>
+              {row.driving && r.days_left != null && <span className="num font-semibold text-destructive">{r.days_left}d left</span>}
             </div>
-            <div className="num mt-1 text-xs text-muted-foreground">{row.date ?? row.empty}</div>
+            <div className="num mt-0.5 text-xs text-muted-foreground">{row.date ?? row.empty}</div>
           </div>
         ))}
       </div>
-      {r.days_left != null && <div className="num mt-4 text-sm">{r.days_left} days left</div>}
-    </div>
+    </section>
   );
 }
 
-function RecommendationPanel({ r }: { r: CaseResult }) {
+function RecommendationCard({ r }: { r: CaseResult }) {
   return (
-    <div className="panel p-6">
-      <div className="eyebrow">Recommendation</div>
-      <p className="mt-3 text-lg">{RECOMMENDATION_TEXT[r.recommendation]}</p>
-      <div className="mt-2 text-xs text-muted-foreground">{RECOMMENDATION_LABEL[r.recommendation]}</div>
-    </div>
+    <section className="panel p-5">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="section-title">Recommendation</h2>
+        {r.band && <span className={BAND_CHIP[r.band]}>{r.band}</span>}
+      </div>
+      <p className="mt-2 text-sm" title={RECOMMENDATION_LABEL[r.recommendation]}>{RECOMMENDATION_TEXT[r.recommendation]}</p>
+    </section>
   );
 }
 
 function PlaceholderCard({ title, note = "Coming next." }: { title: string; note?: string }) {
   return (
-    <div className="panel p-6">
-      <div className="eyebrow">{title}</div>
-      <p className="mt-3 text-sm text-muted-foreground">{note}</p>
-    </div>
+    <section className="panel p-5">
+      <h2 className="section-title">{title}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">{note}</p>
+    </section>
   );
 }

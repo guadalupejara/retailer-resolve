@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "@/lib/current-user";
 import { saveDraft } from "@/lib/decisions";
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import type { AiOutcome } from "@/lib/ai-explain";
 import { explainCase } from "@/lib/explain-case";
 import type { CaseResult } from "@/lib/scoring";
@@ -49,10 +50,15 @@ export function AiExplanation({ id, result }: { id: string; result: CaseResult }
 
   return (
     <section className="panel p-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="eyebrow">AI explanation</div>
-        <span className="chip-disputed">{LABEL}</span>
-        {pathLabel && <span className="chip bg-muted text-muted-foreground">{pathLabel}</span>}
+      <div className="flex flex-wrap items-start gap-3">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Sparkles className="size-4" /></span>
+        <div className="min-w-0">
+          <h2 className="section-title">AI explanation</h2>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <span className="chip-disputed">{LABEL}</span>
+            {pathLabel && <span className="chip-neutral">{pathLabel}</span>}
+          </div>
+        </div>
         <button className="btn-primary ml-auto !py-1.5 text-xs" onClick={() => generate.mutate()} disabled={generate.isPending}>
           {generate.isPending ? "Reviewing evidence…" : explanation ? "Regenerate" : outcome ? "Retry" : "Generate"}
         </button>
@@ -75,7 +81,7 @@ export function AiExplanation({ id, result }: { id: string; result: CaseResult }
           <div className="text-xl font-medium leading-snug">{explanation.headline}</div>
 
           {isWriteOff ? (
-            <div className="rounded-md border border-border p-4">
+            <div className="rounded-xl border border-border p-4">
               <div className="eyebrow">Why this looks valid</div>
               <p className="mt-2 text-sm">{explanation.summary}</p>
             </div>
@@ -88,11 +94,11 @@ export function AiExplanation({ id, result }: { id: string; result: CaseResult }
                   {fixes.map((f) => {
                     const line = result.lines.find((l) => l.line_no === f.line_no);
                     return (
-                      <li key={f.line_no} className="rounded-md border border-border p-4 text-sm">
+                      <li key={f.line_no} className="rounded-xl bg-secondary/60 p-4 text-sm">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-medium">{line?.label ?? `Line ${f.line_no}`}</span>
                           <span className="chip-open">+{pointsFor(f.line_no)} pts</span>
-                          <span className="chip bg-muted text-muted-foreground">Owner: {f.owner}</span>
+                          <span className="chip-neutral">Owner: {f.owner}</span>
                         </div>
                         <div className="mt-2"><span className="text-muted-foreground">Why: </span>{f.why}</div>
                         <div className="mt-1"><span className="text-muted-foreground">Fix: </span>{f.fix}</div>

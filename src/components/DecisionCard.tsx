@@ -78,30 +78,33 @@ export function DecisionCard({ caseId, d, result, threshold }: {
   const submitted = d.status === "submitted";
 
   return (
-    <section className="panel p-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="eyebrow">Decision</div>
+    <section className="panel p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="section-title">Decision</h2>
+        <span className="chip-neutral">{statusLabel}</span>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
         <span className="chip-disputed">AI suggests, humans decide</span>
-        <span className="chip bg-muted text-muted-foreground">{statusLabel}</span>
         {pending && <span className="chip-open">Awaiting manager approval</span>}
       </div>
+      {currentUser && <p className="mt-2 text-xs text-muted-foreground">Acting as {currentUser.name}</p>}
 
-      {act.isError && <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{act.error.message}</div>}
+      {act.isError && <div className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{act.error.message}</div>}
 
-      {!currentUser && <p className="mt-4 text-sm text-muted-foreground">Pick a user in the role switcher to act on this case.</p>}
+      {!currentUser && <p className="mt-4 text-sm text-muted-foreground">Pick a user in the profile menu to act on this case.</p>}
 
       {currentUser && isDone(d.status) && !submitted && (
         <p className="mt-4 text-sm text-muted-foreground">This case is {statusLabel.toLowerCase()}. No more actions.</p>
       )}
 
       {currentUser && (!isDone(d.status) || submitted) && (
-        <div className="mt-5 divide-y divide-border">
+        <div className="mt-3 divide-y divide-border">
           {/* Approve packet: once submitted, the only action left is recording the outcome */}
           {!submitted && <div className="py-4">
             <div className="font-medium">Approve dispute packet</div>
             {can("approve") ? (
               <>
-                <button className="btn-primary mt-2" disabled={busy || block !== null}
+                <button className="btn-primary mt-2 w-full" disabled={busy || block !== null}
                   onClick={() => act.mutate({ action: "approve" })}>
                   Approve dispute packet
                 </button>
@@ -117,7 +120,7 @@ export function DecisionCard({ caseId, d, result, threshold }: {
             <div className="font-medium">Request a document</div>
             {can("request_document") ? (
               <div className="mt-2 space-y-2">
-                <select className="input max-w-sm" value={owner} onChange={(e) => setOwnerPick(e.target.value as OwnerKey)}>
+                <select className="input" value={owner} onChange={(e) => setOwnerPick(e.target.value as OwnerKey)}>
                   {(Object.keys(OWNERS) as OwnerKey[]).map((k) => <option key={k} value={k}>{OWNERS[k]}</option>)}
                 </select>
                 <textarea className="input min-h-20" value={note} onChange={(e) => setDocNote(e.target.value)} />
@@ -140,7 +143,7 @@ export function DecisionCard({ caseId, d, result, threshold }: {
             {!overThreshold && (
               can("write_off") ? (
                 <div className="mt-2 space-y-2">
-                  <input className="input max-w-md" placeholder="Note (optional)" value={writeOffNote} onChange={(e) => setWriteOffNote(e.target.value)} />
+                  <input className="input" placeholder="Note (optional)" value={writeOffNote} onChange={(e) => setWriteOffNote(e.target.value)} />
                   <button className="btn-outline" disabled={busy}
                     onClick={() => act.mutate({ action: "write_off", note: writeOffNote || undefined })}>
                     Write off {money(amount)}

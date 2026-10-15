@@ -55,8 +55,12 @@ function FieldInput({ spec, value, onChange }: { spec: FieldSpec; value: FieldVa
  * Add evidence: pick a document type the case needs, choose a file, check the AI-read fields, save.
  * Saving replaces the case's existing document of that type and rescores the case.
  */
-export function AddEvidence({ caseId, docOptions, evidence }: {
+export function AddEvidence({ caseId, docOptions, evidence, embedded = false, onSaved }: {
   caseId: string; docOptions: EvidenceDocType[]; evidence: EvidenceRowLite[];
+  /** Inside a sheet or dialog: no card border and no own title. */
+  embedded?: boolean;
+  /** Called after the document is saved and the case rescored (e.g. to close the sheet). */
+  onSaved?: () => void;
 }) {
   const qc = useQueryClient();
   const { currentUser } = useCurrentUser();
@@ -85,6 +89,7 @@ export function AddEvidence({ caseId, docOptions, evidence }: {
       void qc.invalidateQueries({ queryKey: ["audit", caseId] });
       setFile(null);
       setLocalError(null);
+      onSaved?.();
     },
   });
 
@@ -111,20 +116,20 @@ export function AddEvidence({ caseId, docOptions, evidence }: {
   };
 
   if (docOptions.length === 0) {
-    return <div className="panel p-6 text-sm text-muted-foreground">This case doesn't need any evidence documents.</div>;
+    return <div className={`${embedded ? "" : "panel p-6 "}text-sm text-muted-foreground`}>This case doesn't need any evidence documents.</div>;
   }
 
   const specs = docType ? EVIDENCE_FIELDS[docType] : [];
   const error = localError ?? (save.isError ? save.error.message : null);
 
   return (
-    <div className="panel p-6">
+    <div className={embedded ? "" : "panel p-6"}>
       <div className="flex flex-wrap items-center gap-3">
-        <div className="eyebrow">Add evidence</div>
-        <button className="btn-ghost !py-1 text-xs" onClick={useDemo} type="button">Use demo file ({demoFileFor(caseId).label})</button>
+        {!embedded && <div className="eyebrow">Add evidence</div>}
+        <button className="btn-outline !py-1.5 text-xs" onClick={useDemo} type="button">Use demo file ({demoFileFor(caseId).label})</button>
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
+      <div className={`mt-5 grid gap-4 ${embedded ? "" : "md:grid-cols-2"}`}>
         <label className="block">
           <span className="eyebrow">Document type</span>
           <select className="input mt-1.5" value={docType ?? ""} onChange={(e) => pick(e.target.value as EvidenceDocType)}>
@@ -144,9 +149,9 @@ export function AddEvidence({ caseId, docOptions, evidence }: {
       </div>
 
       {docType && (
-        <div className="mt-5 rounded-md border border-dashed border-border p-4">
+        <div className="mt-5 rounded-xl border border-dashed border-border p-4">
           <div className="eyebrow">AI-read, please verify</div>
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div className={`mt-3 grid gap-3 ${embedded ? "" : "md:grid-cols-2"}`}>
             {specs.map((f) => (
               <label key={f.key} className="block text-sm">
                 <span className="text-muted-foreground">{humanize(f.key)}</span>
@@ -159,7 +164,7 @@ export function AddEvidence({ caseId, docOptions, evidence }: {
         </div>
       )}
 
-      {error && <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+      {error && <div className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button className="btn-primary" disabled={!docType || !file || save.isPending || !currentUser} onClick={() => save.mutate()}>
