@@ -6,7 +6,6 @@ import { resetDemo } from "@/lib/decisions";
 import { useChargebacks } from "@/lib/chargebacks";
 import { buildQueue, RETAILER_NAMES } from "@/lib/queue";
 import { ROLE_LABELS, useCurrentUser } from "@/lib/current-user";
-import { CaseSearch } from "@/components/CaseSearch";
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -14,11 +13,11 @@ import {
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
-        <main className="flex-1 overflow-x-hidden px-6 py-10 md:px-12">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden px-4 pt-2 pb-10 md:pr-6 md:pl-2">{children}</main>
       </div>
     </div>
   );
@@ -26,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 /* ---------- Sidebar ---------- */
 
-type Icon = ComponentType<{ className?: string }>;
+type Icon = ComponentType<{ className?: string; strokeWidth?: number }>;
 
 function Sidebar() {
   const q = useChargebacks();
@@ -38,7 +37,8 @@ function Sidebar() {
   }, [q.data]);
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-sidebar px-3 py-5 md:flex">
+    // Floating panel: 16px in from the window edges, fixed in place while the page scrolls.
+    <aside className="sticky top-4 m-4 hidden h-[calc(100vh-2rem)] w-56 shrink-0 flex-col overflow-hidden rounded-[24px] bg-sidebar px-3 py-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:flex">
       <Link to="/" className="wordmark mb-8 px-3 text-foreground">Recoverly</Link>
 
       <SectionLabel>Main</SectionLabel>
@@ -54,9 +54,13 @@ function Sidebar() {
           <Link key={id} to="/retailers/$retailerId" params={{ retailerId: id }} className={navClass} activeProps={{ className: navActive }}>
             {({ isActive }) => (
               <>
-                <Store className={`size-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
-                <span className="flex-1">{name}</span>
-                {q.data && <span className="num rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">{openByRetailer[id] ?? 0}</span>}
+                <Store className="size-4 shrink-0" strokeWidth={1.75} />
+                <span className="min-w-0 flex-1 truncate">{name}</span>
+                {q.data && (
+                  <span className={`num rounded-full px-2 py-0.5 text-xs font-medium ${isActive ? "bg-primary-foreground/15 text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+                    {openByRetailer[id] ?? 0}
+                  </span>
+                )}
               </>
             )}
           </Link>
@@ -66,43 +70,30 @@ function Sidebar() {
   );
 }
 
-const navClass = "flex items-center gap-3 rounded-[10px] px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground";
-const navActive = "bg-card text-foreground shadow-sm ring-1 ring-border hover:bg-card";
+const navClass = "flex items-center gap-3 rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none";
+const navActive = "!bg-charcoal !text-primary-foreground hover:!text-primary-foreground";
 
 function SectionLabel({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`mb-1.5 px-3 text-xs font-medium text-muted-foreground ${className}`}>{children}</div>;
+  return <div className={`mb-1.5 px-3 text-xs font-medium text-tertiary ${className}`}>{children}</div>;
 }
 
 function NavItem({ to, icon: I, label, exact }: { to: "/" | "/insights" | "/documents"; icon: Icon; label: string; exact?: boolean }) {
   return (
     <Link to={to} className={navClass} activeProps={{ className: navActive }} activeOptions={{ exact: !!exact, includeSearch: false }}>
-      {({ isActive }) => (
-        <>
-          <I className={`size-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
-          {label}
-        </>
-      )}
+      <I className="size-4 shrink-0" strokeWidth={1.75} />
+      <span className="min-w-0 truncate">{label}</span>
     </Link>
   );
 }
 
 /* ---------- Top bar ---------- */
 
+/** Breadcrumbs left, profile right, on the page background. Search lives only in the dashboard header. */
 function TopBar() {
-  const q = useChargebacks();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // The home dashboard has its own search in the page header.
-  const showSearch = pathname !== "/";
-  const synced = q.dataUpdatedAt ? new Date(q.dataUpdatedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : null;
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/85 px-6 backdrop-blur md:px-12">
-      {/* Breadcrumbs and the profile side give way first; the search keeps its width. */}
+    <header className="sticky top-0 z-30 flex h-[72px] items-center gap-4 bg-background px-4 md:pr-6 md:pl-2">
       <div className="min-w-0 flex-1"><Breadcrumbs /></div>
-      {showSearch && <CaseSearch className="min-w-0 flex-1 sm:min-w-[360px] sm:max-w-[560px]" />}
-      <div className="flex min-w-fit flex-1 items-center justify-end gap-4">
-        <span className="hidden text-xs whitespace-nowrap text-muted-foreground xl:inline">{q.isFetching ? "Syncing…" : synced ? `Synced ${synced}` : ""}</span>
-        <ProfileMenu />
-      </div>
+      <ProfileMenu />
     </header>
   );
 }
@@ -160,8 +151,8 @@ function ProfileMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex shrink-0 items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-left outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring/30">
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{initials}</span>
+      <DropdownMenuTrigger className="flex shrink-0 items-center gap-2.5 rounded-full bg-card py-1 pr-3 pl-1 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring/30">
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-sand text-xs font-semibold text-foreground">{initials}</span>
         <span className="hidden leading-tight whitespace-nowrap lg:block">
           <span className="block text-sm font-medium">{currentUser?.name ?? "Loading…"}</span>
           <span className="block text-xs text-muted-foreground">{currentUser ? ROLE_LABELS[currentUser.role] : ""}</span>
