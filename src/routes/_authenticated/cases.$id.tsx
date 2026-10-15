@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Fragment, useState } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import { AlertTriangle, ChevronDown, ChevronRight, ExternalLink, FileDown, Plus } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AiExplanation } from "@/components/AiExplanation";
@@ -110,55 +110,41 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
 
 /* ---------- Header ---------- */
 
+/** Two lines: chips, id and title; then retailer · code · amount · days left · attempt. */
 function Header({ id, d, r, mapping }: { id: string; d: Deduction; r: CaseResult; mapping: CodeMapping | undefined }) {
-  const meta = [
-    RETAILER_NAMES[d.retailer_id] ?? d.retailer_id,
-    mapping ? `${mapping.code} · ${mapping.code_name}` : d.raw_code,
-    `PO ${d.po_number}`,
-    `Invoice ${d.invoice_number}`,
-  ];
   const limit = mapping?.attempt_limit;
   const urgent = r.days_left != null && r.days_left <= 7;
+  const meta: ReactNode[] = [
+    RETAILER_NAMES[d.retailer_id] ?? d.retailer_id,
+    !mapping ? d.raw_code : mapping.code === mapping.code_name ? mapping.code : `${mapping.code} – ${mapping.code_name}`,
+    money(Number(d.amount)),
+    r.days_left == null ? "No active clock" : (
+      <span className={urgent ? "font-medium text-destructive" : ""}>
+        {r.days_left} {r.days_left === 1 ? "day" : "days"} left{r.clock ? ` (${CLOCK_NAME[r.clock]})` : ""}
+      </span>
+    ),
+    limit != null ? `Attempt ${Math.min(d.attempts_used + 1, limit)} of ${limit}` : `Attempt ${d.attempts_used + 1}`,
+  ];
   return (
-    <header className="flex flex-wrap items-start justify-between gap-6">
+    <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           {r.priority && <span className={PRIORITY_CHIP[r.priority]}>{r.priority}</span>}
-          <span className="num text-sm font-medium text-muted-foreground">{d.id}</span>
+          <span className="num text-sm font-semibold text-muted-foreground">{d.id}</span>
+          <h1 className="min-w-0 font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]">{d.title}</h1>
           <span className="chip-neutral">{STATUS_LABEL[d.status] ?? d.status}</span>
           {r.state !== "scored" && <span className="chip-neutral">{STATE_LABEL[r.state]}</span>}
         </div>
-        <h1 className="mt-2 page-title">{d.title}</h1>
-        <p className="num mt-1.5 text-sm text-muted-foreground">
-          {meta.map((m, i) => <Fragment key={m}>{i > 0 && <span className="mx-1.5 text-border">•</span>}{m}</Fragment>)}
+        <p className="num mt-1.5 text-[13px] text-muted-foreground">
+          {meta.map((m, i) => <Fragment key={i}>{i > 0 && <span className="mx-1.5" aria-hidden>·</span>}{m}</Fragment>)}
         </p>
       </div>
-
-      <div className="flex flex-wrap items-start gap-3">
-        <dl className="panel flex divide-x divide-border">
-          <Figure k="Amount" v={money(Number(d.amount))} />
-          <Figure k="Days left" v={r.days_left == null ? "—" : `${r.days_left}`} tone={urgent ? "text-destructive" : undefined}
-            sub={r.clock ? CLOCK_NAME[r.clock] : undefined} />
-          <Figure k="Attempt" v={limit != null ? `${Math.min(d.attempts_used + 1, limit)} of ${limit}` : `${d.attempts_used + 1}`}
-            sub={`${d.attempts_used} used`} />
-        </dl>
-        {d.status === "submitted" && (
-          <Link to="/cases/$id/packet" params={{ id }} target="_blank" className="btn-outline">
-            <FileDown className="size-4" /> Export packet
-          </Link>
-        )}
-      </div>
+      {d.status === "submitted" && (
+        <Link to="/cases/$id/packet" params={{ id }} target="_blank" className="btn-outline shrink-0">
+          <FileDown className="size-4" /> Export packet
+        </Link>
+      )}
     </header>
-  );
-}
-
-function Figure({ k, v, sub, tone }: { k: string; v: string; sub?: string | undefined; tone?: string | undefined }) {
-  return (
-    <div className="min-w-28 px-5 py-3">
-      <dt className="text-xs text-muted-foreground">{k}</dt>
-      <dd className={`num mt-0.5 text-xl font-semibold tracking-[-0.02em] ${tone ?? ""}`}>{v}</dd>
-      {sub && <dd className="text-xs text-muted-foreground">{sub}</dd>}
-    </div>
   );
 }
 
