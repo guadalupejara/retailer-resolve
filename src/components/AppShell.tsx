@@ -17,13 +17,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       void qc.invalidateQueries();
     },
   });
-  const nav = "block rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-foreground/10 hover:text-sidebar-foreground";
-  const active = { className: "block rounded-md px-3 py-2 text-sm bg-sidebar-foreground/15 text-sidebar-foreground" };
+  const nav = "block rounded-[10px] px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-secondary hover:text-sidebar-foreground";
+  const active = { className: "block rounded-[10px] px-3 py-2 text-sm font-medium bg-primary/10 text-primary" };
   return (
     <div className="flex min-h-screen">
-      <aside className="hidden w-60 shrink-0 flex-col bg-sidebar p-4 md:flex">
-        <Link to="/" className="mb-8 px-3 pt-2 font-display text-2xl text-sidebar-foreground">
-          recoup<span className="text-accent">.</span>
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-sidebar p-4 md:flex">
+        <Link to="/" className="mb-8 px-3 pt-2 text-2xl font-bold tracking-[-0.03em] text-sidebar-foreground">
+          recoup<span className="text-primary">.</span>
         </Link>
         <nav className="space-y-1">
           <Link to="/" className={nav} activeProps={active} activeOptions={{ exact: true }}>Dashboard</Link>
@@ -38,7 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
-        <div className="mt-auto rounded-md bg-sidebar-foreground/10 p-3 text-xs text-sidebar-foreground/80">
+        <div className="mt-auto rounded-xl bg-secondary p-3 text-xs text-sidebar-foreground/80">
           <label htmlFor="role-switcher" className="eyebrow !text-sidebar-foreground/50">Working as</label>
           <select
             id="role-switcher"
@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {reset.isPending ? "Resetting…" : reset.isError ? "Reset failed. Try again." : reset.isSuccess ? "Demo reset" : "Reset demo data"}
         </button>
       </aside>
-      <main className="flex-1 overflow-x-hidden px-6 py-8 md:px-10">{children}</main>
+      <main className="flex-1 overflow-x-hidden px-6 py-10 md:px-12">{children}</main>
     </div>
   );
 }

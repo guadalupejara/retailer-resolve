@@ -46,7 +46,7 @@ function AlertQueue() {
   return (
     <AppShell>
       <div className="eyebrow">Alert queue</div>
-      <h1 className="mt-1 text-4xl">Chargebacks to act on</h1>
+      <h1 className="mt-1 page-title">Chargebacks to act on</h1>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Open dollars at stake" value={data ? money(stats.openDollars) : "—"} tone="warning" />
@@ -115,7 +115,7 @@ function AlertQueue() {
               </table>
             </div>
 
-            <h2 className="mt-12 text-2xl">Done</h2>
+            <h2 className="mt-12 section-title">Done</h2>
             <p className="mt-1 text-sm text-muted-foreground">Submitted, written off, won or denied. No further action here.</p>
             <div className="panel mt-4 overflow-x-auto">
               <table className="w-full text-sm">
@@ -134,7 +134,7 @@ function AlertQueue() {
                       </td>
                       <td className="px-4 py-3">{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</td>
                       <td className="num px-4 py-3 text-right">{money(r.amount)}</td>
-                      <td className="px-4 py-3"><span className="chip bg-muted text-muted-foreground">{STATUS_LABEL[r.deduction.status] ?? r.deduction.status}</span></td>
+                      <td className="px-4 py-3"><span className="chip-neutral">{STATUS_LABEL[r.deduction.status] ?? r.deduction.status}</span></td>
                     </tr>
                   ))}
                   {doneRows.length === 0 && (
@@ -144,7 +144,7 @@ function AlertQueue() {
               </table>
             </div>
 
-            <h2 className="mt-12 text-2xl">Not scorable</h2>
+            <h2 className="mt-12 section-title">Not scorable</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Expired, final, routed, or needing human review. These have no score or priority.
             </p>
@@ -211,7 +211,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "wa
   return (
     <div className="panel p-5">
       <div className="eyebrow">{label}</div>
-      <div className={`num mt-2 text-2xl ${c}`}>{value}</div>
+      <div className={`num mt-3 kpi-num ${c}`}>{value}</div>
     </div>
   );
 }

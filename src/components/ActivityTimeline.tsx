@@ -10,7 +10,7 @@ export function ActivityTimeline({ caseId }: { caseId: string }) {
 
   return (
     <section className="mt-10">
-      <h2 className="text-2xl">Activity</h2>
+      <h2 className="section-title">Activity</h2>
       {q.isPending && <div className="panel mt-4 p-6 text-sm text-muted-foreground">Loading activity…</div>}
       {q.isError && <div className="panel mt-4 p-6 text-sm text-destructive">Couldn't load activity. Try again in a moment.</div>}
       {q.data && q.data.length === 0 && <div className="panel mt-4 p-6 text-sm text-muted-foreground">No activity yet.</div>}

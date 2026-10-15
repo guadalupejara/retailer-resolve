@@ -58,7 +58,7 @@ function InsightsPage() {
   return (
     <AppShell>
       <div className="eyebrow">Insights</div>
-      <h1 className="mt-1 text-4xl">What your disputes have done</h1>
+      <h1 className="mt-1 page-title">What your disputes have done</h1>
       <p className="mt-2 text-sm text-muted-foreground">Read-only. Built from closed disputes and the live queue.</p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -68,7 +68,7 @@ function InsightsPage() {
         <Stat label="Win rate, by count" value={pct(totals.winRate)} sub="won ÷ (won + denied + expired)" />
       </div>
 
-      <h2 className="mt-12 text-2xl">Past outcome dollars</h2>
+      <h2 className="mt-12 section-title">Past outcome dollars</h2>
       <div className="panel mt-4 h-80 p-4">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chart} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
@@ -82,7 +82,7 @@ function InsightsPage() {
         </ResponsiveContainer>
       </div>
 
-      <h2 className="mt-12 text-2xl">Top denial reasons</h2>
+      <h2 className="mt-12 section-title">Top denial reasons</h2>
       <p className="mt-2 text-sm">Your readiness checks are built from your denial history.</p>
       <div className="panel mt-4 overflow-x-auto">
         <table className="w-full text-sm">
@@ -114,7 +114,7 @@ function InsightsPage() {
         </div>
       )}
 
-      <h2 className="mt-12 text-2xl">What's at stake now</h2>
+      <h2 className="mt-12 section-title">What's at stake now</h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         {(["Ready", "Needs work", "Weak"] as const).map((b) => (
           <Stat key={b} label={`Open, ${b.toLowerCase()}`} value={money(stake.byBand[b]?.amount ?? 0)} sub={`${stake.byBand[b]?.n ?? 0} cases`} />
@@ -147,7 +147,7 @@ function Stat({ label, value, sub, tone }: { label: string; value: string; sub: 
   return (
     <div className="panel p-5">
       <div className="eyebrow">{label}</div>
-      <div className={`num mt-2 text-2xl ${c}`}>{value}</div>
+      <div className={`num mt-3 kpi-num ${c}`}>{value}</div>
       <div className="mt-1 text-xs text-muted-foreground">{sub}</div>
     </div>
   );

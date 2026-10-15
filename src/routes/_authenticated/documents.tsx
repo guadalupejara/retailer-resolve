@@ -25,7 +25,7 @@ function DocumentsPage() {
   return (
     <AppShell>
       <div className="eyebrow">Library</div>
-      <h1 className="mt-1 text-4xl">Case documents</h1>
+      <h1 className="mt-1 page-title">Case documents</h1>
       <input
         className="input mt-6 max-w-md"
         placeholder="Search by case, PO, document type or file name…"
@@ -49,7 +49,7 @@ function DocumentsPage() {
         {groups.map((g) => (
           <section key={g.retailerId}>
             <div className="mb-3 flex items-baseline gap-3">
-              <h2 className="text-2xl">{g.name}</h2>
+              <h2 className="section-title">{g.name}</h2>
               <span className="text-xs text-muted-foreground">
                 {g.cases.length} cases · {g.cases.reduce((t, c) => t + c.files.length, 0)} files
               </span>
@@ -66,7 +66,7 @@ function DocumentsPage() {
                     {files.map((f) => (
                       <li key={f.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
                         <span className="w-44">{DOC_LABEL[f.doc_type] ?? f.doc_type}</span>
-                        <span className="chip bg-muted text-muted-foreground">{f.variant ?? "—"}</span>
+                        <span className="chip-neutral">{f.variant ?? "—"}</span>
                         <span className="num flex-1 truncate text-xs text-muted-foreground">{f.storage_path.split("/").pop()}</span>
                         <a href={evidenceUrl(f.storage_path)} target="_blank" rel="noopener noreferrer" className="btn-ghost !py-1 text-xs">Open ↗</a>
                       </li>

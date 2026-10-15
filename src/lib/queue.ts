@@ -18,8 +18,8 @@ export interface QueueFilters {
 export const PRIORITY_CHIP: Record<Priority, string> = {
   Critical: "chip-lost",
   High: "chip-open",
-  Normal: "chip-disputed",
-  Low: "chip bg-muted text-muted-foreground",
+  Normal: "chip-neutral",
+  Low: "chip-neutral",
 };
 
 export const BAND_CHIP: Record<Band, string> = {

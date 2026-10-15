@@ -39,7 +39,7 @@ export function ScoreReadout({ id, r, cap }: { id: string; r: CaseResult; cap: n
   return (
     <div>
       <div className="flex items-end gap-4">
-        <div className="num text-6xl">
+        <div className="num text-6xl font-semibold tracking-[-0.03em]">
           {re && from != null && to != null ? <CountUp from={from} to={to} run={re.run} /> : (r.display ?? "—")}
         </div>
         {r.band && <span className={`${BAND_CHIP[r.band as Band]} mb-2`}>{r.band}</span>}

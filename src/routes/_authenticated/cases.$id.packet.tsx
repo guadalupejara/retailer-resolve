@@ -72,8 +72,8 @@ function PacketPage() {
       </div>
 
       <header className="mt-6 border-b border-border pb-4">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Dispute packet</div>
-        <h1 className="mt-1 text-3xl"><span className="num">{d.id}</span> · {d.title}</h1>
+        <div className="text-xs font-medium text-muted-foreground">Dispute packet</div>
+        <h1 className="mt-1 page-title"><span className="num">{d.id}</span> · {d.title}</h1>
       </header>
 
       <dl className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
@@ -88,7 +88,7 @@ function PacketPage() {
       </dl>
 
       <section className="mt-8">
-        <h2 className="text-lg font-semibold">Dispute summary</h2>
+        <h2 className="section-title">Dispute summary</h2>
         {summary ? (
           <>
             <p className="mt-2 whitespace-pre-wrap text-sm">{summary.text}</p>
@@ -105,13 +105,13 @@ function PacketPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-lg font-semibold">Score breakdown</h2>
+        <h2 className="section-title">Score breakdown</h2>
         {r.state !== "scored" ? (
           <p className="mt-2 text-sm text-muted-foreground">This case has no score breakdown (state: {r.state}).</p>
         ) : (
           groupLines(r.lines).map((g) => (
             <div key={g.bucket} className="mt-3">
-              <div className="flex justify-between text-xs uppercase tracking-wide text-muted-foreground">
+              <div className="flex justify-between text-xs font-medium text-muted-foreground">
                 <span>{g.bucket}</span><span className="num">{g.earned}/{g.points}</span>
               </div>
               <table className="mt-1 w-full text-sm">
@@ -135,7 +135,7 @@ function PacketPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-lg font-semibold">Evidence</h2>
+        <h2 className="section-title">Evidence</h2>
         {evidence.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">No evidence on file.</p>
         ) : (
@@ -155,7 +155,7 @@ function PacketPage() {
       </section>
 
       <section className="mt-10 border-t border-border pt-4 text-sm">
-        <h2 className="text-lg font-semibold">Approval</h2>
+        <h2 className="section-title">Approval</h2>
         {approval ? (
           <p className="mt-2">Approved by {nameOf(approval.actor)} on {PT(approval.at)}.</p>
         ) : (
@@ -174,7 +174,7 @@ function Page({ children }: { children: React.ReactNode }) {
 function Field({ k, v }: { k: string; v: string }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-muted-foreground">{k}</dt>
+      <dt className="text-xs font-medium text-muted-foreground">{k}</dt>
       <dd className="num mt-0.5 break-words">{v}</dd>
     </div>
   );

@@ -90,7 +90,7 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
 
       {scored && (
         <section className="mt-10">
-          <h2 className="text-2xl">Scoring breakdown</h2>
+          <h2 className="section-title">Scoring breakdown</h2>
           <div className="mt-4 space-y-6">
             {groupLines(r.lines).map((g) => (
               <div key={g.bucket}>
@@ -116,7 +116,7 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
                           )}
                         </div>
                         <div className="flex items-start gap-3 md:justify-end">
-                          <span className={status === "pass" ? "chip-won" : status === "fail" ? "chip-lost" : "chip bg-muted text-muted-foreground"}>
+                          <span className={status === "pass" ? "chip-won" : status === "fail" ? "chip-lost" : "chip-neutral"}>
                             {status === "pass" ? "Pass" : status === "fail" ? "Fail" : "N/A"}
                           </span>
                           <span className="num text-xs">{l.earned}/{l.points}</span>
@@ -135,7 +135,7 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
       )}
 
       <section className="mt-10">
-        <h2 className="text-2xl">Evidence</h2>
+        <h2 className="section-title">Evidence</h2>
         <div className="mt-4">
           <AddEvidence caseId={id} docOptions={docOptions} evidence={evidence} />
         </div>
@@ -147,7 +147,7 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
               <div key={e.id} className="panel p-5">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="font-medium">{DOC_LABEL[e.doc_type] ?? e.doc_type}</span>
-                  {e.variant && <span className="chip bg-muted text-muted-foreground">{e.variant}</span>}
+                  {e.variant && <span className="chip-neutral">{e.variant}</span>}
                   <span className="num text-xs text-muted-foreground">{basename(e.storage_path)}</span>
                   <a href={evidenceUrl(e.storage_path)} target="_blank" rel="noopener noreferrer" className="btn-outline ml-auto !py-1 text-xs">Open ↗</a>
                 </div>
@@ -197,7 +197,7 @@ function Header({ d, r, mappingLabel, amount }: { d: Deduction; r: CaseResult; m
   return (
     <div className="mt-4">
       <div className="eyebrow">Case</div>
-      <h1 className="mt-1 text-4xl"><span className="num">{d.id}</span></h1>
+      <h1 className="mt-1 page-title"><span className="num">{d.id}</span></h1>
       <div className="mt-2 text-base text-muted-foreground">{d.title}</div>
       <dl className="panel mt-6 grid grid-cols-2 gap-4 p-5 text-sm md:grid-cols-4 xl:grid-cols-7">
         {fields.map(([k, v]) => (
@@ -227,7 +227,7 @@ function NotScoredPanel({ r, d, mapping, s }: { r: CaseResult; d: Deduction; map
   return (
     <div className="panel p-6">
       <div className="eyebrow">Not scored</div>
-      <div className="mt-3 text-2xl">{STATE_LABEL[r.state]}</div>
+      <div className="mt-3 text-2xl font-semibold tracking-[-0.02em]">{STATE_LABEL[r.state]}</div>
       {reason && <p className="mt-3 text-sm text-muted-foreground">{reason}</p>}
     </div>
   );
