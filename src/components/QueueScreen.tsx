@@ -12,13 +12,17 @@ export function QueueScreen({ filters }: { filters: QueueFilters }) {
   const navigate = useNavigate();
   const q = useChargebacks();
 
-  // Picking a retailer moves to that retailer's page; priority and band stay in the query string.
+  // Picking a retailer moves to that retailer's page (or /cases for all); the other filters stay in the query string.
   const setFilter = (patch: QueueFilters) => {
-    const next = { ...filters, ...patch };
-    const search = { priority: next.priority, band: next.band };
-    if (next.retailer) navigate({ to: "/retailers/$retailerId", params: { retailerId: next.retailer }, search, replace: !("retailer" in patch) });
-    else navigate({ to: "/", search, replace: !("retailer" in patch) });
+    const { retailer, ...search } = { ...filters, ...patch };
+    const replace = !("retailer" in patch);
+    if (retailer) navigate({ to: "/retailers/$retailerId", params: { retailerId: retailer }, search, replace });
+    else navigate({ to: "/cases", search, replace });
   };
+  // Filters the home cards link with. They have no dropdown, so show them as removable chips.
+  const extra: { label: string; clear: QueueFilters }[] = [];
+  if (filters.recommendation) extra.push({ label: `Recommendation: ${RECOMMENDATION_LABEL[filters.recommendation]}`, clear: { recommendation: undefined } });
+  if (filters.maxDays != null) extra.push({ label: `Due within ${filters.maxDays} days`, clear: { maxDays: undefined } });
 
   const data = q.data ? buildQueue(q.data.scored, q.data.queue) : null;
   // Stats and the not-scorable list follow the retailer filter only. Priority and band filter the table.
@@ -32,7 +36,7 @@ export function QueueScreen({ filters }: { filters: QueueFilters }) {
 
   return (
     <>
-      <div className="eyebrow">{retailerName ? `${retailerName} alert queue` : "Alert queue"}</div>
+      <div className="eyebrow">{retailerName ? `${retailerName} alert queue` : "All retailers"}</div>
       <h1 className="mt-1 page-title">{retailerName ? `${retailerName} chargebacks to act on` : "Chargebacks to act on"}</h1>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -49,6 +53,15 @@ export function QueueScreen({ filters }: { filters: QueueFilters }) {
           options={[["", "All priorities"], ...PRIORITIES.map((p): [string, string] => [p, p])]} />
         <FilterSelect label="Band" value={filters.band ?? ""} onChange={(v) => setFilter({ band: (v || undefined) as Band | undefined })}
           options={[["", "All bands"], ...BANDS.map((b): [string, string] => [b, b])]} />
+        {extra.length > 0 && (
+          <div className="flex items-end gap-2 pb-1">
+            {extra.map((x) => (
+              <button key={x.label} type="button" onClick={() => setFilter(x.clear)} className="chip-disputed hover:bg-primary/15" aria-label={`Remove filter ${x.label}`}>
+                {x.label} <span aria-hidden>×</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="mt-6">
@@ -102,7 +115,7 @@ export function QueueScreen({ filters }: { filters: QueueFilters }) {
               </table>
             </div>
 
-            <h2 className="mt-12 section-title">Done</h2>
+            <h2 id="done" className="mt-12 scroll-mt-24 section-title">Done</h2>
             <p className="mt-1 text-sm text-muted-foreground">Submitted, written off, won or denied. No further action here.</p>
             <div className="panel mt-4 overflow-x-auto">
               <table className="w-full text-sm">
@@ -170,7 +183,7 @@ export function QueueScreen({ filters }: { filters: QueueFilters }) {
 }
 
 /** Score on one line, "raw N" small underneath when the fatal-defect cap applies. */
-function ScoreCell({ r }: { r: CaseResult }) {
+export function ScoreCell({ r }: { r: CaseResult }) {
   if (r.display == null) return <>—</>;
   return (
     <div className="whitespace-nowrap">

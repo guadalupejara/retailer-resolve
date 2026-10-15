@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
+import { Route as AuthenticatedCasesIndexRouteImport } from './routes/_authenticated/cases.index'
 import { Route as AuthenticatedCasesIdRouteImport } from './routes/_authenticated/cases.$id'
 import { Route as AuthenticatedRetailersRetailerIdRouteImport } from './routes/_authenticated/retailers.$retailerId'
 import { Route as AuthenticatedCasesIdPacketRouteImport } from './routes/_authenticated/cases.$id.packet'
@@ -34,6 +35,11 @@ const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
 const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCasesIndexRoute = AuthenticatedCasesIndexRouteImport.update({
+  id: '/cases/',
+  path: '/cases/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCasesIdRoute = AuthenticatedCasesIdRouteImport.update({
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/insights': typeof AuthenticatedInsightsRoute
   '/cases/$id': typeof AuthenticatedCasesIdRouteWithChildren
   '/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
+  '/cases/': typeof AuthenticatedCasesIndexRoute
   '/cases/$id/packet': typeof AuthenticatedCasesIdPacketRoute
 }
 export interface FileRoutesByTo {
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/cases/$id': typeof AuthenticatedCasesIdRouteWithChildren
   '/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
+  '/cases': typeof AuthenticatedCasesIndexRoute
   '/cases/$id/packet': typeof AuthenticatedCasesIdPacketRoute
 }
 export interface FileRoutesById {
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/cases/$id': typeof AuthenticatedCasesIdRouteWithChildren
   '/_authenticated/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
+  '/_authenticated/cases/': typeof AuthenticatedCasesIndexRoute
   '/_authenticated/cases/$id/packet': typeof AuthenticatedCasesIdPacketRoute
 }
 export interface FileRouteTypes {
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/insights'
     | '/cases/$id'
     | '/retailers/$retailerId'
+    | '/cases/'
     | '/cases/$id/packet'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cases/$id'
     | '/retailers/$retailerId'
+    | '/cases'
     | '/cases/$id/packet'
   id:
     | '__root__'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/cases/$id'
     | '/_authenticated/retailers/$retailerId'
+    | '/_authenticated/cases/'
     | '/_authenticated/cases/$id/packet'
   fileRoutesById: FileRoutesById
 }
@@ -140,6 +152,13 @@ declare module '@tanstack/react-router' {
       path: '/insights'
       fullPath: '/insights'
       preLoaderRoute: typeof AuthenticatedInsightsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cases/': {
+      id: '/_authenticated/cases/'
+      path: '/cases'
+      fullPath: '/cases/'
+      preLoaderRoute: typeof AuthenticatedCasesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cases/$id': {
@@ -183,6 +202,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedCasesIdRoute: typeof AuthenticatedCasesIdRouteWithChildren
   AuthenticatedRetailersRetailerIdRoute: typeof AuthenticatedRetailersRetailerIdRoute
+  AuthenticatedCasesIndexRoute: typeof AuthenticatedCasesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -191,6 +211,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedCasesIdRoute: AuthenticatedCasesIdRouteWithChildren,
   AuthenticatedRetailersRetailerIdRoute: AuthenticatedRetailersRetailerIdRoute,
+  AuthenticatedCasesIndexRoute: AuthenticatedCasesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

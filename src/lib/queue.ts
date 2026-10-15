@@ -13,6 +13,21 @@ export interface QueueFilters {
   retailer?: string | undefined;
   priority?: Priority | undefined;
   band?: Band | undefined;
+  /** Only rows the engine recommends this for (the home "Approvals needed" card links with "submit"). */
+  recommendation?: Recommendation | undefined;
+  /** Only rows with days_left at or under this. */
+  maxDays?: number | undefined;
+}
+
+/** Reads the queue filters from a URL search object. Shared by the /cases and /retailers/$retailerId routes. */
+export function parseQueueSearch(s: Record<string, unknown>): Omit<QueueFilters, "retailer"> {
+  const maxDays = Number(s["maxDays"]);
+  return {
+    priority: PRIORITIES.find((p) => p === s["priority"]),
+    band: BANDS.find((b) => b === s["band"]),
+    recommendation: (Object.keys(RECOMMENDATION_LABEL) as Recommendation[]).find((r) => r === s["recommendation"]),
+    maxDays: s["maxDays"] != null && Number.isFinite(maxDays) ? maxDays : undefined,
+  };
 }
 
 export const PRIORITY_CHIP: Record<Priority, string> = {
@@ -83,7 +98,9 @@ export function applyFilters(rows: QueueRow[], f: QueueFilters) {
     (r) =>
       (!f.retailer || r.deduction.retailer_id === f.retailer) &&
       (!f.priority || r.result.priority === f.priority) &&
-      (!f.band || r.result.band === f.band),
+      (!f.band || r.result.band === f.band) &&
+      (!f.recommendation || r.result.recommendation === f.recommendation) &&
+      (f.maxDays == null || (r.result.days_left != null && r.result.days_left <= f.maxDays)),
   );
 }
 

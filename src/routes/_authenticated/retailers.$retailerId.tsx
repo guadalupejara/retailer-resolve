@@ -1,14 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { QueueScreen } from "@/components/QueueScreen";
-import { BANDS, PRIORITIES, RETAILER_NAMES } from "@/lib/queue";
-import type { Band, Priority } from "@/lib/scoring";
+import { RETAILER_NAMES, parseQueueSearch } from "@/lib/queue";
 
 export const Route = createFileRoute("/_authenticated/retailers/$retailerId")({
-  validateSearch: (s: Record<string, unknown>): { priority?: Priority | undefined; band?: Band | undefined } => ({
-    priority: PRIORITIES.find((p) => p === s["priority"]),
-    band: BANDS.find((b) => b === s["band"]),
-  }),
+  validateSearch: parseQueueSearch,
   beforeLoad: ({ params }) => {
     if (!(params.retailerId in RETAILER_NAMES)) throw notFound();
   },

@@ -129,9 +129,11 @@ function Breadcrumbs() {
     caseId = decodeURIComponent(casePage[1]!);
     retailerId = q.data?.scored.find((x) => x.deduction.id === caseId)?.deduction.retailer_id;
   }
-  if (!retailerPage && !casePage) return <div />;
+  const allCases = /^\/cases\/?$/.test(pathname);
+  if (!retailerPage && !casePage && !allCases) return <div />;
 
   crumbs = [{ label: "Dashboard", to: <Link to="/" className="hover:text-foreground">Dashboard</Link> }];
+  if (allCases) crumbs.push({ label: "All cases" });
   if (retailerId) {
     const name = RETAILER_NAMES[retailerId] ?? retailerId;
     crumbs.push({ label: name, to: caseId ? <Link to="/retailers/$retailerId" params={{ retailerId }} className="hover:text-foreground">{name}</Link> : undefined });
