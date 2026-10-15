@@ -169,15 +169,9 @@ function Header({ d, r, mapping }: { d: Deduction; r: CaseResult; mapping: CodeM
 
 /* ---------- Left column ---------- */
 
-const BAND_TINT: Record<string, string> = {
-  Ready: "bg-success/[0.05] border-success/25",
-  "Needs work": "bg-warning/[0.08] border-warning/35",
-  Weak: "bg-destructive/[0.05] border-destructive/20",
-};
-
 function ReadinessHero({ id, r, s }: { id: string; r: CaseResult; s: Settings }) {
   return (
-    <section className={`panel p-6 ${r.band ? BAND_TINT[r.band] : ""}`}>
+    <section className="panel p-6">
       <div className="eyebrow">Readiness score</div>
       <div className="mt-3">
         <ScoreReadout id={id} r={r} cap={s.cap_score} needsWorkMin={s.band_needs_work_min} readyMin={s.band_ready_min} />

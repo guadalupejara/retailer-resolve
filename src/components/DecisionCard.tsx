@@ -24,9 +24,9 @@ function approveBlock(r: CaseResult): string | null {
  * Which controls the card shows, from the case state. Display only: the server rules are unchanged.
  * - outcome:   submitted. Only Record outcome.
  * - manager:   a write-off is waiting for the manager. Only approve / reject.
- * - approve:   the engine recommends submit. Only Approve dispute packet.
- * - write_off: the engine recommends accept and write off. Only the write-off controls.
- * - evidence:  anything else. One evidence action: Request evidence, then Add received evidence.
+ * - approve:   the engine recommends submit. Approve dispute packet, then write-off as a secondary action.
+ * - write_off: the engine recommends accept and write off. Write-off is the primary action.
+ * - evidence:  anything else. One evidence action (Request evidence, then Add received evidence), then write-off.
  */
 type Mode = "outcome" | "manager" | "approve" | "write_off" | "evidence";
 
@@ -168,14 +168,15 @@ export function DecisionCard({ caseId, d, result, threshold, canAddEvidence, onA
             )}
           </div>}
 
-          {/* Write-off: direct at or below the manager limit, request above it, then the manager's call. */}
-          {(mode === "write_off" || mode === "manager") && <div className="py-4">
-            <div className="font-medium">Write off {money(amount)}</div>
+          {/* Write-off: direct at or below the manager limit, request above it, then the manager's call.
+              On every open scored case: the primary action for accept_write_off, otherwise secondary below the divider. */}
+          {mode !== "outcome" && <div className="py-4">
+            <div className={mode === "write_off" || mode === "manager" ? "font-medium" : "text-sm font-medium text-muted-foreground"}>Write off {money(amount)}</div>
             {!overThreshold && (
               can("write_off") ? (
                 <div className="mt-2 space-y-2">
                   <input className="input" placeholder="Note (optional)" value={writeOffNote} onChange={(e) => setWriteOffNote(e.target.value)} />
-                  <button className="btn-outline" disabled={busy}
+                  <button className={mode === "write_off" ? "btn-primary w-full" : "btn-outline"} disabled={busy}
                     onClick={() => act.mutate({ action: "write_off", note: writeOffNote || undefined })}>
                     Write off {money(amount)}
                   </button>
@@ -212,7 +213,7 @@ export function DecisionCard({ caseId, d, result, threshold, canAddEvidence, onA
                 <div className="mt-2 space-y-2">
                   <p className="text-xs text-muted-foreground">Above {money(threshold)} you request it. The AR manager decides.</p>
                   <textarea className="input min-h-16" placeholder="Why should this be written off?" value={requestReason} onChange={(e) => setRequestReason(e.target.value)} />
-                  <button className="btn-outline" disabled={busy || !requestReason.trim()}
+                  <button className={mode === "write_off" ? "btn-primary w-full" : "btn-outline"} disabled={busy || !requestReason.trim()}
                     onClick={() => act.mutate({ action: "request_write_off", note: requestReason.trim() })}>
                     Request write-off
                   </button>
