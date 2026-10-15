@@ -1,12 +1,16 @@
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import type { ComponentType, ReactNode } from "react";
+import { AlertTriangle, ArrowRight, ClipboardCheck, Send, Wallet } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { CaseSearch } from "@/components/CaseSearch";
 import { ScoreCell } from "@/components/QueueScreen";
 import { useChargebacks } from "@/lib/chargebacks";
 import { useCurrentUser } from "@/lib/current-user";
 import { overview } from "@/lib/overview";
-import { BAND_CHIP, CLOCK_LABEL, PRIORITY_CHIP, RETAILER_NAMES, STATE_LABEL, buildQueue, money, type QueueRow } from "@/lib/queue";
+import {
+  BANDS, BAND_CHIP, CLOCK_LABEL, PRIORITY_CHIP, RETAILER_NAMES, STATE_LABEL,
+  applyFilters, buildQueue, money, queueStats, type QueueRow,
+} from "@/lib/queue";
 
 export const Route = createFileRoute("/_authenticated/")({
   // Old links used /?retailer=walmart. Each retailer now has its own page.
@@ -27,214 +31,260 @@ export const Route = createFileRoute("/_authenticated/")({
   component: Home,
 });
 
+type Queue = ReturnType<typeof buildQueue>;
+
+/**
+ * Per-retailer view of the same numbers, for the Walmart vs Amazon comparisons. Built by running the existing
+ * selectors (applyFilters, queueStats, overview) on each retailer's slice of buildQueue. Nothing is rescored.
+ */
+function byRetailer(q: Queue) {
+  return Object.entries(RETAILER_NAMES).map(([id, name]) => {
+    const slice = (rows: QueueRow[]) => applyFilters(rows, { retailer: id });
+    const o = overview({ scorable: slice(q.scorable), notScorable: slice(q.notScorable), done: slice(q.done) });
+    const bands = BANDS.map((band) => {
+      const rows = applyFilters(q.scorable, { retailer: id, band });
+      return { band, count: rows.length, dollars: queueStats(rows).openDollars };
+    });
+    return { id, name, o, bands };
+  });
+}
+type RetailerSplit = ReturnType<typeof byRetailer>[number];
+
 function Home() {
   const q = useChargebacks();
   const { currentUser } = useCurrentUser();
   const firstName = currentUser?.name.split(" ")[0];
-  const o = q.data ? overview(buildQueue(q.data.scored, q.data.queue)) : null;
+  const queue = q.data ? buildQueue(q.data.scored, q.data.queue) : null;
+  const o = queue ? overview(queue) : null;
+  const split = queue ? byRetailer(queue) : null;
 
   return (
     <AppShell>
-      <h1 className="page-title">Good morning{firstName ? `, ${firstName}` : ""}</h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">
-        {o ? summaryLine(o.critical.count, o.dueWithin7.dollars) : "Loading today's cases…"}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="page-title">Good morning{firstName ? `, ${firstName}` : ""}</h1>
+        <CaseSearch className="w-full sm:w-[420px]" />
+      </div>
 
       {q.isError && (
-        <div className="panel mt-8 border-l-4 border-l-destructive p-5 text-sm">
+        <div className="panel mt-6 border-l-4 border-l-destructive p-6 text-sm">
           <div className="font-medium text-destructive">Couldn't load the overview</div>
           <div className="mt-1 text-muted-foreground">{q.error.message}</div>
         </div>
       )}
 
-      {/* Row 1: KPIs, each linking to the list it counts. */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Money at stake" value={o ? money(o.open.dollars) : "—"} sub={o && `${o.open.count} open cases`}
-          link={<Link to="/cases" className={kpiLink} aria-label="Money at stake: view open cases" />} />
-        <KpiCard label="Critical" tone="danger" value={o ? String(o.critical.count) : "—"} sub={o && money(o.critical.dollars)}
-          link={<Link to="/cases" search={{ priority: "Critical" }} className={kpiLink} aria-label="Critical: view critical cases" />} />
-        <KpiCard label="Approvals needed, next 7 days" tone="warning" value={o ? String(o.approvalsNeeded.count) : "—"} sub={o && "Ready to file, due within 7 days"}
-          link={<Link to="/cases" search={{ recommendation: "submit", maxDays: 7 }} className={kpiLink} aria-label="Approvals needed: view cases ready to file" />} />
-        <KpiCard label="Packets submitted" tone="success" value={o ? String(o.packetsSubmitted.count) : "—"} sub={o && money(o.packetsSubmitted.dollars)}
-          link={<Link to="/cases" hash="done" className={kpiLink} aria-label="Packets submitted: view done cases" />} />
-      </div>
+      <div className="mt-8 grid grid-cols-12 gap-6">
+        {/* Row 1: KPIs. Each compares Walmart and Amazon. */}
+        <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={Wallet} label="Money at stake"
+          value={o ? money(o.open.dollars) : "—"}
+          link={<Link to="/cases" className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
+          {split && <SplitRows rows={split.map((r) => ({ id: r.id, name: r.name, primary: money(r.o.open.dollars), secondary: plural(r.o.open.count, "case") }))} />}
+        </KpiCard>
+        <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={AlertTriangle} label="Critical"
+          value={o ? String(o.critical.count) : "—"}
+          link={<Link to="/cases" search={{ priority: "Critical" }} className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
+          {split && o && (o.critical.count === 0 ? <NoneYet /> :
+            <SplitRows rows={split.map((r) => ({ id: r.id, name: r.name, primary: String(r.o.critical.count), secondary: money(r.o.critical.dollars) }))} />)}
+        </KpiCard>
+        <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={ClipboardCheck} label="Approvals needed, next 7 days"
+          value={o ? String(o.approvalsNeeded.count) : "—"}
+          link={<Link to="/cases" search={{ recommendation: "submit", maxDays: 7 }} className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
+          {split && o && (o.approvalsNeeded.count === 0 ? <NoneYet /> :
+            <SplitRows rows={split.map((r) => ({ id: r.id, name: r.name, primary: String(r.o.approvalsNeeded.count), secondary: money(r.o.approvalsNeeded.dollars) }))} />)}
+        </KpiCard>
+        <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={Send} label="Packets submitted"
+          value={o ? String(o.packetsSubmitted.count) : "—"}
+          link={<Link to="/cases" hash="done" className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
+          {split && o && (o.packetsSubmitted.count === 0 ? <NoneYet /> :
+            <SplitRows rows={split.map((r) => ({ id: r.id, name: r.name, primary: String(r.o.packetsSubmitted.count), secondary: money(r.o.packetsSubmitted.dollars) }))} />)}
+        </KpiCard>
 
-      {/* Row 2: needs attention + retailers. */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <section className="panel overflow-hidden lg:col-span-2">
-          <div className="flex items-center justify-between px-5 pt-5 pb-3">
-            <h2 className="section-title">Needs attention</h2>
-            <Link to="/cases" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-              View all <ArrowRight className="size-4" />
-            </Link>
+        {/* Row 2: the work, and the retailer comparison. */}
+        <Card className="col-span-12 xl:col-span-8" title="Needs attention" link={<Link to="/cases" className={linkCls}>View all <ArrowRight className="size-3.5" /></Link>}>
+          {o ? <AttentionList rows={o.needsAttention} /> : <Muted>{q.isPending ? "Loading…" : "—"}</Muted>}
+        </Card>
+        <Card className="col-span-12 xl:col-span-4" title="Retailers">
+          {split ? <RetailerRows split={split} /> : <Muted>{q.isPending ? "Loading…" : "—"}</Muted>}
+        </Card>
+
+        {/* Row 3: what happened after filing. */}
+        <Card className="col-span-12 lg:col-span-6" title="After filing">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatBlock label="Submitted" t={o?.afterFiling.submitted} />
+            <StatBlock label="Won" t={o?.afterFiling.won} dollarsSuffix="recovered" />
+            <StatBlock label="Denied" t={o?.afterFiling.denied} />
+            <StatBlock label="Written off" t={o?.afterFiling.writtenOff} />
           </div>
-          {o ? <AttentionTable rows={o.needsAttention} /> : <div className="px-5 pb-6 text-sm text-muted-foreground">{q.isPending ? "Loading…" : "—"}</div>}
-        </section>
-
-        <section className="space-y-4">
-          <h2 className="section-title lg:pt-5">Retailers</h2>
-          {o
-            ? o.retailers.map((r) => <RetailerCard key={r.id} r={r} />)
-            : <div className="panel p-5 text-sm text-muted-foreground">{q.isPending ? "Loading…" : "—"}</div>}
-        </section>
-      </div>
-
-      {/* Row 3: after filing + closed without a decision. */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <section className="panel p-5">
-          <h2 className="section-title">After filing</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Where submitted packets and write-offs stand.</p>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Outcome label="Submitted" t={o?.afterFiling.submitted} />
-            <Outcome label="Won" t={o?.afterFiling.won} dollarsLabel="recovered" tone="text-success" />
-            <Outcome label="Denied" t={o?.afterFiling.denied} tone="text-destructive" />
-            <Outcome label="Written off" t={o?.afterFiling.writtenOff} />
-          </div>
-        </section>
-
-        <section className="panel p-5">
-          <h2 className="section-title">Closed without a decision</h2>
-          <p className="mt-1 text-sm text-muted-foreground">The filing window closed or no attempts are left.</p>
-          <ul className="mt-4 divide-y divide-border">
-            {o?.closedWithoutDecision.map((r) => (
-              <li key={r.deduction.id}>
-                <Link to="/cases/$id" params={{ id: r.deduction.id }} className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-secondary">
-                  <div className="min-w-0 flex-1">
-                    <div className="num text-sm font-medium text-primary">{r.deduction.id}</div>
-                    <div className="truncate text-xs text-muted-foreground">{r.deduction.title}</div>
-                  </div>
-                  <span className="chip-neutral">{STATE_LABEL[r.result.state]}</span>
-                  <span className="num w-24 text-right text-sm">{money(r.amount)}</span>
-                  <ChevronRight className="size-4 text-muted-foreground" />
-                </Link>
-              </li>
-            ))}
-            {o && o.closedWithoutDecision.length === 0 && <li className="py-4 text-sm text-muted-foreground">None yet</li>}
-          </ul>
-        </section>
+        </Card>
+        <Card className="col-span-12 lg:col-span-6" title="Closed without a decision">
+          {o ? <ClosedList rows={o.closedWithoutDecision} /> : <Muted>{q.isPending ? "Loading…" : "—"}</Muted>}
+        </Card>
       </div>
     </AppShell>
   );
 }
 
-function summaryLine(critical: number, dueDollars: number) {
-  if (critical === 0 && dueDollars === 0) return "Nothing critical and nothing due in the next 7 days.";
-  return `${critical} critical ${critical === 1 ? "case" : "cases"} · ${money(dueDollars)} due within 7 days.`;
-}
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-/* The link is stretched over the whole card, so the card is one click target. */
-const kpiLink = "absolute inset-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+/* ---------- Card anatomy: title row (title left, optional link right), then content ---------- */
 
-function KpiCard({ label, value, sub, tone, link }: {
-  label: string; value: string; sub?: string | null | undefined; tone?: "danger" | "warning" | "success"; link: ReactNode;
-}) {
-  const c = tone === "danger" ? "text-destructive" : tone === "warning" ? "text-warning-foreground" : tone === "success" ? "text-success" : "text-foreground";
+function Card({ title, link, className = "", children }: { title: string; link?: ReactNode; className?: string; children: ReactNode }) {
   return (
-    <div className="panel relative p-5 transition-shadow hover:shadow-md">
-      {link}
-      <div className="eyebrow">{label}</div>
-      <div className={`num mt-3 kpi-num ${c}`}>{value}</div>
-      <div className="mt-2 text-sm text-muted-foreground">{sub ?? " "}</div>
-    </div>
+    <section className={`panel flex flex-col p-6 ${className}`}>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="section-title">{title}</h2>
+        {link}
+      </div>
+      <div className="mt-4 flex-1">{children}</div>
+    </section>
   );
 }
 
-function AttentionTable({ rows }: { rows: QueueRow[] }) {
-  const navigate = useNavigate();
-  if (rows.length === 0) return <div className="px-5 pb-6 text-sm text-muted-foreground">No open cases. Nice.</div>;
+type Icon = ComponentType<{ className?: string }>;
+
+function KpiCard({ icon: I, label, value, link, className = "", children }: {
+  icon: Icon; label: string; value: string; link: ReactNode; className?: string; children?: ReactNode;
+}) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="border-y border-border bg-secondary/40 text-left">
-          <tr>
-            <th className="px-5 py-2.5">Priority</th><th className="px-3 py-2.5">Case</th><th className="px-3 py-2.5">Retailer</th>
-            <th className="px-3 py-2.5 text-right">Amount</th><th className="px-3 py-2.5">Days left</th><th className="px-5 py-2.5">Score</th>
-          </tr>
-        </thead>
-        <tbody>
+    <section className={`panel flex flex-col p-6 ${className}`}>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2 font-sans text-[13px] font-medium tracking-normal text-muted-foreground">
+          <span className="grid size-7 place-items-center rounded-lg border border-border text-foreground"><I className="size-3.5" /></span>
+          {label}
+        </h2>
+        {link}
+      </div>
+      <div className="num kpi-num mt-4">{value}</div>
+      <div className="mt-4 flex-1">{children}</div>
+    </section>
+  );
+}
+
+/** Small link in a card title row: accent color, visible keyboard focus. */
+const linkCls = "inline-flex shrink-0 items-center gap-1 rounded-md text-[13px] font-medium text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none";
+
+const Muted = ({ children }: { children: ReactNode }) => <p className="text-sm text-muted-foreground">{children}</p>;
+const NoneYet = () => <Muted>None yet</Muted>;
+
+/** Walmart and Amazon, one row each: name left, numbers right-aligned. */
+function SplitRows({ rows }: { rows: { id: string; name: string; primary: string; secondary: string }[] }) {
+  return (
+    <ul className="space-y-1.5">
+      {rows.map((r) => (
+        <li key={r.id}>
+          <Link to="/retailers/$retailerId" params={{ retailerId: r.id }}
+            className="flex items-baseline gap-2 rounded-md text-sm hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none">
+            <span className="flex-1">{r.name}</span>
+            <span className="num font-medium">{r.primary}</span>
+            <span className="num w-24 text-right text-muted-foreground">{r.secondary}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/* ---------- Row 2 ---------- */
+
+const ATTENTION_COLS = "grid grid-cols-[5.5rem_minmax(0,1fr)_5rem_6rem_5.5rem_8.5rem] items-center gap-x-4";
+
+function AttentionList({ rows }: { rows: QueueRow[] }) {
+  if (rows.length === 0) return <Muted>No open cases.</Muted>;
+  return (
+    <div className="-mx-2 overflow-x-auto">
+      <div className="min-w-[40rem]">
+        <div className={`${ATTENTION_COLS} border-b border-border px-2 pb-2 text-xs font-medium text-muted-foreground`}>
+          <span>Priority</span><span>Case</span><span>Retailer</span>
+          <span className="text-right">Amount</span><span className="text-right">Days left</span><span className="text-right">Score</span>
+        </div>
+        <ul className="divide-y divide-border">
           {rows.map((r) => (
-            <tr key={r.deduction.id} onClick={() => navigate({ to: "/cases/$id", params: { id: r.deduction.id } })}
-              className="cursor-pointer border-b border-border last:border-0 hover:bg-secondary/50">
-              <td className="px-5 py-3">{r.result.priority && <span className={PRIORITY_CHIP[r.result.priority]}>{r.result.priority}</span>}</td>
-              <td className="max-w-72 px-3 py-3">
-                <Link to="/cases/$id" params={{ id: r.deduction.id }} onClick={(e) => e.stopPropagation()} className="num font-medium text-primary hover:underline">{r.deduction.id}</Link>
-                <div className="truncate text-xs text-muted-foreground">{r.deduction.title}</div>
-              </td>
-              <td className="px-3 py-3">{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</td>
-              <td className="num px-3 py-3 text-right">{money(r.amount)}</td>
-              <td className="num px-3 py-3">
-                {r.result.days_left == null ? "—" : (
-                  <>
-                    <span className={r.result.days_left <= 7 ? "font-semibold text-destructive" : ""}>{r.result.days_left}d</span>
-                    {r.result.clock && <div className="text-xs text-muted-foreground">{CLOCK_LABEL[r.result.clock]}</div>}
-                  </>
-                )}
-              </td>
-              <td className="px-5 py-3">
-                <div className="flex items-center gap-2">
+            <li key={r.deduction.id}>
+              <Link to="/cases/$id" params={{ id: r.deduction.id }}
+                className={`${ATTENTION_COLS} rounded-lg px-2 py-3 text-sm hover:bg-secondary/60 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none`}>
+                <span>{r.result.priority && <span className={PRIORITY_CHIP[r.result.priority]}>{r.result.priority}</span>}</span>
+                <span className="min-w-0">
+                  <span className="num block font-medium text-primary">{r.deduction.id}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{r.deduction.title}</span>
+                </span>
+                <span>{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</span>
+                <span className="num text-right">{money(r.amount)}</span>
+                <span className="num text-right">
+                  {r.result.days_left == null ? "—" : (
+                    <>
+                      <span className={`block ${r.result.days_left <= 7 ? "font-semibold" : ""}`}>{r.result.days_left}d</span>
+                      {r.result.clock && <span className="block text-xs text-muted-foreground">{CLOCK_LABEL[r.result.clock]}</span>}
+                    </>
+                  )}
+                </span>
+                <span className="flex items-center justify-end gap-2">
                   <span className="num"><ScoreCell r={r.result} /></span>
                   {r.result.band && <span className={BAND_CHIP[r.result.band]}>{r.result.band}</span>}
-                </div>
-              </td>
-            </tr>
+                </span>
+              </Link>
+            </li>
           ))}
-        </tbody>
-      </table>
+        </ul>
+      </div>
     </div>
   );
 }
 
-function RetailerCard({ r }: { r: ReturnType<typeof overview>["retailers"][number] }) {
+function RetailerRows({ split }: { split: RetailerSplit[] }) {
   return (
-    <Link to="/retailers/$retailerId" params={{ retailerId: r.id }} className="panel block p-5 transition-shadow hover:shadow-md">
-      <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold">{r.name}</h3>
-        <ChevronRight className="size-4 text-muted-foreground" />
-      </div>
-      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-        <Fact k="Open cases" v={String(r.openCases)} />
-        <Fact k="At stake" v={money(r.openDollars)} />
-        <Fact k="Critical" v={String(r.critical)} tone={r.critical ? "text-destructive" : undefined} />
-        <Fact k="Ready to file" v={String(r.readyToSubmit)} />
-      </dl>
-      <div className="mt-4 rounded-xl bg-secondary px-3 py-2 text-sm">
-        <span className="text-muted-foreground">Next deadline </span>
-        {r.next ? (
-          <>
-            <span className={`num font-semibold ${r.next.result.days_left! <= 7 ? "text-destructive" : ""}`}>{r.next.result.days_left}d</span>
-            <span className="text-muted-foreground"> · </span>
-            <span className="num">{r.next.deduction.id}</span>
-            {r.next.result.clock && <span className="text-muted-foreground"> · {CLOCK_LABEL[r.next.result.clock]}</span>}
-          </>
-        ) : <span className="text-muted-foreground">None</span>}
-      </div>
-    </Link>
+    <ul className="divide-y divide-border">
+      {split.map((r) => (
+        <li key={r.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-medium">{r.name}</div>
+            <div className="num text-xs text-muted-foreground">
+              {plural(r.o.open.count, "open case")} · {money(r.o.open.dollars)}
+            </div>
+          </div>
+          <Link to="/retailers/$retailerId" params={{ retailerId: r.id }}
+            className={linkCls}>
+            Open <ArrowRight className="size-3.5" />
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
-function Fact({ k, v, tone }: { k: string; v: string; tone?: string | undefined }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{k}</dt>
-      <dd className={`num mt-0.5 font-semibold ${tone ?? ""}`}>{v}</dd>
-    </div>
-  );
-}
+/* ---------- Row 3 ---------- */
 
-function Outcome({ label, t, dollarsLabel, tone }: {
-  label: string; t: { count: number; dollars: number } | undefined; dollarsLabel?: string; tone?: string;
-}) {
+function StatBlock({ label, t, dollarsSuffix }: { label: string; t: { count: number; dollars: number } | undefined; dollarsSuffix?: string }) {
   return (
-    <div className="rounded-xl bg-secondary p-4">
-      <div className="eyebrow">{label}</div>
+    <div className="rounded-xl border border-border p-4">
+      <div className="text-[13px] font-medium text-muted-foreground">{label}</div>
       {!t ? <div className="mt-2 text-sm text-muted-foreground">—</div>
         : t.count === 0 ? <div className="mt-2 text-sm text-muted-foreground">None yet</div>
         : (
           <>
-            <div className={`num mt-1 text-2xl font-semibold ${tone ?? ""}`}>{t.count}</div>
-            <div className="num text-xs text-muted-foreground">{money(t.dollars)}{dollarsLabel ? ` ${dollarsLabel}` : ""}</div>
+            <div className="num mt-1 text-2xl font-semibold">{t.count}</div>
+            <div className="num text-xs text-muted-foreground">{money(t.dollars)}{dollarsSuffix ? ` ${dollarsSuffix}` : ""}</div>
           </>
         )}
     </div>
+  );
+}
+
+function ClosedList({ rows }: { rows: QueueRow[] }) {
+  if (rows.length === 0) return <NoneYet />;
+  return (
+    <ul className="-mx-2 divide-y divide-border">
+      {rows.map((r) => (
+        <li key={r.deduction.id}>
+          <Link to="/cases/$id" params={{ id: r.deduction.id }}
+            className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm hover:bg-secondary/60 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none">
+            <span className="min-w-0 flex-1">
+              <span className="num block font-medium text-primary">{r.deduction.id}</span>
+              <span className="block truncate text-xs text-muted-foreground">{r.deduction.title}</span>
+            </span>
+            <span className="chip-neutral">{STATE_LABEL[r.result.state]}</span>
+            <span className="num w-24 text-right">{money(r.amount)}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
