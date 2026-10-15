@@ -91,6 +91,14 @@
   /* Retailer comparison, used in every chart. */
   --walmart: #3F5A49;
   --amazon: #A9C2B2;
+  /* Dashboard Walmart vs Amazon segments: soft band and priority colors. */
+  --band-ready: #5B7B67;
+  --band-needs-work: #C9A66B;
+  --band-weak: #C27A72;
+  --prio-critical: #C27A72;
+  --prio-high: #C9A66B;
+  --prio-normal: #9A9E97;
+  --prio-low: #CFD1CB;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #6B7069;
 }

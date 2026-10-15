@@ -11,13 +11,14 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function AppShell({ children }: { children: ReactNode }) {
+/** `bare`: no top bar. The page puts the profile menu in its own header (the home dashboard does). */
+export function AppShell({ children, bare = false }: { children: ReactNode; bare?: boolean }) {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar />
-        <main className="min-w-0 flex-1 overflow-x-hidden px-4 pt-2 pb-10 md:pr-6 md:pl-2">{children}</main>
+        {!bare && <TopBar />}
+        <main className={`min-w-0 flex-1 overflow-x-hidden px-4 pb-10 md:pr-6 md:pl-2 ${bare ? "pt-6" : "pt-2"}`}>{children}</main>
       </div>
     </div>
   );
@@ -137,7 +138,7 @@ function Breadcrumbs() {
 
 /* ---------- Profile menu ---------- */
 
-function ProfileMenu() {
+export function ProfileMenu() {
   const { users, currentUser, setCurrentUserId } = useCurrentUser();
   const qc = useQueryClient();
   const reset = useMutation({
