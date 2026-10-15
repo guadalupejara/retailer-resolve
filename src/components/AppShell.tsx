@@ -36,7 +36,6 @@ function Sidebar() {
     if (q.data) for (const r of buildQueue(q.data.scored, q.data.queue).scorable) counts[r.deduction.retailer_id] = (counts[r.deduction.retailer_id] ?? 0) + 1;
     return counts;
   }, [q.data]);
-  const demoToday = q.data?.settings.demo_today;
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-sidebar px-3 py-5 md:flex">
@@ -63,10 +62,6 @@ function Sidebar() {
           </Link>
         ))}
       </nav>
-
-      <div className="mt-auto px-3">
-        <span className="chip-neutral">Demo date{demoToday ? ` · ${formatIsoDate(demoToday)}` : ""}</span>
-      </div>
     </aside>
   );
 }
@@ -89,12 +84,6 @@ function NavItem({ to, icon: I, label, exact }: { to: "/" | "/insights" | "/docu
       )}
     </Link>
   );
-}
-
-/** "2026-10-16" -> "Oct 16, 2026". Formatting only; the date itself comes from settings.demo_today. */
-function formatIsoDate(iso: string) {
-  const d = new Date(`${iso}T00:00:00Z`);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 }
 
 /* ---------- Top bar ---------- */
