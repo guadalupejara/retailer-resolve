@@ -19,7 +19,7 @@ function RetailerQueue() {
   const search = Route.useSearch();
   return (
     <AppShell>
-      <QueueScreen filters={{ retailer: retailerId, ...search }} />
+      <QueueScreen filters={search} retailerFromPath={retailerId} />
     </AppShell>
   );
 }

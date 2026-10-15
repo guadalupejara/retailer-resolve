@@ -1,4 +1,5 @@
-// The alert queue page body. Shared by the dashboard (/) and the retailer pages (/retailers/$retailerId).
+// The alert queue page body. Shared by /cases (all retailers) and the retailer pages (/retailers/$retailerId).
+// On a retailer page the retailer comes only from the URL path, so there is no retailer filter there.
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useChargebacks } from "@/lib/chargebacks";
 import type { Band, CaseResult, Priority } from "@/lib/scoring";
@@ -8,11 +9,17 @@ import {
   applyFilters, buildQueue, money, queueStats, type QueueFilters, type QueueRow,
 } from "@/lib/queue";
 
-export function QueueScreen({ filters }: { filters: QueueFilters }) {
+export function QueueScreen({ filters, retailerFromPath }: {
+  filters: QueueFilters;
+  /** Set on /retailers/$retailerId: the retailer is fixed by the path and the retailer filter is hidden. */
+  retailerFromPath?: string;
+}) {
   const navigate = useNavigate();
   const q = useChargebacks();
+  if (retailerFromPath) filters = { ...filters, retailer: retailerFromPath };
 
-  // Picking a retailer moves to that retailer's page (or /cases for all); the other filters stay in the query string.
+  // Priority, band and the home-card filters stay in the query string. The retailer never does:
+  // on a retailer page it's the path, and on /cases picking one moves to that retailer's page.
   const setFilter = (patch: QueueFilters) => {
     const { retailer, ...search } = { ...filters, ...patch };
     const replace = !("retailer" in patch);
@@ -47,8 +54,10 @@ export function QueueScreen({ filters }: { filters: QueueFilters }) {
       </div>
 
       <div className="mt-10 flex flex-wrap gap-4">
-        <FilterSelect label="Retailer" value={filters.retailer ?? ""} onChange={(v) => setFilter({ retailer: v || undefined })}
-          options={[["", "All retailers"], ...Object.entries(RETAILER_NAMES)]} />
+        {!retailerFromPath && (
+          <FilterSelect label="Retailer" value={filters.retailer ?? ""} onChange={(v) => setFilter({ retailer: v || undefined })}
+            options={[["", "All retailers"], ...Object.entries(RETAILER_NAMES)]} />
+        )}
         <FilterSelect label="Priority" value={filters.priority ?? ""} onChange={(v) => setFilter({ priority: (v || undefined) as Priority | undefined })}
           options={[["", "All priorities"], ...PRIORITIES.map((p): [string, string] => [p, p])]} />
         <FilterSelect label="Band" value={filters.band ?? ""} onChange={(v) => setFilter({ band: (v || undefined) as Band | undefined })}
