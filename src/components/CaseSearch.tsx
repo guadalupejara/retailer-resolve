@@ -1,7 +1,8 @@
-// Case search: finds loaded cases by id, PO, invoice or title. Used in the top bar and in the home header.
+// Case search: finds loaded cases by id, PO, invoice or title. Lives in the dashboard header.
 // Cmd/Ctrl+K focuses it. Arrow keys move, Enter or click opens the case, Esc closes.
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Search } from "lucide-react";
 import { useChargebacks } from "@/lib/chargebacks";
 import { RETAILER_NAMES } from "@/lib/queue";
 import type { Deduction } from "@/lib/scoring";
@@ -68,9 +69,9 @@ export function CaseSearch({ className = "" }: { className?: string }) {
           close();
         }
       }}
-      className={`relative overflow-visible rounded-[10px] border border-input bg-card focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20 [&_[cmdk-input-wrapper]]:border-0 ${className}`}
+      className={`relative overflow-visible rounded-full bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus-within:ring-2 focus-within:ring-ring/25 [&_[cmdk-input-wrapper]]:border-0 [&_[cmdk-input-wrapper]]:pl-5 [&_[cmdk-input-wrapper]>svg]:hidden ${className}`}
     >
-      <div className="flex items-center">
+      <div className="flex items-center gap-2 py-1 pr-1">
         <div className="min-w-0 flex-1">
           <CommandInput
             ref={inputRef}
@@ -83,12 +84,20 @@ export function CaseSearch({ className = "" }: { className?: string }) {
             onBlur={() => setOpen(false)}
             placeholder="Search case ID, PO or invoice…"
             aria-label="Search cases"
-            className="h-9 py-2"
+            title={`Search cases (${isMac ? "⌘K" : "Ctrl+K"})`}
+            className="h-9 truncate py-2"
           />
         </div>
-        <kbd className="mr-2 shrink-0 rounded-md border border-border bg-secondary px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap text-muted-foreground">
-          {isMac ? "⌘K" : "Ctrl K"}
-        </kbd>
+        {/* Opens the highlighted result, or puts the cursor in the field when nothing is typed yet. */}
+        <button type="button" aria-label="Search" onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            if (selected && query.trim()) return openCase(selected);
+            inputRef.current?.focus();
+            setOpen(true);
+          }}
+          className="grid size-10 shrink-0 place-items-center rounded-full bg-charcoal text-primary-foreground hover:bg-charcoal/85 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none">
+          <Search className="size-4" strokeWidth={1.75} />
+        </button>
       </div>
       {open && query.trim() && (
         // preventDefault keeps focus in the input, so a click on a result isn't lost to the blur.

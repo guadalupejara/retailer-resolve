@@ -1,17 +1,18 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import type { ComponentType, ReactNode } from "react";
-import { AlertTriangle, ArrowRight, ClipboardCheck, Send, Wallet } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { ArrowRight, Store } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { CaseSearch } from "@/components/CaseSearch";
-import { ScoreCell } from "@/components/QueueScreen";
-import { RETAILER_COLOR, ReadinessChart, RetailerBars, RetailerDonut, RetailerSplitBar, type Slice } from "@/components/RetailerCharts";
+import {
+  ComparisonChart, Gauge, MiniBars, MiniDonut, MiniSplit, RetailerLegendChips, compactMoney, type Slice,
+} from "@/components/RetailerCharts";
 import { useChargebacks } from "@/lib/chargebacks";
 import { useCurrentUser } from "@/lib/current-user";
 import { overview } from "@/lib/overview";
 import {
-  BANDS, BAND_CHIP, CLOCK_LABEL, PRIORITY_CHIP, RETAILER_NAMES, STATE_LABEL,
-  applyFilters, buildQueue, money, queueStats, type QueueRow,
+  BANDS, BAND_CHIP, PRIORITIES, RETAILER_NAMES, applyFilters, buildQueue, money, queueStats, type QueueRow,
 } from "@/lib/queue";
+import type { Priority } from "@/lib/scoring";
 
 export const Route = createFileRoute("/_authenticated/")({
   // Old links used /?retailer=walmart. Each retailer now has its own page.
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 type Queue = ReturnType<typeof buildQueue>;
+type Totals = { count: number; dollars: number };
 
 /**
  * Per-retailer view of the same numbers, for the Walmart vs Amazon comparisons. Built by running the existing
@@ -42,11 +44,10 @@ function byRetailer(q: Queue) {
   return Object.entries(RETAILER_NAMES).map(([id, name]) => {
     const slice = (rows: QueueRow[]) => applyFilters(rows, { retailer: id });
     const o = overview({ scorable: slice(q.scorable), notScorable: slice(q.notScorable), done: slice(q.done) });
-    const bands = BANDS.map((band) => {
-      const rows = applyFilters(q.scorable, { retailer: id, band });
-      return { band, count: rows.length, dollars: queueStats(rows).openDollars };
-    });
-    return { id, name, o, bands };
+    const group = (rows: QueueRow[]): Totals => ({ count: rows.length, dollars: queueStats(rows).openDollars });
+    const bands = Object.fromEntries(BANDS.map((band) => [band, group(applyFilters(q.scorable, { retailer: id, band }))]));
+    const priorities = Object.fromEntries(PRIORITIES.map((p) => [p, group(applyFilters(q.scorable, { retailer: id, priority: p as Priority }))]));
+    return { id, name, o, bands, priorities };
   });
 }
 type RetailerSplit = ReturnType<typeof byRetailer>[number];
@@ -58,12 +59,16 @@ function Home() {
   const queue = q.data ? buildQueue(q.data.scored, q.data.queue) : null;
   const o = queue ? overview(queue) : null;
   const split = queue ? byRetailer(queue) : null;
+  // Ready to file: open scored cases in the Ready band, out of all open scored cases.
+  const ready = queue ? applyFilters(queue.scorable, { band: "Ready" }).length : 0;
+  const openScored = queue?.scorable.length ?? 0;
+  const loading = <Muted>{q.isPending ? "Loading…" : "—"}</Muted>;
 
   return (
     <AppShell>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="page-title">Good morning{firstName ? `, ${firstName}` : ""}</h1>
-        <CaseSearch className="w-full sm:w-[420px]" />
+        <h1 className="min-w-0 text-[28px] leading-tight font-semibold tracking-[-0.02em]">Good morning{firstName ? `, ${firstName}` : ""}</h1>
+        <CaseSearch className="w-full sm:w-[360px]" />
       </div>
 
       {q.isError && (
@@ -73,98 +78,99 @@ function Home() {
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-12 gap-6">
-        {/* Row 1: KPIs. Each compares Walmart and Amazon. */}
-        <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={Wallet} label="Money at stake"
-          value={o ? money(o.open.dollars) : "—"}
-          link={<Link to="/cases" className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
-          {split && o && (o.open.count === 0 ? <NoneYet /> : <RetailerDonut slices={slices(split, (r) => r.o.open)} total={o.open.dollars} />)}
+      <div className="mt-6 grid grid-cols-12 gap-6">
+        {/* Row 1: four compact KPIs. One figure each; the Walmart / Amazon split is in the mini chart's tooltip. */}
+        <KpiCard label="Money at stake" to={{ to: "/cases" }}
+          value={o ? compactMoney(o.open.dollars) : "—"} full={o ? money(o.open.dollars) : undefined}>
+          {split && o && o.open.count > 0 && <MiniDonut title="Money at stake" slices={slices(split, (r) => r.o.open)} />}
         </KpiCard>
-        <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={AlertTriangle} label="Critical"
-          value={o ? String(o.critical.count) : "—"}
-          link={<Link to="/cases" search={{ priority: "Critical" }} className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
-          {split && o && (o.critical.count === 0 ? <NoneYet /> :
-            <RetailerBars slices={slices(split, (r) => r.o.critical)} />)}
+        <KpiCard label="Critical" filled to={{ to: "/cases", search: { priority: "Critical" } }}
+          value={o ? String(o.critical.count) : "—"} full={o ? `${o.critical.count} critical · ${money(o.critical.dollars)}` : undefined}>
+          {split && o && o.critical.count > 0 && <MiniBars inverted title="Critical" slices={slices(split, (r) => r.o.critical)} />}
         </KpiCard>
-        <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={ClipboardCheck} label="Approvals needed, next 7 days"
-          value={o ? String(o.approvalsNeeded.count) : "—"}
-          link={<Link to="/cases" search={{ recommendation: "submit", maxDays: 7 }} className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
-          {split && o && (o.approvalsNeeded.count === 0 ? <NoneYet /> :
-            <RetailerBars slices={slices(split, (r) => r.o.approvalsNeeded)} />)}
+        <KpiCard label="Approvals needed, next 7 days" to={{ to: "/cases", search: { recommendation: "submit", maxDays: 7 } }}
+          value={o ? String(o.approvalsNeeded.count) : "—"} full={o ? `${o.approvalsNeeded.count} to approve · ${money(o.approvalsNeeded.dollars)}` : undefined}>
+          {split && o && o.approvalsNeeded.count > 0 && <MiniBars title="Approvals needed, next 7 days" slices={slices(split, (r) => r.o.approvalsNeeded)} />}
         </KpiCard>
-        <KpiCard className="col-span-12 sm:col-span-6 xl:col-span-3" icon={Send} label="Packets submitted"
-          value={o ? String(o.packetsSubmitted.count) : "—"}
-          link={<Link to="/cases" hash="done" className={linkCls}>View <ArrowRight className="size-3.5" /></Link>}>
-          {split && o && (o.packetsSubmitted.count === 0 ? <NoneYet /> :
-            <RetailerSplitBar slices={slices(split, (r) => r.o.packetsSubmitted)} />)}
+        <KpiCard label="Packets submitted" to={{ to: "/cases", hash: "done" }}
+          value={o ? (o.packetsSubmitted.count === 0 ? "None yet" : String(o.packetsSubmitted.count)) : "—"}
+          full={o ? `${o.packetsSubmitted.count} submitted · ${money(o.packetsSubmitted.dollars)}` : undefined}>
+          {split && o && o.packetsSubmitted.count > 0 && <MiniSplit title="Packets submitted" slices={slices(split, (r) => r.o.packetsSubmitted)} />}
         </KpiCard>
 
-        {/* Row 2: the work, and the retailer comparison. */}
-        <Card className="col-span-12 xl:col-span-8" title="Needs attention" link={<Link to="/cases" className={linkCls}>View all <ArrowRight className="size-3.5" /></Link>}>
-          {o ? <AttentionList rows={o.needsAttention} /> : <Muted>{q.isPending ? "Loading…" : "—"}</Muted>}
+        {/* Row 2: the comparison, the readiness gauge, the retailers. */}
+        <section className="panel col-span-12 flex min-w-0 flex-col p-6 xl:col-span-6">
+          <CompareCard split={split} pending={q.isPending} />
+        </section>
+        <Card className="col-span-12 md:col-span-6 xl:col-span-3" title="Ready to file">
+          {!queue ? loading : openScored === 0 ? <NoneYet /> : (
+            <div className="flex h-full flex-col justify-center">
+              <Gauge percent={(ready / openScored) * 100} label={`${ready} of ${openScored} open cases are Ready`} />
+              <p className="num mt-3 text-center text-sm text-muted-foreground">{ready} of {openScored} open cases</p>
+            </div>
+          )}
         </Card>
-        <Card className="col-span-12 xl:col-span-4" title="Retailers">
-          {split ? <RetailerRows split={split} /> : <Muted>{q.isPending ? "Loading…" : "—"}</Muted>}
+        <Card className="col-span-12 md:col-span-6 xl:col-span-3" title="Retailers">
+          {split ? <RetailerRows split={split} /> : loading}
         </Card>
 
-        {/* Row 3: what happened after filing. */}
-        <Card className="col-span-12 lg:col-span-6" title="After filing">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {/* Row 3: the work, and what happened after filing. */}
+        <Card className="col-span-12 xl:col-span-8" title="Needs attention"
+          link={<Link to="/cases" className={linkCls}>View all <ArrowRight className="size-3.5" /></Link>}>
+          {o ? <AttentionList rows={o.needsAttention} /> : loading}
+        </Card>
+        <Card className="col-span-12 xl:col-span-4" title="After filing">
+          <div className="grid grid-cols-2 gap-3">
             <StatBlock label="Submitted" t={o?.afterFiling.submitted} />
-            <StatBlock label="Won" t={o?.afterFiling.won} dollarsSuffix="recovered" />
+            <StatBlock label="Won" t={o?.afterFiling.won} />
             <StatBlock label="Denied" t={o?.afterFiling.denied} />
             <StatBlock label="Written off" t={o?.afterFiling.writtenOff} />
           </div>
-        </Card>
-        <Card className="col-span-12 lg:col-span-6" title="Closed without a decision">
-          {o ? <ClosedList rows={o.closedWithoutDecision} /> : <Muted>{q.isPending ? "Loading…" : "—"}</Muted>}
         </Card>
       </div>
     </AppShell>
   );
 }
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
-
 /** One { count, dollars } total per retailer, in chart form. */
-const slices = (split: RetailerSplit[], pick: (r: RetailerSplit) => { count: number; dollars: number }): Slice[] =>
+const slices = (split: RetailerSplit[], pick: (r: RetailerSplit) => Totals): Slice[] =>
   split.map((r) => ({ id: r.id, name: r.name, ...pick(r) }));
 
-/* ---------- Card anatomy: title row (title left, optional link right), then content ---------- */
+/* ---------- Card anatomy ---------- */
 
 function Card({ title, link, className = "", children }: { title: string; link?: ReactNode; className?: string; children: ReactNode }) {
   return (
-    <section className={`panel flex flex-col p-6 ${className}`}>
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="section-title">{title}</h2>
+    <section className={`panel flex min-w-0 flex-col p-6 ${className}`}>
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <h2 className="section-title truncate">{title}</h2>
         {link}
       </div>
-      <div className="mt-4 flex-1">{children}</div>
+      <div className="mt-4 min-w-0 flex-1">{children}</div>
     </section>
   );
 }
 
-type Icon = ComponentType<{ className?: string }>;
+type KpiLink =
+  | { to: "/cases"; search?: { priority?: "Critical"; recommendation?: "submit"; maxDays?: number }; hash?: string };
 
-function KpiCard({ icon: I, label, value, link, className = "", children }: {
-  icon: Icon; label: string; value: string; link: ReactNode; className?: string; children?: ReactNode;
+/** Compact KPI: label and one value on the left, a mini chart on the right. The whole label is a link to the list. */
+function KpiCard({ label, value, full, to, filled = false, children }: {
+  label: string; value: string; full?: string | undefined; to: KpiLink; filled?: boolean; children?: ReactNode;
 }) {
   return (
-    <section className={`panel flex flex-col p-6 ${className}`}>
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 font-sans text-[13px] font-medium tracking-normal text-muted-foreground">
-          <span className="grid size-7 place-items-center rounded-lg border border-border text-foreground"><I className="size-3.5" /></span>
+    <section className={`panel col-span-12 flex min-h-24 min-w-0 items-center gap-3 px-5 py-4 sm:col-span-6 xl:col-span-3 ${filled ? "!bg-primary-dark text-primary-foreground" : ""}`}>
+      <div className="min-w-0 flex-1">
+        <Link {...to} className={`block text-[13px] leading-snug font-medium hover:underline focus-visible:underline focus-visible:outline-none ${filled ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
           {label}
-        </h2>
-        {link}
+        </Link>
+        <div className="num mt-1.5 truncate text-[26px] leading-none font-semibold tracking-[-0.02em]" title={full}>{value}</div>
       </div>
-      <div className="num kpi-num mt-4">{value}</div>
-      <div className="mt-4 flex-1">{children}</div>
+      {children}
     </section>
   );
 }
 
-/** Small link in a card title row: accent color, visible keyboard focus. */
+/** Small link in a card title row: sage, visible keyboard focus. */
 const linkCls = "inline-flex shrink-0 items-center gap-1 rounded-md text-[13px] font-medium text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none";
 
 const Muted = ({ children }: { children: ReactNode }) => <p className="text-sm text-muted-foreground">{children}</p>;
@@ -172,122 +178,114 @@ const NoneYet = () => <Muted>None yet</Muted>;
 
 /* ---------- Row 2 ---------- */
 
-const ATTENTION_COLS = "grid grid-cols-[5.5rem_minmax(0,1fr)_5rem_6rem_5.5rem_8.5rem] items-center gap-x-4";
+type CompareBy = "readiness" | "priority";
 
-function AttentionList({ rows }: { rows: QueueRow[] }) {
-  if (rows.length === 0) return <Muted>No open cases.</Muted>;
+function CompareCard({ split, pending }: { split: RetailerSplit[] | null; pending: boolean }) {
+  const [by, setBy] = useState<CompareBy>("readiness");
+  const groups: string[] = by === "readiness" ? BANDS : PRIORITIES;
+  const total = split?.reduce((t, r) => t + r.o.open.count, 0) ?? 0;
   return (
-    <div className="-mx-2 overflow-x-auto">
-      <div className="min-w-[40rem]">
-        <div className={`${ATTENTION_COLS} border-b border-border px-2 pb-2 text-xs font-medium text-muted-foreground`}>
-          <span>Priority</span><span>Case</span><span>Retailer</span>
-          <span className="text-right">Amount</span><span className="text-right">Days left</span><span className="text-right">Score</span>
-        </div>
-        <ul className="divide-y divide-border">
-          {rows.map((r) => (
-            <li key={r.deduction.id}>
-              <Link to="/cases/$id" params={{ id: r.deduction.id }}
-                className={`${ATTENTION_COLS} rounded-lg px-2 py-3 text-sm hover:bg-secondary/60 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none`}>
-                <span>{r.result.priority && <span className={PRIORITY_CHIP[r.result.priority]}>{r.result.priority}</span>}</span>
-                <span className="min-w-0">
-                  <span className="num block font-medium text-primary">{r.deduction.id}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{r.deduction.title}</span>
-                </span>
-                <span>{RETAILER_NAMES[r.deduction.retailer_id] ?? r.deduction.retailer_id}</span>
-                <span className="num text-right">{money(r.amount)}</span>
-                <span className="num text-right">
-                  {r.result.days_left == null ? "—" : (
-                    <>
-                      <span className={`block ${r.result.days_left <= 7 ? "font-semibold" : ""}`}>{r.result.days_left}d</span>
-                      {r.result.clock && <span className="block text-xs text-muted-foreground">{CLOCK_LABEL[r.result.clock]}</span>}
-                    </>
-                  )}
-                </span>
-                <span className="flex items-center justify-end gap-2">
-                  <span className="num"><ScoreCell r={r.result} /></span>
-                  {r.result.band && <span className={BAND_CHIP[r.result.band]}>{r.result.band}</span>}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+    <>
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <h2 className="section-title truncate">Walmart vs Amazon</h2>
+        <select aria-label="Compare by" value={by} onChange={(e) => setBy(e.target.value as CompareBy)}
+          className="shrink-0 cursor-pointer rounded-full bg-secondary py-1.5 pr-8 pl-3 text-xs font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
+          <option value="readiness">By readiness</option>
+          <option value="priority">By priority</option>
+        </select>
       </div>
-    </div>
+      {split && <div className="mt-3"><RetailerLegendChips retailers={split} /></div>}
+      <div className="mt-4 h-56 min-w-0">
+        {!split ? <Muted>{pending ? "Loading…" : "—"}</Muted> : total === 0 ? <NoneYet /> : (
+          <ComparisonChart
+            retailers={split.map((r) => ({ id: r.id, name: r.name }))}
+            rows={groups.map((g) => ({
+              group: g,
+              byRetailer: Object.fromEntries(split.map((r) => [r.id, (by === "readiness" ? r.bands : r.priorities)[g] ?? { count: 0, dollars: 0 }])),
+            }))}
+          />
+        )}
+      </div>
+    </>
   );
 }
 
 function RetailerRows({ split }: { split: RetailerSplit[] }) {
-  const total = split.reduce((t, r) => t + r.o.open.count, 0);
   return (
-    <div className="flex h-full flex-col">
-      <div className="text-[13px] font-medium text-muted-foreground">Walmart vs Amazon by readiness</div>
-      {total === 0 ? <div className="mt-2"><NoneYet /></div> : (
-        <div className="mt-2">
-          <ReadinessChart
-            retailers={split.map((r) => ({ id: r.id, name: r.name }))}
-            rows={BANDS.map((band) => ({
-              band,
-              byRetailer: Object.fromEntries(split.map((r) => {
-                const b = r.bands.find((x) => x.band === band);
-                return [r.id, { count: b?.count ?? 0, dollars: b?.dollars ?? 0 }];
-              })),
-            }))}
-          />
-        </div>
-      )}
-      <ul className="mt-auto divide-y divide-border border-t border-border pt-1">
-        {split.map((r) => (
-          <li key={r.id} className="flex items-center gap-3 py-2.5 last:pb-0">
-            <span className="size-2.5 shrink-0 rounded-[3px]" style={{ backgroundColor: RETAILER_COLOR[r.id] }} aria-hidden />
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium">{r.name}</div>
-              <div className="num text-xs text-muted-foreground">{plural(r.o.open.count, "open case")} · {money(r.o.open.dollars)}</div>
+    <ul className="space-y-3">
+      {split.map((r) => (
+        <li key={r.id} className="flex min-w-0 items-center gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-sand text-foreground" aria-hidden>
+            <Store className="size-4" strokeWidth={1.75} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-medium">{r.name}</div>
+            <div className="num truncate text-xs text-muted-foreground" title={`${money(r.o.open.dollars)} at stake`}>
+              {compactMoney(r.o.open.dollars)} at stake
             </div>
-            <Link to="/retailers/$retailerId" params={{ retailerId: r.id }} className={linkCls}>
-              Open <ArrowRight className="size-3.5" />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+          </div>
+          <Link to="/retailers/$retailerId" params={{ retailerId: r.id }} className={linkCls}>
+            Open <ArrowRight className="size-3.5" />
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
 /* ---------- Row 3 ---------- */
 
-function StatBlock({ label, t, dollarsSuffix }: { label: string; t: { count: number; dollars: number } | undefined; dollarsSuffix?: string }) {
+/** Left edge of each Needs attention row, by priority. */
+const PRIORITY_BAR: Record<string, string> = {
+  Critical: "bg-destructive",
+  High: "bg-warning",
+  Normal: "bg-tertiary",
+  Low: "bg-tertiary",
+};
+
+function AttentionList({ rows }: { rows: QueueRow[] }) {
+  if (rows.length === 0) return <Muted>No open cases.</Muted>;
   return (
-    <div className="rounded-xl border border-border p-4">
-      <div className="text-[13px] font-medium text-muted-foreground">{label}</div>
-      {!t ? <div className="mt-2 text-sm text-muted-foreground">—</div>
-        : t.count === 0 ? <div className="mt-2 text-sm text-muted-foreground">None yet</div>
-        : (
-          <>
-            <div className="num mt-1 text-2xl font-semibold">{t.count}</div>
-            <div className="num text-xs text-muted-foreground">{money(t.dollars)}{dollarsSuffix ? ` ${dollarsSuffix}` : ""}</div>
-          </>
-        )}
-    </div>
+    <ul className="-mx-2 space-y-1">
+      {rows.map((r) => {
+        const d = r.deduction;
+        const retailer = RETAILER_NAMES[d.retailer_id] ?? d.retailer_id;
+        const days = r.result.days_left == null ? "No active clock" : `${r.result.days_left} ${r.result.days_left === 1 ? "day" : "days"} left`;
+        return (
+          <li key={d.id}>
+            <Link to="/cases/$id" params={{ id: d.id }}
+              className="group flex min-w-0 items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-secondary/70 focus-visible:bg-secondary/70 focus-visible:outline-none">
+              <span className={`h-9 w-1 shrink-0 rounded-full ${r.result.priority ? PRIORITY_BAR[r.result.priority] : "bg-tertiary"}`}
+                title={r.result.priority ? `${r.result.priority} priority` : undefined} aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm" title={`${d.id} · ${d.title}`}>
+                  <span className="num font-medium">{d.id}</span>
+                  <span className="text-muted-foreground"> · {d.title}</span>
+                </span>
+                <span className="num block truncate text-xs text-tertiary">
+                  {r.result.priority && <span className="sr-only">{r.result.priority} priority · </span>}{retailer} · {days}
+                </span>
+              </span>
+              {/* Amount and score only on hover or keyboard focus. */}
+              <span className="num hidden shrink-0 text-xs whitespace-nowrap text-muted-foreground group-hover:inline group-focus-visible:inline">
+                {money(r.amount)}{r.result.display != null ? ` · score ${r.result.display}` : ""}
+              </span>
+              {r.result.band && <span className={`${BAND_CHIP[r.result.band]} shrink-0`}>{r.result.band}</span>}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
-function ClosedList({ rows }: { rows: QueueRow[] }) {
-  if (rows.length === 0) return <NoneYet />;
+function StatBlock({ label, t }: { label: string; t: Totals | undefined }) {
   return (
-    <ul className="-mx-2 divide-y divide-border">
-      {rows.map((r) => (
-        <li key={r.deduction.id}>
-          <Link to="/cases/$id" params={{ id: r.deduction.id }}
-            className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm hover:bg-secondary/60 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none">
-            <span className="min-w-0 flex-1">
-              <span className="num block font-medium text-primary">{r.deduction.id}</span>
-              <span className="block truncate text-xs text-muted-foreground">{r.deduction.title}</span>
-            </span>
-            <span className="chip-neutral">{STATE_LABEL[r.result.state]}</span>
-            <span className="num w-24 text-right">{money(r.amount)}</span>
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <div className="min-w-0 rounded-2xl bg-secondary/60 p-4" title={t && t.count > 0 ? money(t.dollars) : undefined}>
+      <div className="truncate text-[13px] font-medium text-muted-foreground">{label}</div>
+      {!t ? <div className="mt-2 text-sm text-muted-foreground">—</div>
+        : t.count === 0 ? <div className="mt-2 text-sm text-muted-foreground">None yet</div>
+        : <div className="num mt-1 text-2xl font-semibold">{t.count}</div>}
+    </div>
   );
 }

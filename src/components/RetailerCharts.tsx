@@ -1,23 +1,27 @@
 // Walmart vs Amazon charts for the home dashboard. Every value passed in comes from the existing selectors
 // (buildQueue, applyFilters, queueStats, overview); these components only draw them.
-// Identity is never color alone: each chart has direct labels or a legend with the retailer name and value,
-// a hover tooltip with exact counts and dollars, and a click (or the linked legend) that opens the retailer page.
-import { Link, useNavigate } from "@tanstack/react-router";
+// No numbers are printed on the charts: exact counts and dollars are in the hover tooltip, and every chart
+// is clickable (a bar or slice opens that retailer's page).
+import { useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import {
-  Bar, BarChart, Cell, LabelList, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
-} from "recharts";
+import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { money } from "@/lib/queue";
 
 /** One fixed color per retailer, used on every chart: the --walmart and --amazon tokens in styles.css. */
 export const RETAILER_COLOR: Record<string, string> = { walmart: "var(--walmart)", amazon: "var(--amazon)" };
-const colorOf = (id: string) => RETAILER_COLOR[id] ?? "var(--tertiary)";
+/** On the filled dark-sage card, Walmart's dark sage would vanish, so it turns white there. */
+const INVERTED_COLOR: Record<string, string> = { walmart: "var(--primary-foreground)", amazon: "var(--amazon)" };
+const colorOf = (id: string, inverted = false) => (inverted ? INVERTED_COLOR : RETAILER_COLOR)[id] ?? "var(--tertiary)";
 
 const SURFACE = "var(--card)";
 const INK_MUTED = "var(--muted-foreground)";
 const HOVER_FILL = "var(--secondary)";
 
 export interface Slice { id: string; name: string; count: number; dollars: number }
+
+const compactUsd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 });
+/** Card form of a dollar figure ($56.4K). The full value goes in a title tooltip or a table. */
+export const compactMoney = (n: number) => compactUsd.format(n);
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
@@ -26,108 +30,67 @@ function useOpenRetailer() {
   return (id: string) => navigate({ to: "/retailers/$retailerId", params: { retailerId: id } });
 }
 
-/* ---------- Shared pieces ---------- */
+/* ---------- Tooltips ---------- */
 
 function TipBox({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-lg border border-border bg-popover px-3 py-2 text-xs shadow-md">
-      <div className="font-medium text-foreground">{title}</div>
-      <div className="num mt-0.5 text-muted-foreground">{children}</div>
+    <div className="rounded-xl bg-popover px-3 py-2 text-xs whitespace-nowrap text-foreground shadow-md ring-1 ring-border">
+      <div className="font-medium">{title}</div>
+      <div className="num mt-1 space-y-0.5 text-muted-foreground">{children}</div>
     </div>
   );
 }
 
-function SliceTip({ active, payload, word = "case" }: { active?: boolean; payload?: { payload: Slice }[]; word?: string }) {
-  const s = active ? payload?.[0]?.payload : undefined;
-  if (!s) return null;
-  return <TipBox title={s.name}>{plural(s.count, word)} · {money(s.dollars)}</TipBox>;
-}
-
-function Swatch({ id }: { id: string }) {
-  return <span className="size-2.5 shrink-0 rounded-[3px]" style={{ backgroundColor: colorOf(id) }} aria-hidden />;
-}
-
-/** Legend that doubles as the keyboard path: each row is a focusable link to the retailer page. */
-export function RetailerLegend({ slices, primary, secondary }: {
-  slices: Slice[]; primary: (s: Slice) => string; secondary: (s: Slice) => string;
-}) {
+/** Both retailers, count and dollars. Used by every mini chart. */
+function BothTip({ title, slices, word = "case" }: { title: string; slices: Slice[]; word?: string }) {
   return (
-    <ul className="space-y-1.5">
+    <TipBox title={title}>
       {slices.map((s) => (
-        <li key={s.id}>
-          <Link to="/retailers/$retailerId" params={{ retailerId: s.id }}
-            className="flex items-center gap-2 rounded-md text-sm hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none">
-            <Swatch id={s.id} />
-            <span className="flex-1">{s.name}</span>
-            <span className="num font-medium">{primary(s)}</span>
-            <span className="num w-20 text-right text-muted-foreground">{secondary(s)}</span>
-          </Link>
-        </li>
+        <div key={s.id} className="flex items-center gap-2">
+          <span className="size-2 shrink-0 rounded-[2px]" style={{ backgroundColor: colorOf(s.id) }} aria-hidden />
+          <span className="text-foreground">{s.name}</span>
+          <span>{plural(s.count, word)} · {money(s.dollars)}</span>
+        </div>
       ))}
-    </ul>
+    </TipBox>
   );
 }
 
-/* ---------- Money at stake: donut ---------- */
+const tipProps = { wrapperStyle: { zIndex: 40, outline: "none" }, allowEscapeViewBox: { x: true, y: true }, isAnimationActive: false } as const;
 
-const compactUsd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 });
+/* ---------- KPI mini charts (fit a 64 x 56 box) ---------- */
 
-export function RetailerDonut({ slices, total }: { slices: Slice[]; total: number }) {
+export function MiniDonut({ slices, title, inverted = false }: { slices: Slice[]; title: string; inverted?: boolean }) {
   const open = useOpenRetailer();
   return (
-    <div className="flex items-center gap-4">
-      <div className="relative size-[112px] shrink-0">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart accessibilityLayer>
-            <Pie data={slices} dataKey="dollars" nameKey="name" innerRadius={38} outerRadius={54} paddingAngle={2}
-              startAngle={90} endAngle={-270} stroke={SURFACE} strokeWidth={2} isAnimationActive={false}
-              onClick={(d: { payload?: Slice }) => d.payload && open(d.payload.id)} className="cursor-pointer">
-              {slices.map((s) => <Cell key={s.id} fill={colorOf(s.id)} />)}
-            </Pie>
-            <Tooltip content={<SliceTip />} />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="pointer-events-none absolute inset-0 grid place-items-center">
-          <span className="num text-sm font-semibold">{compactUsd.format(total)}</span>
-        </div>
-      </div>
-      <div className="min-w-0 flex-1">
-        <RetailerLegend slices={slices} primary={(s) => money(s.dollars)} secondary={(s) => plural(s.count, "case")} />
-      </div>
+    <div className="h-14 w-14 shrink-0">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart accessibilityLayer>
+          <Pie data={slices} dataKey="dollars" nameKey="name" innerRadius={16} outerRadius={27} paddingAngle={3}
+            startAngle={90} endAngle={-270} stroke={inverted ? "transparent" : SURFACE} strokeWidth={2} isAnimationActive={false}
+            onClick={(d: { payload?: Slice }) => d.payload && open(d.payload.id)} className="cursor-pointer">
+            {slices.map((s) => <Cell key={s.id} fill={colorOf(s.id, inverted)} />)}
+          </Pie>
+          <Tooltip {...tipProps} content={({ active }) => (active ? <BothTip title={title} slices={slices} /> : null)} />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   );
 }
 
-/* ---------- Critical / approvals: two horizontal bars ---------- */
-
-export function RetailerBars({ slices }: { slices: Slice[] }) {
+export function MiniBars({ slices, title, inverted = false }: { slices: Slice[]; title: string; inverted?: boolean }) {
   const open = useOpenRetailer();
   const max = Math.max(1, ...slices.map((s) => s.count));
   return (
-    <div>
-      <ResponsiveContainer width="100%" height={slices.length * 34}>
-        <BarChart data={slices} layout="vertical" margin={{ top: 0, right: 4, bottom: 0, left: 0 }} barCategoryGap={8} accessibilityLayer>
-          {/* Extra room past the longest bar for its label. */}
-          <XAxis type="number" hide domain={[0, max * 2.2]} allowDecimals={false} />
-          <YAxis type="category" dataKey="name" width={64} axisLine={false} tickLine={false}
-            tick={{ fontSize: 13, fill: INK_MUTED }} />
-          <Tooltip content={<SliceTip />} cursor={{ fill: HOVER_FILL }} />
-          <Bar dataKey="count" barSize={14} radius={[0, 4, 4, 0]} minPointSize={2} isAnimationActive={false}
+    <div className="h-14 w-16 shrink-0">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={slices} margin={{ top: 2, right: 8, bottom: 0, left: 8 }} barCategoryGap="30%" accessibilityLayer>
+          <XAxis dataKey="name" hide />
+          <YAxis hide domain={[0, max]} />
+          <Tooltip {...tipProps} cursor={false} content={({ active }) => (active ? <BothTip title={title} slices={slices} /> : null)} />
+          <Bar dataKey="count" barSize={8} radius={[4, 4, 0, 0]} minPointSize={3} isAnimationActive={false}
             onClick={(d: { payload?: Slice }) => d.payload && open(d.payload.id)} className="cursor-pointer">
-            {slices.map((s) => <Cell key={s.id} fill={colorOf(s.id)} />)}
-            <LabelList dataKey="count" position="right" className="num"
-              content={(p) => {
-                const s = slices[Number(p.index)];
-                if (!s) return null;
-                const x = Number(p.x) + Number(p.width) + 8;
-                const y = Number(p.y) + Number(p.height) / 2;
-                return (
-                  <text x={x} y={y} dominantBaseline="central" fontSize={13} className="num">
-                    <tspan fill="currentColor" fontWeight={600}>{s.count}</tspan>
-                    <tspan fill={INK_MUTED}>{`  ${money(s.dollars)}`}</tspan>
-                  </text>
-                );
-              }} />
+            {slices.map((s) => <Cell key={s.id} fill={colorOf(s.id, inverted)} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
@@ -135,81 +98,90 @@ export function RetailerBars({ slices }: { slices: Slice[] }) {
   );
 }
 
-/* ---------- Packets submitted: one 100% split bar ---------- */
-
-export function RetailerSplitBar({ slices }: { slices: Slice[] }) {
+export function MiniSplit({ slices, title, inverted = false }: { slices: Slice[]; title: string; inverted?: boolean }) {
   const open = useOpenRetailer();
   const total = slices.reduce((t, s) => t + s.count, 0);
   const row = Object.fromEntries(slices.map((s) => [s.id, s.count]));
   const visible = slices.filter((s) => s.count > 0);
   return (
-    <div>
-      <ResponsiveContainer width="100%" height={18}>
-        <BarChart data={[row]} layout="vertical" margin={{ top: 0, right: 0, bottom: 0, left: 0 }} accessibilityLayer>
-          <XAxis type="number" hide domain={[0, total]} />
-          <YAxis type="category" hide />
-          <Tooltip cursor={false} content={({ active }) => active ? (
-            <TipBox title="Packets submitted">{slices.map((s) => `${s.name} ${s.count} · ${money(s.dollars)}`).join("  |  ")}</TipBox>
-          ) : null} />
-          {visible.map((s, i) => (
-            <Bar key={s.id} dataKey={s.id} name={s.name} stackId="split" fill={colorOf(s.id)} stroke={SURFACE} strokeWidth={2}
-              barSize={18} isAnimationActive={false} onClick={() => open(s.id)} className="cursor-pointer"
-              radius={visible.length === 1 ? 4 : i === 0 ? [4, 0, 0, 4] : [0, 4, 4, 0]} />
-          ))}
-        </BarChart>
-      </ResponsiveContainer>
-      {/* Counts on each side, named, so the split never relies on color. */}
-      <div className="mt-3 flex items-start justify-between gap-3 text-sm">
-        {slices.map((s, i) => (
-          <Link key={s.id} to="/retailers/$retailerId" params={{ retailerId: s.id }}
-            className={`flex items-center gap-2 rounded-md hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none ${i === 1 ? "flex-row-reverse text-right" : ""}`}>
-            <Swatch id={s.id} />
-            <span>
-              <span className="block">{s.name} <span className="num font-semibold">{s.count}</span></span>
-              <span className="num block text-xs text-muted-foreground">{money(s.dollars)}</span>
-            </span>
-          </Link>
-        ))}
+    <div className="flex h-14 w-20 shrink-0 items-center">
+      <div className="h-3 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={[row]} layout="vertical" margin={{ top: 0, right: 0, bottom: 0, left: 0 }} accessibilityLayer>
+            <XAxis type="number" hide domain={[0, total]} />
+            <YAxis type="category" hide />
+            <Tooltip {...tipProps} cursor={false} content={({ active }) => (active ? <BothTip title={title} slices={slices} word="packet" /> : null)} />
+            {visible.map((s, i) => (
+              <Bar key={s.id} dataKey={s.id} name={s.name} stackId="split" fill={colorOf(s.id, inverted)}
+                stroke={inverted ? "transparent" : SURFACE} strokeWidth={2} barSize={12} isAnimationActive={false}
+                onClick={() => open(s.id)} className="cursor-pointer"
+                radius={visible.length === 1 ? 6 : i === 0 ? [6, 0, 0, 6] : [0, 6, 6, 0]} />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
 }
 
-/* ---------- Retailers card: grouped bars by readiness band ---------- */
+/* ---------- Walmart vs Amazon: grouped bars by readiness band or priority ---------- */
 
-export function ReadinessChart({ rows, retailers }: {
-  rows: { band: string; byRetailer: Record<string, { count: number; dollars: number }> }[];
+export function RetailerLegendChips({ retailers }: { retailers: { id: string; name: string }[] }) {
+  return (
+    <ul className="flex flex-wrap items-center gap-2">
+      {retailers.map((r) => (
+        <li key={r.id} className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
+          <span className="size-2 rounded-full" style={{ backgroundColor: colorOf(r.id) }} aria-hidden />
+          {r.name}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function ComparisonChart({ rows, retailers }: {
+  rows: { group: string; byRetailer: Record<string, { count: number; dollars: number }> }[];
   retailers: { id: string; name: string }[];
 }) {
   const open = useOpenRetailer();
-  const data = rows.map((r) => ({ band: r.band, ...Object.fromEntries(retailers.map((x) => [x.id, r.byRetailer[x.id]?.count ?? 0])) }));
+  const data = rows.map((r) => ({ group: r.group, ...Object.fromEntries(retailers.map((x) => [x.id, r.byRetailer[x.id]?.count ?? 0])) }));
   return (
-    <div>
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} margin={{ top: 8, right: 0, bottom: 0, left: -24 }} barGap={2} barCategoryGap="28%" accessibilityLayer>
-          <XAxis dataKey="band" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: INK_MUTED }} />
-          <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: INK_MUTED }} width={48} />
-          <Tooltip cursor={{ fill: HOVER_FILL }} content={({ active, label }) => {
-            const row = active ? rows.find((r) => r.band === label) : undefined;
-            if (!row) return null;
-            return (
-              <TipBox title={String(label)}>
-                {retailers.map((x) => (
-                  <div key={x.id}>{x.name}: {plural(row.byRetailer[x.id]?.count ?? 0, "case")} · {money(row.byRetailer[x.id]?.dollars ?? 0)}</div>
-                ))}
-              </TipBox>
-            );
-          }} />
-          <Legend verticalAlign="top" align="left" height={28} iconType="square" iconSize={10}
-            formatter={(v) => <span className="text-xs text-foreground">{v}</span>} />
-          {retailers.map((x) => (
-            <Bar key={x.id} dataKey={x.id} name={x.name} fill={colorOf(x.id)} barSize={16} radius={[4, 4, 0, 0]}
-              isAnimationActive={false} onClick={() => open(x.id)} className="cursor-pointer">
-              <LabelList dataKey={x.id} position="top" fontSize={11} fill={INK_MUTED} className="num" />
-            </Bar>
-          ))}
-        </BarChart>
-      </ResponsiveContainer>
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 8, right: 0, bottom: 0, left: 0 }} barGap={4} barCategoryGap="30%" accessibilityLayer>
+        <XAxis dataKey="group" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: INK_MUTED }} interval={0} />
+        <YAxis hide allowDecimals={false} />
+        <Tooltip {...tipProps} cursor={{ fill: HOVER_FILL, radius: 8 }} content={({ active, label }) => {
+          const row = active ? rows.find((r) => r.group === label) : undefined;
+          if (!row) return null;
+          return (
+            <BothTip title={String(label)}
+              slices={retailers.map((x) => ({ id: x.id, name: x.name, count: row.byRetailer[x.id]?.count ?? 0, dollars: row.byRetailer[x.id]?.dollars ?? 0 }))} />
+          );
+        }} />
+        {retailers.map((x) => (
+          <Bar key={x.id} dataKey={x.id} name={x.name} fill={colorOf(x.id)} barSize={14} radius={[6, 6, 6, 6]} minPointSize={2}
+            isAnimationActive={false} onClick={() => open(x.id)} className="cursor-pointer" />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+/* ---------- Ready to file: semicircle gauge ---------- */
+
+export function Gauge({ percent, label }: { percent: number; label: string }) {
+  const value = Math.max(0, Math.min(100, percent));
+  // A half ring drawn with pathLength=100, so the dash length is the percent. Scales with its card via viewBox.
+  const arc = "M 18 100 A 82 82 0 0 1 182 100";
+  return (
+    <div className="relative mx-auto w-full max-w-[200px]" role="img" aria-label={label}>
+      <svg viewBox="0 0 200 112" className="block w-full" aria-hidden>
+        <path d={arc} fill="none" stroke="var(--primary-tint)" strokeWidth={20} strokeLinecap="round" />
+        {value > 0 && (
+          <path d={arc} fill="none" stroke="var(--primary)" strokeWidth={20} strokeLinecap="round" pathLength={100} strokeDasharray={`${value} 100`} />
+        )}
+      </svg>
+      <div className="num pointer-events-none absolute inset-x-0 bottom-1 text-center text-[26px] leading-none font-semibold">{Math.round(value)}%</div>
     </div>
   );
 }
