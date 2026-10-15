@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Fragment, useState, type ReactNode } from "react";
-import { AlertTriangle, ChevronDown, ChevronRight, ExternalLink, FileDown, Plus } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronRight, ExternalLink, FileDown } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AiExplanation } from "@/components/AiExplanation";
 import { evidenceUrl, useChargebacks } from "@/lib/chargebacks";
@@ -43,6 +43,7 @@ function CasePage() {
 }
 
 function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typeof useChargebacks>["data"]> }) {
+  const [adding, setAdding] = useState(false);
   const item = data.scored.find((x) => x.deduction.id === id);
   if (!item) {
     return <div className="panel p-10 text-center text-sm text-muted-foreground">No case {id}.</div>;
@@ -62,7 +63,7 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
 
   return (
     <>
-      <Header id={id} d={d} r={r} mapping={mapping} />
+      <Header d={d} r={r} mapping={mapping} />
 
       {r.warnings.length > 0 && (
         <div className="mt-6 space-y-2">
@@ -88,13 +89,14 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
           {scored ? <ReadinessHero id={id} r={r} s={s} /> : <NotScoredHero r={r} d={d} mapping={mapping} s={s} />}
           {scored && <PointsBreakdown r={r} />}
           {scored && <AiExplanation id={id} result={r} />}
-          <EvidenceCard id={id} evidence={evidence} docOptions={docOptions} />
+          <EvidenceCard evidence={evidence} docOptions={docOptions} />
         </div>
 
         {/* Right column: the call. Normal page flow, so everything in it is always fully visible. */}
         <aside className="min-w-0 space-y-6">
           {scored
-            ? <DecisionCard caseId={id} d={d} result={r} threshold={threshold} />
+            ? <DecisionCard caseId={id} d={d} result={r} threshold={threshold}
+                canAddEvidence={docOptions.length > 0} onAddEvidence={() => setAdding(true)} />
             : <PlaceholderCard title="Decision" note="Decisions are made on scored cases. This case is not scored." />}
           <DeadlinesCard r={r} />
         </aside>
@@ -104,6 +106,28 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
       <div className="mt-6">
         <ActivityTimeline caseId={id} limit={6} />
       </div>
+
+      {/* Export packet: submitted cases only, shown once, at the bottom of the page. */}
+      {d.status === "submitted" && (
+        <div className="mt-6 flex justify-end">
+          <Link to="/cases/$id/packet" params={{ id }} target="_blank" className="btn-outline">
+            <FileDown className="size-4" /> Export packet
+          </Link>
+        </div>
+      )}
+
+      {/* Add evidence form. Opened only from the Decision card's "Add received evidence". */}
+      <Sheet open={adding} onOpenChange={setAdding}>
+        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Add evidence</SheetTitle>
+            <SheetDescription>Saving replaces this case's document of that type and rescores the case.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6">
+            <AddEvidence caseId={id} docOptions={docOptions} evidence={evidence} embedded onSaved={() => setAdding(false)} />
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
@@ -111,7 +135,7 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
 /* ---------- Header ---------- */
 
 /** Two lines: chips, id and title; then retailer · code · amount · days left · attempt. */
-function Header({ id, d, r, mapping }: { id: string; d: Deduction; r: CaseResult; mapping: CodeMapping | undefined }) {
+function Header({ d, r, mapping }: { d: Deduction; r: CaseResult; mapping: CodeMapping | undefined }) {
   const limit = mapping?.attempt_limit;
   const urgent = r.days_left != null && r.days_left <= 7;
   const meta: ReactNode[] = [
@@ -139,11 +163,6 @@ function Header({ id, d, r, mapping }: { id: string; d: Deduction; r: CaseResult
           {meta.map((m, i) => <Fragment key={i}>{i > 0 && <span className="mx-1.5" aria-hidden>·</span>}{m}</Fragment>)}
         </p>
       </div>
-      {d.status === "submitted" && (
-        <Link to="/cases/$id/packet" params={{ id }} target="_blank" className="btn-outline shrink-0">
-          <FileDown className="size-4" /> Export packet
-        </Link>
-      )}
     </header>
   );
 }
@@ -249,18 +268,13 @@ function PointsBreakdown({ r }: { r: CaseResult }) {
   );
 }
 
-function EvidenceCard({ id, evidence, docOptions }: { id: string; evidence: EvidenceRow[]; docOptions: EvidenceDocType[] }) {
-  const [adding, setAdding] = useState(false);
+/** Evidence on file. Adding a document happens from the Decision card, after it was requested. */
+function EvidenceCard({ evidence, docOptions }: { evidence: EvidenceRow[]; docOptions: EvidenceDocType[] }) {
   const [open, setOpen] = useState<string | null>(null);
   return (
     <section className="panel overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-3">
         <h2 className="section-title">Evidence</h2>
-        {docOptions.length > 0 && (
-          <button type="button" className="btn-primary !py-1.5 text-xs" onClick={() => setAdding(true)}>
-            <Plus className="size-4" /> Add evidence
-          </button>
-        )}
       </div>
 
       {evidence.length === 0 ? (
@@ -306,18 +320,6 @@ function EvidenceCard({ id, evidence, docOptions }: { id: string; evidence: Evid
           })}
         </ul>
       )}
-
-      <Sheet open={adding} onOpenChange={setAdding}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>Add evidence</SheetTitle>
-            <SheetDescription>Saving replaces this case's document of that type and rescores the case.</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6">
-            <AddEvidence caseId={id} docOptions={docOptions} evidence={evidence} embedded onSaved={() => setAdding(false)} />
-          </div>
-        </SheetContent>
-      </Sheet>
     </section>
   );
 }

@@ -21,11 +21,25 @@ function approveBlock(r: CaseResult): string | null {
 }
 
 /**
+ * Which controls the card shows, from the case state. Display only: the server rules are unchanged.
+ * - outcome:   submitted. Only Record outcome.
+ * - manager:   a write-off is waiting for the manager. Only approve / reject.
+ * - approve:   the engine recommends submit. Only Approve dispute packet.
+ * - write_off: the engine recommends accept and write off. Only the write-off controls.
+ * - evidence:  anything else. One evidence action: Request evidence, then Add received evidence.
+ */
+type Mode = "outcome" | "manager" | "approve" | "write_off" | "evidence";
+
+/**
  * Decision card: AI suggests, humans decide. Only buttons the current role can use are shown; for
  * everything else the card says who can. The server checks the same rules again on every action.
  */
-export function DecisionCard({ caseId, d, result, threshold }: {
+export function DecisionCard({ caseId, d, result, threshold, canAddEvidence, onAddEvidence }: {
   caseId: string; d: Deduction; result: CaseResult; threshold: number;
+  /** The case has document types to add (from its template). */
+  canAddEvidence: boolean;
+  /** Opens the existing Add evidence form. */
+  onAddEvidence: () => void;
 }) {
   const qc = useQueryClient();
   const { currentUser, users } = useCurrentUser();
@@ -76,8 +90,14 @@ export function DecisionCard({ caseId, d, result, threshold }: {
   const block = approveBlock(result);
   const statusLabel = STATUS_LABEL[d.status] ?? d.status;
   const submitted = d.status === "submitted";
-  // Which main action the card shows. The recommendation comes from scoring.ts.
-  const recommendsSubmit = result.recommendation === "submit";
+  // The recommendation comes from scoring.ts; the requested_document row from the audit log.
+  const mode: Mode = submitted ? "outcome"
+    : pending ? "manager"
+    : result.recommendation === "submit" ? "approve"
+    : result.recommendation === "accept_write_off" ? "write_off"
+    : "evidence";
+  const requested = (activity.data ?? []).some((a) => a.action === "requested_document");
+  const showAddReceived = mode === "evidence" && requested && canAddEvidence;
 
   return (
     <section className="panel p-5">
@@ -101,9 +121,8 @@ export function DecisionCard({ caseId, d, result, threshold }: {
 
       {currentUser && (!isDone(d.status) || submitted) && (
         <div className="mt-3 divide-y divide-border">
-          {/* Approve packet: shown only when the engine recommends submit. Once submitted, the only action left
-              is recording the outcome. Display only: the server still checks every action. */}
-          {!submitted && recommendsSubmit && <div className="py-4">
+          {/* Approve packet: only when the engine recommends submit. */}
+          {mode === "approve" && <div className="py-4">
             <div className="font-medium">Approve dispute packet</div>
             {can("approve") ? (
               <>
@@ -118,8 +137,17 @@ export function DecisionCard({ caseId, d, result, threshold }: {
             )}
           </div>}
 
-          {/* Request evidence: the main action whenever the engine does not recommend submit */}
-          {!submitted && !recommendsSubmit && <div className="py-4">
+          {/* Evidence, step 2: once a document has been requested, add it when it arrives. */}
+          {showAddReceived && <div className="py-4">
+            <div className="font-medium">Add received evidence</div>
+            <p className="mt-1 text-xs text-muted-foreground">A document was requested for this case. Add it here; the case rescores on save.</p>
+            <button type="button" className="btn-primary mt-2 w-full" disabled={busy} onClick={onAddEvidence}>
+              Add received evidence
+            </button>
+          </div>}
+
+          {/* Evidence, step 1: request the missing document. */}
+          {mode === "evidence" && !showAddReceived && !activity.isPending && <div className="py-4">
             <div className="font-medium">Request evidence</div>
             {can("request_document") ? (
               <div className="mt-2 space-y-2">
@@ -140,8 +168,8 @@ export function DecisionCard({ caseId, d, result, threshold }: {
             )}
           </div>}
 
-          {/* Write-off */}
-          {!submitted && <div className="py-4">
+          {/* Write-off: direct at or below the manager limit, request above it, then the manager's call. */}
+          {(mode === "write_off" || mode === "manager") && <div className="py-4">
             <div className="font-medium">Write off {money(amount)}</div>
             {!overThreshold && (
               can("write_off") ? (
@@ -195,12 +223,10 @@ export function DecisionCard({ caseId, d, result, threshold }: {
             )}
           </div>}
 
-          {/* Record outcome */}
-          <div className="py-4">
+          {/* Record outcome: the only action on a submitted case. */}
+          {mode === "outcome" && <div className="py-4">
             <div className="font-medium">Record outcome</div>
-            {!submitted ? (
-              <p className="mt-1 text-xs text-muted-foreground">Available once the dispute packet is submitted.</p>
-            ) : can("record_outcome") ? (
+            {can("record_outcome") ? (
               <div className="mt-2 space-y-2">
                 <div className="flex flex-wrap gap-2">
                   <button className="btn-primary" disabled={busy} onClick={() => act.mutate({ action: "record_outcome", outcome: "won" })}>
@@ -217,7 +243,7 @@ export function DecisionCard({ caseId, d, result, threshold }: {
             ) : (
               <p className="mt-1 text-xs text-muted-foreground">Only {who("record_outcome")} can record the outcome.</p>
             )}
-          </div>
+          </div>}
         </div>
       )}
     </section>
