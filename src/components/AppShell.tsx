@@ -10,7 +10,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const s = useStore();
   const { users, currentUser, setCurrentUserId } = useCurrentUser();
   const qc = useQueryClient();
-  const reset = useMutation({ mutationFn: () => resetDemo(), onSuccess: () => qc.invalidateQueries() });
+  const reset = useMutation({
+    mutationFn: () => resetDemo(),
+    onSuccess: () => {
+      qc.removeQueries({ queryKey: ["rescore"] });
+      void qc.invalidateQueries();
+    },
+  });
   const nav = "block rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-foreground/10 hover:text-sidebar-foreground";
   const active = { className: "block rounded-md px-3 py-2 text-sm bg-sidebar-foreground/15 text-sidebar-foreground" };
   return (

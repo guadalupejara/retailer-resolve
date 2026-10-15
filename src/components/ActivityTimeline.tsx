@@ -2,7 +2,7 @@ import { useCurrentUser } from "@/lib/current-user";
 import { ACTION_LABEL } from "@/lib/decision-rules";
 import { useActivity } from "@/lib/activity";
 
-/** Newest first. Who, what, when, the note, and the displayed score at the time. */
+/** Newest first. Who, what, when (Pacific time), the note, and the displayed score at the time. */
 export function ActivityTimeline({ caseId }: { caseId: string }) {
   const q = useActivity(caseId);
   const { users } = useCurrentUser();
@@ -24,7 +24,7 @@ export function ActivityTimeline({ caseId }: { caseId: string }) {
                 {row.note && <div className="mt-0.5 text-xs text-muted-foreground">{row.note}</div>}
               </div>
               <div className="num flex gap-4 text-xs text-muted-foreground md:justify-end">
-                <span>{new Date(row.at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</span>
+                <span>{new Date(row.at).toLocaleString("en-US", { timeZone: "America/Los_Angeles", dateStyle: "medium", timeStyle: "short" })} PT</span>
                 <span>Score {row.score_at_action ?? "—"}</span>
               </div>
             </li>

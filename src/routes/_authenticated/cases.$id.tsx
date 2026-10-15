@@ -6,6 +6,9 @@ import type { CaseResult, CodeMapping, Deduction, Settings } from "@/lib/scoring
 import { BAND_CHIP, RECOMMENDATION_LABEL, RETAILER_NAMES, STATE_LABEL, money } from "@/lib/queue";
 import { settingValue } from "@/lib/decision-rules";
 import { DecisionCard } from "@/components/DecisionCard";
+import { AddEvidence } from "@/components/AddEvidence";
+import { ScoreReadout } from "@/components/ScoreReadout";
+import { isEvidenceDocType, type EvidenceDocType } from "@/lib/evidence-fields";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import {
   DOC_LABEL, RECOMMENDATION_TEXT, basename, deadlineRows, evidenceFields, groupLines, lineStatus,
@@ -47,6 +50,12 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
   const mapping = data.seed.code_mappings.find((m) => m.id === d.code_mapping_id);
   const evidence = (data.seed.evidence as unknown as EvidenceRow[]).filter((e) => e.deduction_id === d.id);
   const scored = r.state === "scored";
+  const template = data.seed.templates.find((t) => t.id === mapping?.template_id);
+  const terms = data.seed.shipments.find((s) => s.po_number === d.po_number)?.terms;
+  const docOptions = [...new Set((template?.required_docs ?? [])
+    .filter((x) => !x.when_terms || x.when_terms === terms)
+    .map((x) => x.doc)
+    .filter(isEvidenceDocType))] as EvidenceDocType[];
   const threshold = settingValue(data.seed.settings as unknown as { key: string; value: string }[], "manager_approval_write_off_above");
 
   return (
@@ -68,7 +77,7 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
       )}
 
       <div className="mt-8 grid gap-4 lg:grid-cols-3">
-        {scored ? <ScorePanel r={r} s={s} /> : <NotScoredPanel r={r} d={d} mapping={mapping} s={s} />}
+        {scored ? <ScorePanel id={id} r={r} s={s} /> : <NotScoredPanel r={r} d={d} mapping={mapping} s={s} />}
         <DeadlinesPanel r={r} />
         <RecommendationPanel r={r} />
       </div>
@@ -121,6 +130,9 @@ function CaseDetail({ id, data }: { id: string; data: NonNullable<ReturnType<typ
 
       <section className="mt-10">
         <h2 className="text-2xl">Evidence</h2>
+        <div className="mt-4">
+          <AddEvidence caseId={id} docOptions={docOptions} evidence={evidence} />
+        </div>
         {evidence.length === 0 ? (
           <div className="panel mt-4 p-6 text-sm text-muted-foreground">No evidence files for this case yet.</div>
         ) : (
@@ -193,20 +205,13 @@ function Header({ d, r, mappingLabel, amount }: { d: Deduction; r: CaseResult; m
   );
 }
 
-function ScorePanel({ r, s }: { r: CaseResult; s: Settings }) {
+function ScorePanel({ id, r, s }: { id: string; r: CaseResult; s: Settings }) {
   return (
     <div className="panel p-6">
       <div className="eyebrow">Readiness score</div>
-      <div className="mt-3 flex items-end gap-4">
-        <div className="num text-6xl">{r.display ?? "—"}</div>
-        {r.band && <span className={`${BAND_CHIP[r.band]} mb-2`}>{r.band}</span>}
+      <div className="mt-3">
+        <ScoreReadout id={id} r={r} cap={s.cap_score} />
       </div>
-      {r.capped && r.raw != null && (
-        <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          <div className="font-medium">Capped at {s.cap_score}: would be {r.raw}</div>
-          <div className="mt-1 text-xs">Fatal: {r.capped_by.join("; ")}</div>
-        </div>
-      )}
     </div>
   );
 }

@@ -27,10 +27,12 @@ export function useChargebacks() {
 }
 
 /**
- * URL for an evidence file. The mock files are served by the app itself from
- * public/evidence/ (copy mock-backend/evidence there), so no storage bucket is needed.
- * evidenceUrl("evidence/WMT-001/pod.pdf") -> "/evidence/WMT-001/pod.pdf"
+ * URL for an evidence file. Seeded mock files ("evidence/<case>/<file>") are served by the app from
+ * public/evidence/. Uploaded files ("<case>/<file>") come from the public "evidence" storage bucket.
  */
 export function evidenceUrl(storagePath: string) {
-  return "/" + storagePath.replace(/^\/+/, "");
+  const clean = storagePath.replace(/^\/+/, "");
+  if (clean.startsWith("evidence/")) return "/" + clean;
+  const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
+  return `${base}/storage/v1/object/public/evidence/${clean}`;
 }

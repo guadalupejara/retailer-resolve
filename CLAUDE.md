@@ -27,6 +27,7 @@ charge of every money decision. Pitch line: **"AI does the investigation, humans
   Hook: `useChargebacks()`. Evidence URLs: `evidenceUrl(storage_path)` -> `/evidence/...`.
 - `public/evidence/`: the mock evidence files (PODs, BOLs, ASN files, photos).
 - `src/lib/ai-explain.ts`: the Gemini call, reply validation and cache fallback. `scripts/generate-ai-cache.ts`: writes the cache.
+- Evidence: `src/lib/evidence.server.ts` (add or replace a document, then rescore). `scoring.ts` reads only the first evidence row of each doc type, so a new document replaces the existing row; it is inserted only when none exists. Uploads go to the `evidence` bucket at `<case id>/<doc>-<timestamp>.<ext>`. `evidenceUrl()` serves `evidence/...` paths from `public/evidence/` and everything else from the bucket.
 - Decisions: `src/lib/decision-rules.ts` (who can do what; shared by server and UI). `src/lib/decisions.ts`: server functions (`takeCaseAction`, `resetDemo`). `src/lib/decisions.server.ts`: the only file that uses `SUPABASE_SERVICE_ROLE_KEY`; never import it from client code.
 - `src/lib/data.ts`, `src/lib/store.ts`: Lupe's original mock data (5 retailers, QuickBooks).
   **Being replaced** by the Supabase data. Do not add new features on top of them.

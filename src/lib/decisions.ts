@@ -24,6 +24,24 @@ export const takeCaseAction = createServerFn({ method: "POST" })
   });
 
 export const resetDemo = createServerFn({ method: "POST" }).handler(async () => {
-  const { runReset } = await import("./decisions.server");
-  return runReset();
+  const { runReset, serviceDb } = await import("./decisions.server");
+  const { resetEvidence } = await import("./evidence.server");
+  const seed = (await import("../../mock-backend/data/seed.json")).default;
+  const demo = await runReset();
+  const evidence = await resetEvidence(serviceDb(), seed.evidence);
+  return { ...demo, ...evidence };
 });
+
+export const addEvidence = createServerFn({ method: "POST" })
+  .validator((d: { caseId: string; userId: string; docType: string; fields: Record<string, string | boolean | number | null>; fileName: string; fileBase64: string; variant: "uploaded" | "demo" }) => {
+    if (typeof d?.caseId !== "string" || !/^[A-Za-z0-9-]{1,32}$/.test(d.caseId)) throw new Error("Invalid case id");
+    if (typeof d.userId !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(d.userId)) throw new Error("Invalid user id");
+    if (typeof d.fileBase64 !== "string" || typeof d.fileName !== "string") throw new Error("Choose a file first.");
+    if (d.variant !== "uploaded" && d.variant !== "demo") throw new Error("Unknown file source");
+    if (typeof d.fields !== "object" || d.fields === null) throw new Error("Fields must be an object");
+    return d;
+  })
+  .handler(async ({ data }) => {
+    const { runAddEvidence } = await import("./evidence.server");
+    return runAddEvidence(data);
+  });

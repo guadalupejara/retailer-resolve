@@ -19,16 +19,16 @@ export interface ActionInput {
 }
 
 /** Errors with a message the user can read. Anything else is logged and replaced with a generic message. */
-class ActionError extends Error {}
+export class ActionError extends Error {}
 
-function serviceDb(): SupabaseClient {
+export function serviceDb(): SupabaseClient {
   const url = process.env["SUPABASE_URL"];
   const key = process.env["SUPABASE_SERVICE_ROLE_KEY"];
   if (!url || !key) throw new Error("Server is missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-async function actorFor(db: SupabaseClient, userId: string): Promise<Person> {
+export async function actorFor(db: SupabaseClient, userId: string): Promise<Person> {
   const { data, error } = await db.from("app_users").select("id, name, role").eq("id", userId).maybeSingle();
   if (error) throw error;
   if (!data) throw new ActionError("Unknown user. Pick a user in the role switcher.");
