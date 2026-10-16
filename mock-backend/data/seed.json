@@ -1,0 +1,4208 @@
+{
+  "demo_today": "2026-10-16",
+  "supplier": {
+    "name": "Brightleaf Snacks Co.",
+    "note": "Fictional supplier used for the demo"
+  },
+  "settings": {
+    "demo_today": "2026-10-16",
+    "write_off_threshold": 250,
+    "high_value_threshold": 2500,
+    "critical_days": 7,
+    "high_days": 30,
+    "cap_score": 40,
+    "band_ready_min": 80,
+    "band_needs_work_min": 50,
+    "manager_approval_write_off_above": 1000
+  },
+  "retailers": [
+    {
+      "id": "walmart",
+      "name": "Walmart",
+      "portal": "Retail Link (APDP)"
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "portal": "Vendor Central"
+    }
+  ],
+  "carriers": [
+    {
+      "id": "ridgeline",
+      "name": "Ridgeline Freight",
+      "pod_retention_days": 90
+    },
+    {
+      "id": "bluewater",
+      "name": "Bluewater Logistics",
+      "pod_retention_days": 120
+    },
+    {
+      "id": "summit",
+      "name": "Summit LTL",
+      "pod_retention_days": 60
+    }
+  ],
+  "users": [
+    {
+      "id": "u_priya",
+      "name": "Priya Shah",
+      "role": "deductions_analyst"
+    },
+    {
+      "id": "u_marcus",
+      "name": "Marcus Lee",
+      "role": "ar_manager"
+    },
+    {
+      "id": "u_dana",
+      "name": "Dana Ortiz",
+      "role": "logistics"
+    },
+    {
+      "id": "u_sam",
+      "name": "Sam Patel",
+      "role": "sales"
+    }
+  ],
+  "templates": [
+    {
+      "id": "shortage_wmt",
+      "name": "Shortage (Walmart)",
+      "required_docs": [
+        {
+          "doc": "pod",
+          "points": 12,
+          "when_terms": "prepaid"
+        },
+        {
+          "doc": "bol",
+          "points": 12,
+          "when_terms": "collect"
+        },
+        {
+          "doc": "po",
+          "points": 12
+        },
+        {
+          "doc": "invoice",
+          "points": 11
+        }
+      ]
+    },
+    {
+      "id": "shortage_amz",
+      "name": "Shortage (Amazon)",
+      "required_docs": [
+        {
+          "doc": "delivery_confirmation",
+          "points": 18
+        },
+        {
+          "doc": "invoice",
+          "points": 17
+        }
+      ]
+    },
+    {
+      "id": "pricing_wmt",
+      "name": "Pricing (Walmart)",
+      "required_docs": [
+        {
+          "doc": "invoice",
+          "points": 12
+        },
+        {
+          "doc": "claim",
+          "points": 12
+        },
+        {
+          "doc": "po",
+          "points": 11
+        }
+      ]
+    },
+    {
+      "id": "asn_amz",
+      "name": "ASN compliance (Amazon)",
+      "required_docs": [
+        {
+          "doc": "asn_file",
+          "points": 35
+        }
+      ]
+    },
+    {
+      "id": "carton_amz",
+      "name": "Carton and label (Amazon)",
+      "required_docs": [
+        {
+          "doc": "carton_photo",
+          "points": 35
+        }
+      ]
+    }
+  ],
+  "template_lines": [
+    {
+      "id": "shortage_wmt-1",
+      "template_id": "shortage_wmt",
+      "line_no": 1,
+      "bucket": "Evidence present",
+      "label": "Required documents present",
+      "points": 35,
+      "check_key": "docs_present",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "A dispute without its required documents is denied.",
+      "fix": "Attach the missing document.",
+      "fix_owner": "analyst",
+      "source": "https://www.spscommerce.com/community/articles/why-deduction-documents-get-rejected-fixes"
+    },
+    {
+      "id": "shortage_wmt-2",
+      "template_id": "shortage_wmt",
+      "line_no": 2,
+      "bucket": "Evidence content",
+      "label": "PO number matches",
+      "points": 8,
+      "check_key": "po_matches",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Every document must point to the PO being disputed.",
+      "fix": "Get a corrected copy showing the right PO number.",
+      "fix_owner": "logistics",
+      "source": "https://help.supplypike.com/en/articles/4993182-example-shipping-documents"
+    },
+    {
+      "id": "shortage_wmt-3",
+      "template_id": "shortage_wmt",
+      "line_no": 3,
+      "bucket": "Evidence content",
+      "label": "Ship-to matches",
+      "points": 8,
+      "check_key": "shipto_matches",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "The delivery address must match the PO's ship-to location.",
+      "fix": "Confirm the delivery location with the carrier and get a corrected copy.",
+      "fix_owner": "logistics",
+      "source": "https://help.supplypike.com/en/articles/4993182-example-shipping-documents"
+    },
+    {
+      "id": "shortage_wmt-4",
+      "template_id": "shortage_wmt",
+      "line_no": 4,
+      "bucket": "Evidence content",
+      "label": "Stamp or signature present",
+      "points": 9,
+      "check_key": "proof_signed",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "Walmart treats a POD without a DC stamp or store signature (or a BOL without a carrier signature) as invalid for shortages.",
+      "fix": "Request the stamped or signed copy from the carrier using the PRO number.",
+      "fix_owner": "logistics",
+      "source": "https://help.supplypike.com/en/articles/4993182-example-shipping-documents"
+    },
+    {
+      "id": "shortage_wmt-5",
+      "template_id": "shortage_wmt",
+      "line_no": 5,
+      "bucket": "Amounts",
+      "label": "Amounts reconcile exactly",
+      "points": 20,
+      "check_key": "amount_matches",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "A dispute amount that doesn't match its backup is rejected even when the claim is valid.",
+      "fix": "Set the dispute amount to the documented shortage, to the cent.",
+      "fix_owner": "analyst",
+      "source": "https://www.emagia.com/blog/walmart-deduction-dispute-process-guide/"
+    },
+    {
+      "id": "shortage_wmt-6",
+      "template_id": "shortage_wmt",
+      "line_no": 6,
+      "bucket": "Procedural",
+      "label": "Proof type fits prepaid or collect",
+      "points": 5,
+      "check_key": "proof_type_fits",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Prepaid shipments need a POD; collect shipments need a carrier-signed BOL.",
+      "fix": "Attach the proof type that matches the shipment terms.",
+      "fix_owner": "logistics",
+      "source": "https://help.supplypike.com/en/articles/4993182-example-shipping-documents"
+    },
+    {
+      "id": "shortage_wmt-7",
+      "template_id": "shortage_wmt",
+      "line_no": 7,
+      "bucket": "Procedural",
+      "label": "Deduction settled",
+      "points": 5,
+      "check_key": "settled",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Disputing before a deduction settles can produce approvals that are later reversed.",
+      "fix": "Wait until the deduction shows as posted, then submit.",
+      "fix_owner": "analyst",
+      "source": "https://www.spscommerce.com/community/articles/why-deduction-documents-get-rejected-fixes"
+    },
+    {
+      "id": "shortage_wmt-8",
+      "template_id": "shortage_wmt",
+      "line_no": 8,
+      "bucket": "History",
+      "label": "Prior denial addressed",
+      "points": 10,
+      "check_key": "prior_denial_addressed",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "A re-dispute must fix what the last denial said was wrong.",
+      "fix": "Add the evidence the previous denial asked for.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "shortage_amz-1",
+      "template_id": "shortage_amz",
+      "line_no": 1,
+      "bucket": "Evidence present",
+      "label": "Required documents present",
+      "points": 35,
+      "check_key": "docs_present",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "A dispute without its required documents is denied.",
+      "fix": "Attach the missing document.",
+      "fix_owner": "analyst",
+      "source": "https://www.channelengine.com/en/blog/disputing-shortage-claims-on-amazon-vendor"
+    },
+    {
+      "id": "shortage_amz-2",
+      "template_id": "shortage_amz",
+      "line_no": 2,
+      "bucket": "Evidence content",
+      "label": "PO number matches",
+      "points": 8,
+      "check_key": "po_matches",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Every document must point to the PO being disputed.",
+      "fix": "Get a corrected delivery confirmation showing the right PO.",
+      "fix_owner": "logistics",
+      "source": null
+    },
+    {
+      "id": "shortage_amz-3",
+      "template_id": "shortage_amz",
+      "line_no": 3,
+      "bucket": "Evidence content",
+      "label": "Ship-to matches",
+      "points": 8,
+      "check_key": "shipto_matches",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "The delivery must be to the fulfillment center on the PO.",
+      "fix": "Confirm the delivery FC with the carrier.",
+      "fix_owner": "logistics",
+      "source": null
+    },
+    {
+      "id": "shortage_amz-4",
+      "template_id": "shortage_amz",
+      "line_no": 4,
+      "bucket": "Evidence content",
+      "label": "Delivery confirmed by carrier",
+      "points": 9,
+      "check_key": "delivery_confirmed",
+      "fatal": true,
+      "fatal_verified": false,
+      "why": "Amazon needs proof the shipment reached the fulfillment center.",
+      "fix": "Get the carrier's delivery confirmation with tracking.",
+      "fix_owner": "logistics",
+      "source": "https://www.channelengine.com/en/blog/disputing-shortage-claims-on-amazon-vendor"
+    },
+    {
+      "id": "shortage_amz-5",
+      "template_id": "shortage_amz",
+      "line_no": 5,
+      "bucket": "Amounts",
+      "label": "Amounts reconcile exactly",
+      "points": 20,
+      "check_key": "amount_matches",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "A dispute amount that doesn't match its backup is rejected.",
+      "fix": "Set the dispute amount to the documented shortage, to the cent.",
+      "fix_owner": "analyst",
+      "source": "https://www.emagia.com/blog/walmart-deduction-dispute-process-guide/"
+    },
+    {
+      "id": "shortage_amz-6",
+      "template_id": "shortage_amz",
+      "line_no": 6,
+      "bucket": "Procedural",
+      "label": "Related claims grouped",
+      "points": 5,
+      "check_key": "grouped",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Claims for the same PO should be disputed together.",
+      "fix": "Group this claim with the other claims on the same PO.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "shortage_amz-7",
+      "template_id": "shortage_amz",
+      "line_no": 7,
+      "bucket": "Procedural",
+      "label": "Dispute summary written",
+      "points": 5,
+      "check_key": "summary_written",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Amazon asks for a written explanation of why the claim is wrong.",
+      "fix": "Write or accept the AI-drafted summary.",
+      "fix_owner": "analyst",
+      "source": "https://www.spscommerce.com/community/articles/chargeback-recovery"
+    },
+    {
+      "id": "shortage_amz-8",
+      "template_id": "shortage_amz",
+      "line_no": 8,
+      "bucket": "History",
+      "label": "Prior denial addressed",
+      "points": 10,
+      "check_key": "prior_denial_addressed",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "A re-dispute must fix what the last denial said was wrong.",
+      "fix": "Add the evidence the previous denial asked for.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "pricing_wmt-1",
+      "template_id": "pricing_wmt",
+      "line_no": 1,
+      "bucket": "Evidence present",
+      "label": "Required documents present",
+      "points": 35,
+      "check_key": "docs_present",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "Pricing disputes need the invoice, the claim and the PO.",
+      "fix": "Download the claim from APDP/APIS and attach it.",
+      "fix_owner": "analyst",
+      "source": "https://help.supplypike.com/en/articles/4988093-recommended-proof-documentation-for-wal-mart-disputing"
+    },
+    {
+      "id": "pricing_wmt-2",
+      "template_id": "pricing_wmt",
+      "line_no": 2,
+      "bucket": "Evidence content",
+      "label": "PO number matches",
+      "points": 8,
+      "check_key": "po_matches",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "The claim and invoice must reference the PO being disputed.",
+      "fix": "Check the claim's PO reference; correct the dispute if it was filed against the wrong PO.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "pricing_wmt-3",
+      "template_id": "pricing_wmt",
+      "line_no": 3,
+      "bucket": "Evidence content",
+      "label": "Item number matches PO",
+      "points": 8,
+      "check_key": "item_matches",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "An item mismatch suggests a substitution, which is a different code.",
+      "fix": "Confirm the item shipped; if substituted, this may be Code 13, not 11.",
+      "fix_owner": "sales",
+      "source": null
+    },
+    {
+      "id": "pricing_wmt-4",
+      "template_id": "pricing_wmt",
+      "line_no": 4,
+      "bucket": "Evidence content",
+      "label": "Invoice price matches PO price",
+      "points": 9,
+      "check_key": "price_matches",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "If you invoiced above the PO price, Walmart's deduction is probably valid.",
+      "fix": "Review with sales. If the PO price was right, accept and write off; fix the price file.",
+      "fix_owner": "sales",
+      "source": "https://www.spscommerce.com/community/articles/why-deduction-documents-get-rejected-fixes"
+    },
+    {
+      "id": "pricing_wmt-5",
+      "template_id": "pricing_wmt",
+      "line_no": 5,
+      "bucket": "Amounts",
+      "label": "Amounts reconcile exactly",
+      "points": 20,
+      "check_key": "amount_matches",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "A dispute amount that doesn't match its backup is rejected.",
+      "fix": "Set the dispute amount to the documented difference.",
+      "fix_owner": "analyst",
+      "source": "https://www.emagia.com/blog/walmart-deduction-dispute-process-guide/"
+    },
+    {
+      "id": "pricing_wmt-6",
+      "template_id": "pricing_wmt",
+      "line_no": 6,
+      "bucket": "Procedural",
+      "label": "Deduction settled",
+      "points": 5,
+      "check_key": "settled",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Disputing before a deduction settles can produce reversed approvals.",
+      "fix": "Wait until the deduction shows as posted.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "pricing_wmt-7",
+      "template_id": "pricing_wmt",
+      "line_no": 7,
+      "bucket": "Procedural",
+      "label": "Dispute summary written",
+      "points": 5,
+      "check_key": "summary_written",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "An explanation helps the reviewer see the price agreement.",
+      "fix": "Write or accept the AI-drafted summary.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "pricing_wmt-8",
+      "template_id": "pricing_wmt",
+      "line_no": 8,
+      "bucket": "History",
+      "label": "Prior denial addressed",
+      "points": 10,
+      "check_key": "prior_denial_addressed",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "A re-dispute must fix what the last denial said was wrong.",
+      "fix": "Add the evidence the previous denial asked for.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "asn_amz-1",
+      "template_id": "asn_amz",
+      "line_no": 1,
+      "bucket": "Evidence present",
+      "label": "Required documents present",
+      "points": 35,
+      "check_key": "docs_present",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "Amazon needs the ASN screenshot or EDI 856 file.",
+      "fix": "Export the EDI 856 (text or XML) or screenshot it in Vendor Central.",
+      "fix_owner": "analyst",
+      "source": "https://www.spscommerce.com/community/articles/chargeback-recovery"
+    },
+    {
+      "id": "asn_amz-2",
+      "template_id": "asn_amz",
+      "line_no": 2,
+      "bucket": "Evidence content",
+      "label": "PO number matches",
+      "points": 8,
+      "check_key": "po_matches",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "The ASN must reference the PO on the chargeback.",
+      "fix": "Attach the ASN for the correct PO.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "asn_amz-3",
+      "template_id": "asn_amz",
+      "line_no": 3,
+      "bucket": "Evidence content",
+      "label": "Carton IDs present (SSCC or AMZNCC)",
+      "points": 8,
+      "check_key": "carton_ids_present",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Amazon checks that the ASN carried carton-level barcode data.",
+      "fix": "Show where the ASN contained the SSCC or AMZNCC values.",
+      "fix_owner": "logistics",
+      "source": "https://wiki.amazowl.com/sop/vendor-central/dispute-chargeback-ASN"
+    },
+    {
+      "id": "asn_amz-4",
+      "template_id": "asn_amz",
+      "line_no": 4,
+      "bucket": "Evidence content",
+      "label": "ASN sent before receipt",
+      "points": 9,
+      "check_key": "sent_before_receipt",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "The ASN must have been sent before Amazon received the shipment.",
+      "fix": "If it was sent late, the chargeback is probably valid; accept it and fix the ASN timing.",
+      "fix_owner": "logistics",
+      "source": "https://www.spscommerce.com/community/articles/chargeback-recovery"
+    },
+    {
+      "id": "asn_amz-5",
+      "template_id": "asn_amz",
+      "line_no": 5,
+      "bucket": "Amounts",
+      "label": "Amounts reconcile exactly",
+      "points": 20,
+      "check_key": "amount_matches",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "The disputed amount must equal the chargeback amount.",
+      "fix": "Set the dispute amount to the chargeback amount.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "asn_amz-6",
+      "template_id": "asn_amz",
+      "line_no": 6,
+      "bucket": "Procedural",
+      "label": "Related chargebacks grouped",
+      "points": 5,
+      "check_key": "grouped",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Chargebacks for the same ASIN or PO can be disputed together.",
+      "fix": "Select the related chargebacks in the same dispute.",
+      "fix_owner": "analyst",
+      "source": "https://www.spscommerce.com/community/articles/chargeback-recovery"
+    },
+    {
+      "id": "asn_amz-7",
+      "template_id": "asn_amz",
+      "line_no": 7,
+      "bucket": "Procedural",
+      "label": "Dispute summary written",
+      "points": 5,
+      "check_key": "summary_written",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Amazon asks for a written explanation in the dispute summary.",
+      "fix": "Write or accept the AI-drafted summary.",
+      "fix_owner": "analyst",
+      "source": "https://www.spscommerce.com/community/articles/chargeback-recovery"
+    },
+    {
+      "id": "asn_amz-8",
+      "template_id": "asn_amz",
+      "line_no": 8,
+      "bucket": "History",
+      "label": "Prior denial addressed",
+      "points": 10,
+      "check_key": "prior_denial_addressed",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Amazon allows only two disputes; the second must add new evidence.",
+      "fix": "Add the evidence the previous denial asked for.",
+      "fix_owner": "analyst",
+      "source": "https://www.amalytix.com/en/glossary/chargebacks/"
+    },
+    {
+      "id": "carton_amz-1",
+      "template_id": "carton_amz",
+      "line_no": 1,
+      "bucket": "Evidence present",
+      "label": "Required documents present",
+      "points": 35,
+      "check_key": "docs_present",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "Amazon needs photos of the carton contents.",
+      "fix": "Photograph an opened carton from the same shipment.",
+      "fix_owner": "warehouse",
+      "source": "https://wiki.amazowl.com/sop/vendor-central/dispute-chargeback-ASN"
+    },
+    {
+      "id": "carton_amz-2",
+      "template_id": "carton_amz",
+      "line_no": 2,
+      "bucket": "Evidence content",
+      "label": "Carton visibly opened",
+      "points": 8,
+      "check_key": "carton_opened",
+      "fatal": true,
+      "fatal_verified": false,
+      "why": "Amazon asks for a face-open carton; a sealed box shows nothing.",
+      "fix": "Retake the photo with the carton opened.",
+      "fix_owner": "warehouse",
+      "source": "https://wiki.amazowl.com/sop/vendor-central/dispute-chargeback-ASN"
+    },
+    {
+      "id": "carton_amz-3",
+      "template_id": "carton_amz",
+      "line_no": 3,
+      "bucket": "Evidence content",
+      "label": "Barcodes legible, match the ASIN",
+      "points": 8,
+      "check_key": "barcode_legible",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Barcodes must be readable to prove the labeling was right.",
+      "fix": "Retake the photo closer, with the barcode in focus.",
+      "fix_owner": "warehouse",
+      "source": "https://www.spscommerce.com/community/articles/chargeback-recovery"
+    },
+    {
+      "id": "carton_amz-4",
+      "template_id": "carton_amz",
+      "line_no": 4,
+      "bucket": "Evidence content",
+      "label": "Inner packs and units visible",
+      "points": 9,
+      "check_key": "units_visible",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "Amazon asks for images showing inner packs and individual sellable units.",
+      "fix": "Retake the photo showing inner packs and units.",
+      "fix_owner": "warehouse",
+      "source": "https://wiki.amazowl.com/sop/vendor-central/dispute-chargeback-ASN"
+    },
+    {
+      "id": "carton_amz-5",
+      "template_id": "carton_amz",
+      "line_no": 5,
+      "bucket": "Amounts",
+      "label": "Amounts reconcile exactly",
+      "points": 20,
+      "check_key": "amount_matches",
+      "fatal": true,
+      "fatal_verified": true,
+      "why": "The disputed amount must equal the chargeback amount.",
+      "fix": "Set the dispute amount to the chargeback amount.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "carton_amz-6",
+      "template_id": "carton_amz",
+      "line_no": 6,
+      "bucket": "Procedural",
+      "label": "Related chargebacks grouped",
+      "points": 5,
+      "check_key": "grouped",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Chargebacks for the same ASIN or PO can be disputed together.",
+      "fix": "Select the related chargebacks in the same dispute.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "carton_amz-7",
+      "template_id": "carton_amz",
+      "line_no": 7,
+      "bucket": "Procedural",
+      "label": "Dispute summary written",
+      "points": 5,
+      "check_key": "summary_written",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Amazon asks for a written explanation in the dispute summary.",
+      "fix": "Write or accept the AI-drafted summary.",
+      "fix_owner": "analyst",
+      "source": null
+    },
+    {
+      "id": "carton_amz-8",
+      "template_id": "carton_amz",
+      "line_no": 8,
+      "bucket": "History",
+      "label": "Prior denial addressed",
+      "points": 10,
+      "check_key": "prior_denial_addressed",
+      "fatal": false,
+      "fatal_verified": false,
+      "why": "Amazon allows only two disputes; the second must add new evidence.",
+      "fix": "Add the evidence the previous denial asked for.",
+      "fix_owner": "analyst",
+      "source": "https://www.amalytix.com/en/glossary/chargebacks/"
+    }
+  ],
+  "code_mappings": [
+    {
+      "id": "WMT-22",
+      "retailer_id": "walmart",
+      "code": "22",
+      "code_name": "Merchandise billed, not shipped",
+      "category": "Short shipment",
+      "template_id": "shortage_wmt",
+      "channel": "APDP (Retail Link)",
+      "window_days": 730,
+      "window_verified": true,
+      "attempt_limit": null,
+      "attempt_note": "No hard limit; win rates drop after 5 attempts",
+      "response_days": 7,
+      "routed": false,
+      "source": "https://www.spscommerce.com/community/articles/walmart-apdp-portal-explained-best-practices"
+    },
+    {
+      "id": "WMT-24",
+      "retailer_id": "walmart",
+      "code": "24",
+      "code_name": "Carton shortage, freight bill signed short",
+      "category": "Short shipment",
+      "template_id": "shortage_wmt",
+      "channel": "APDP (Retail Link)",
+      "window_days": 730,
+      "window_verified": true,
+      "attempt_limit": null,
+      "attempt_note": "No hard limit; win rates drop after 5 attempts",
+      "response_days": 7,
+      "routed": false,
+      "source": "https://www.spscommerce.com/community/articles/walmart-apdp-portal-explained-best-practices"
+    },
+    {
+      "id": "WMT-25",
+      "retailer_id": "walmart",
+      "code": "25",
+      "code_name": "No merchandise received for invoice",
+      "category": "Nothing received",
+      "template_id": "shortage_wmt",
+      "channel": "APDP (Retail Link)",
+      "window_days": 730,
+      "window_verified": true,
+      "attempt_limit": null,
+      "attempt_note": "No hard limit; win rates drop after 5 attempts",
+      "response_days": 7,
+      "routed": false,
+      "source": "https://www.spscommerce.com/community/articles/walmart-apdp-portal-explained-best-practices"
+    },
+    {
+      "id": "WMT-11",
+      "retailer_id": "walmart",
+      "code": "11",
+      "code_name": "Pricing overcharge",
+      "category": "Price mismatch",
+      "template_id": "pricing_wmt",
+      "channel": "APDP (Retail Link)",
+      "window_days": 730,
+      "window_verified": true,
+      "attempt_limit": null,
+      "attempt_note": "No hard limit; win rates drop after 5 attempts",
+      "response_days": 7,
+      "routed": false,
+      "source": "https://www.spscommerce.com/community/articles/walmart-apdp-portal-explained-best-practices"
+    },
+    {
+      "id": "WMT-87",
+      "retailer_id": "walmart",
+      "code": "87",
+      "code_name": "Other",
+      "category": "Unclassified",
+      "template_id": null,
+      "channel": "APDP (Retail Link)",
+      "window_days": 730,
+      "window_verified": true,
+      "attempt_limit": null,
+      "attempt_note": null,
+      "response_days": 7,
+      "routed": false,
+      "source": "https://www.spscommerce.com/community/articles/walmart-apdp-portal-explained-best-practices"
+    },
+    {
+      "id": "WMT-OTIF",
+      "retailer_id": "walmart",
+      "code": "OTIF",
+      "code_name": "On-time in-full fine",
+      "category": "Delivery compliance",
+      "template_id": null,
+      "channel": "HighRadius portal or Walmart buyer",
+      "window_days": 30,
+      "window_verified": false,
+      "attempt_limit": null,
+      "attempt_note": "Sources conflict on the OTIF window",
+      "response_days": null,
+      "routed": true,
+      "source": "https://www.spscommerce.com/community/articles/walmart-otif-dispute-process"
+    },
+    {
+      "id": "AMZ-ASN",
+      "retailer_id": "amazon",
+      "code": "ASN Accuracy",
+      "code_name": "ASN accuracy chargeback",
+      "category": "ASN compliance",
+      "template_id": "asn_amz",
+      "channel": "Vendor Central",
+      "window_days": 30,
+      "window_verified": true,
+      "attempt_limit": 2,
+      "attempt_note": "Two disputes, then final",
+      "response_days": null,
+      "routed": false,
+      "source": "https://www.amalytix.com/en/glossary/chargebacks/"
+    },
+    {
+      "id": "AMZ-CARTON",
+      "retailer_id": "amazon",
+      "code": "Carton Content Accuracy",
+      "code_name": "Carton content accuracy chargeback",
+      "category": "Carton and label",
+      "template_id": "carton_amz",
+      "channel": "Vendor Central",
+      "window_days": 30,
+      "window_verified": true,
+      "attempt_limit": 2,
+      "attempt_note": "Two disputes, then final",
+      "response_days": null,
+      "routed": false,
+      "source": "https://www.amalytix.com/en/glossary/chargebacks/"
+    },
+    {
+      "id": "AMZ-PQV",
+      "retailer_id": "amazon",
+      "code": "PQV",
+      "code_name": "Shortage claim (purchase quantity variance)",
+      "category": "Short shipment",
+      "template_id": "shortage_amz",
+      "channel": "Vendor Central",
+      "window_days": 730,
+      "window_verified": false,
+      "attempt_limit": null,
+      "attempt_note": "Sources conflict: 2 years (SPS, 2025) vs 30 days (ChannelEngine)",
+      "response_days": null,
+      "routed": false,
+      "source": "https://www.spscommerce.com/community/articles/updated-dispute-timeline-for-1p-amazon-suppliers"
+    },
+    {
+      "id": "AMZ-OTHER",
+      "retailer_id": "amazon",
+      "code": "Prep: Overweight Carton",
+      "code_name": "Unmapped chargeback type",
+      "category": "Unclassified",
+      "template_id": null,
+      "channel": "Vendor Central",
+      "window_days": 30,
+      "window_verified": false,
+      "attempt_limit": 2,
+      "attempt_note": "Assumed same as other chargebacks",
+      "response_days": null,
+      "routed": false,
+      "source": "https://www.amalytix.com/en/glossary/chargebacks/"
+    }
+  ],
+  "purchase_orders": [
+    {
+      "po_number": "451700000",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6012, Searcy, AR",
+      "item_sku": "BLS-1001",
+      "item_description": "Sea Salt Kettle Chips 8oz, case of 12",
+      "quantity": 40,
+      "unit_price": 21.6,
+      "order_date": "2026-07-12"
+    },
+    {
+      "po_number": "451700037",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6094, Bentonville, AR",
+      "item_sku": "BLS-1002",
+      "item_description": "Rosemary Crackers 6oz, case of 12",
+      "quantity": 47,
+      "unit_price": 26.4,
+      "order_date": "2026-08-18"
+    },
+    {
+      "po_number": "451700074",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 7034, Smyrna, DE",
+      "item_sku": "BLS-1003",
+      "item_description": "Trail Mix Pouches 10ct, case of 6",
+      "quantity": 54,
+      "unit_price": 33.0,
+      "order_date": "2026-09-04"
+    },
+    {
+      "po_number": "451700111",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6012, Searcy, AR",
+      "item_sku": "BLS-1004",
+      "item_description": "Dark Chocolate Pretzels 7oz, case of 12",
+      "quantity": 61,
+      "unit_price": 30.0,
+      "order_date": "2026-08-17"
+    },
+    {
+      "po_number": "451700148",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6094, Bentonville, AR",
+      "item_sku": "BLS-1001",
+      "item_description": "Sea Salt Kettle Chips 8oz, case of 12",
+      "quantity": 68,
+      "unit_price": 21.6,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "451700185",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 7034, Smyrna, DE",
+      "item_sku": "BLS-1002",
+      "item_description": "Rosemary Crackers 6oz, case of 12",
+      "quantity": 75,
+      "unit_price": 26.4,
+      "order_date": "2026-06-30"
+    },
+    {
+      "po_number": "451700222",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6012, Searcy, AR",
+      "item_sku": "BLS-1003",
+      "item_description": "Trail Mix Pouches 10ct, case of 6",
+      "quantity": 82,
+      "unit_price": 33.0,
+      "order_date": "2026-07-09"
+    },
+    {
+      "po_number": "451700259",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6094, Bentonville, AR",
+      "item_sku": "BLS-1004",
+      "item_description": "Dark Chocolate Pretzels 7oz, case of 12",
+      "quantity": 89,
+      "unit_price": 30.0,
+      "order_date": "2026-08-24"
+    },
+    {
+      "po_number": "451700296",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 7034, Smyrna, DE",
+      "item_sku": "BLS-1001",
+      "item_description": "Sea Salt Kettle Chips 8oz, case of 12",
+      "quantity": 96,
+      "unit_price": 21.6,
+      "order_date": "2026-07-31"
+    },
+    {
+      "po_number": "451700333",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6012, Searcy, AR",
+      "item_sku": "BLS-1002",
+      "item_description": "Rosemary Crackers 6oz, case of 12",
+      "quantity": 43,
+      "unit_price": 26.4,
+      "order_date": "2026-07-21"
+    },
+    {
+      "po_number": "451700370",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6094, Bentonville, AR",
+      "item_sku": "BLS-1003",
+      "item_description": "Trail Mix Pouches 10ct, case of 6",
+      "quantity": 50,
+      "unit_price": 33.0,
+      "order_date": "2026-07-13"
+    },
+    {
+      "po_number": "451700407",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 7034, Smyrna, DE",
+      "item_sku": "BLS-1004",
+      "item_description": "Dark Chocolate Pretzels 7oz, case of 12",
+      "quantity": 57,
+      "unit_price": 30.0,
+      "order_date": "2026-08-04"
+    },
+    {
+      "po_number": "451700444",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6012, Searcy, AR",
+      "item_sku": "BLS-1001",
+      "item_description": "Sea Salt Kettle Chips 8oz, case of 12",
+      "quantity": 64,
+      "unit_price": 21.6,
+      "order_date": "2026-08-11"
+    },
+    {
+      "po_number": "451700481",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6094, Bentonville, AR",
+      "item_sku": "BLS-1002",
+      "item_description": "Rosemary Crackers 6oz, case of 12",
+      "quantity": 71,
+      "unit_price": 26.4,
+      "order_date": "2026-07-14"
+    },
+    {
+      "po_number": "451700518",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 7034, Smyrna, DE",
+      "item_sku": "BLS-1003",
+      "item_description": "Trail Mix Pouches 10ct, case of 6",
+      "quantity": 78,
+      "unit_price": 33.0,
+      "order_date": "2026-08-05"
+    },
+    {
+      "po_number": "451700555",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6012, Searcy, AR",
+      "item_sku": "BLS-1004",
+      "item_description": "Dark Chocolate Pretzels 7oz, case of 12",
+      "quantity": 85,
+      "unit_price": 30.0,
+      "order_date": "2026-08-06"
+    },
+    {
+      "po_number": "451700592",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6094, Bentonville, AR",
+      "item_sku": "BLS-1001",
+      "item_description": "Sea Salt Kettle Chips 8oz, case of 12",
+      "quantity": 92,
+      "unit_price": 21.6,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "451700629",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 7034, Smyrna, DE",
+      "item_sku": "BLS-1002",
+      "item_description": "Rosemary Crackers 6oz, case of 12",
+      "quantity": 99,
+      "unit_price": 26.4,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "451700666",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6012, Searcy, AR",
+      "item_sku": "BLS-1003",
+      "item_description": "Trail Mix Pouches 10ct, case of 6",
+      "quantity": 46,
+      "unit_price": 33.0,
+      "order_date": "2026-08-23"
+    },
+    {
+      "po_number": "451700703",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6094, Bentonville, AR",
+      "item_sku": "BLS-1004",
+      "item_description": "Dark Chocolate Pretzels 7oz, case of 12",
+      "quantity": 53,
+      "unit_price": 30.0,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "451700740",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 7034, Smyrna, DE",
+      "item_sku": "BLS-1001",
+      "item_description": "Sea Salt Kettle Chips 8oz, case of 12",
+      "quantity": 60,
+      "unit_price": 21.6,
+      "order_date": "2026-07-15"
+    },
+    {
+      "po_number": "451700777",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6012, Searcy, AR",
+      "item_sku": "BLS-1002",
+      "item_description": "Rosemary Crackers 6oz, case of 12",
+      "quantity": 67,
+      "unit_price": 26.4,
+      "order_date": "2024-08-28"
+    },
+    {
+      "po_number": "451700814",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 6094, Bentonville, AR",
+      "item_sku": "BLS-1003",
+      "item_description": "Trail Mix Pouches 10ct, case of 6",
+      "quantity": 74,
+      "unit_price": 33.0,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "451700851",
+      "retailer_id": "walmart",
+      "ship_to": "Walmart DC 7034, Smyrna, DE",
+      "item_sku": "BLS-1004",
+      "item_description": "Dark Chocolate Pretzels 7oz, case of 12",
+      "quantity": 81,
+      "unit_price": 30.0,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "8K3464QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC TPA4, Tracy, CA",
+      "item_sku": "BLS-1001",
+      "item_description": "Sea Salt Kettle Chips 8oz, case of 12",
+      "quantity": 88,
+      "unit_price": 21.6,
+      "order_date": "2026-08-19"
+    },
+    {
+      "po_number": "8K3475QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC RDU9, Garner, NC",
+      "item_sku": "BLS-1002",
+      "item_description": "Rosemary Crackers 6oz, case of 12",
+      "quantity": 95,
+      "unit_price": 26.4,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "8K3486QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC TPA4, Tracy, CA",
+      "item_sku": "BLS-1003",
+      "item_description": "Trail Mix Pouches 10ct, case of 6",
+      "quantity": 42,
+      "unit_price": 33.0,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "8K3497QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC RDU9, Garner, NC",
+      "item_sku": "BLS-1004",
+      "item_description": "Dark Chocolate Pretzels 7oz, case of 12",
+      "quantity": 49,
+      "unit_price": 30.0,
+      "order_date": "2026-08-15"
+    },
+    {
+      "po_number": "8K3508QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC TPA4, Tracy, CA",
+      "item_sku": "BLS-1001",
+      "item_description": "Sea Salt Kettle Chips 8oz, case of 12",
+      "quantity": 56,
+      "unit_price": 21.6,
+      "order_date": "2026-08-08"
+    },
+    {
+      "po_number": "8K3519QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC RDU9, Garner, NC",
+      "item_sku": "BLS-1002",
+      "item_description": "Rosemary Crackers 6oz, case of 12",
+      "quantity": 63,
+      "unit_price": 26.4,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "8K3530QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC TPA4, Tracy, CA",
+      "item_sku": "BLS-1003",
+      "item_description": "Trail Mix Pouches 10ct, case of 6",
+      "quantity": 70,
+      "unit_price": 33.0,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "8K3541QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC RDU9, Garner, NC",
+      "item_sku": "BLS-1004",
+      "item_description": "Dark Chocolate Pretzels 7oz, case of 12",
+      "quantity": 77,
+      "unit_price": 30.0,
+      "order_date": "2026-08-22"
+    },
+    {
+      "po_number": "8K3552QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC TPA4, Tracy, CA",
+      "item_sku": "BLS-1001",
+      "item_description": "Sea Salt Kettle Chips 8oz, case of 12",
+      "quantity": 84,
+      "unit_price": 21.6,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "8K3563QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC RDU9, Garner, NC",
+      "item_sku": "BLS-1002",
+      "item_description": "Rosemary Crackers 6oz, case of 12",
+      "quantity": 91,
+      "unit_price": 26.4,
+      "order_date": "2026-08-17"
+    },
+    {
+      "po_number": "8K3574QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC TPA4, Tracy, CA",
+      "item_sku": "BLS-1003",
+      "item_description": "Trail Mix Pouches 10ct, case of 6",
+      "quantity": 98,
+      "unit_price": 33.0,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "8K3585QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC RDU9, Garner, NC",
+      "item_sku": "BLS-1004",
+      "item_description": "Dark Chocolate Pretzels 7oz, case of 12",
+      "quantity": 45,
+      "unit_price": 30.0,
+      "order_date": "2026-08-13"
+    },
+    {
+      "po_number": "8K3596QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC TPA4, Tracy, CA",
+      "item_sku": "BLS-1001",
+      "item_description": "Sea Salt Kettle Chips 8oz, case of 12",
+      "quantity": 52,
+      "unit_price": 21.6,
+      "order_date": "2026-06-13"
+    },
+    {
+      "po_number": "8K3607QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC RDU9, Garner, NC",
+      "item_sku": "BLS-1002",
+      "item_description": "Rosemary Crackers 6oz, case of 12",
+      "quantity": 59,
+      "unit_price": 26.4,
+      "order_date": "2026-09-14"
+    },
+    {
+      "po_number": "8K3618QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC TPA4, Tracy, CA",
+      "item_sku": "BLS-1003",
+      "item_description": "Trail Mix Pouches 10ct, case of 6",
+      "quantity": 66,
+      "unit_price": 33.0,
+      "order_date": "2026-08-25"
+    },
+    {
+      "po_number": "8K3629QX",
+      "retailer_id": "amazon",
+      "ship_to": "Amazon FC RDU9, Garner, NC",
+      "item_sku": "BLS-1004",
+      "item_description": "Dark Chocolate Pretzels 7oz, case of 12",
+      "quantity": 73,
+      "unit_price": 30.0,
+      "order_date": "2026-08-25"
+    }
+  ],
+  "invoices": [
+    {
+      "invoice_number": "BLS-INV-26000",
+      "po_number": "451700000",
+      "item_sku": "BLS-1001",
+      "quantity": 40,
+      "unit_price": 21.6,
+      "total": 864.0,
+      "invoice_date": "2026-07-21"
+    },
+    {
+      "invoice_number": "BLS-INV-26007",
+      "po_number": "451700037",
+      "item_sku": "BLS-1002",
+      "quantity": 47,
+      "unit_price": 26.4,
+      "total": 1240.8,
+      "invoice_date": "2026-08-27"
+    },
+    {
+      "invoice_number": "BLS-INV-26014",
+      "po_number": "451700074",
+      "item_sku": "BLS-1003",
+      "quantity": 54,
+      "unit_price": 33.0,
+      "total": 1782.0,
+      "invoice_date": "2026-09-13"
+    },
+    {
+      "invoice_number": "BLS-INV-26021",
+      "po_number": "451700111",
+      "item_sku": "BLS-1004",
+      "quantity": 61,
+      "unit_price": 30.0,
+      "total": 1830.0,
+      "invoice_date": "2026-08-26"
+    },
+    {
+      "invoice_number": "BLS-INV-26028",
+      "po_number": "451700148",
+      "item_sku": "BLS-1001",
+      "quantity": 68,
+      "unit_price": 21.6,
+      "total": 1468.8,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26035",
+      "po_number": "451700185",
+      "item_sku": "BLS-1002",
+      "quantity": 75,
+      "unit_price": 26.4,
+      "total": 1980.0,
+      "invoice_date": "2026-07-09"
+    },
+    {
+      "invoice_number": "BLS-INV-26042",
+      "po_number": "451700222",
+      "item_sku": "BLS-1003",
+      "quantity": 82,
+      "unit_price": 33.0,
+      "total": 2706.0,
+      "invoice_date": "2026-07-18"
+    },
+    {
+      "invoice_number": "BLS-INV-26049",
+      "po_number": "451700259",
+      "item_sku": "BLS-1004",
+      "quantity": 89,
+      "unit_price": 30.0,
+      "total": 2670.0,
+      "invoice_date": "2026-09-02"
+    },
+    {
+      "invoice_number": "BLS-INV-26056",
+      "po_number": "451700296",
+      "item_sku": "BLS-1001",
+      "quantity": 96,
+      "unit_price": 21.6,
+      "total": 2073.6,
+      "invoice_date": "2026-08-09"
+    },
+    {
+      "invoice_number": "BLS-INV-26063",
+      "po_number": "451700333",
+      "item_sku": "BLS-1002",
+      "quantity": 43,
+      "unit_price": 26.4,
+      "total": 1135.2,
+      "invoice_date": "2026-07-30"
+    },
+    {
+      "invoice_number": "BLS-INV-26070",
+      "po_number": "451700370",
+      "item_sku": "BLS-1003",
+      "quantity": 50,
+      "unit_price": 33.0,
+      "total": 1650.0,
+      "invoice_date": "2026-07-22"
+    },
+    {
+      "invoice_number": "BLS-INV-26077",
+      "po_number": "451700407",
+      "item_sku": "BLS-1004",
+      "quantity": 57,
+      "unit_price": 30.0,
+      "total": 1710.0,
+      "invoice_date": "2026-08-13"
+    },
+    {
+      "invoice_number": "BLS-INV-26084",
+      "po_number": "451700444",
+      "item_sku": "BLS-1001",
+      "quantity": 64,
+      "unit_price": 21.6,
+      "total": 1382.4,
+      "invoice_date": "2026-08-20"
+    },
+    {
+      "invoice_number": "BLS-INV-26091",
+      "po_number": "451700481",
+      "item_sku": "BLS-1002",
+      "quantity": 71,
+      "unit_price": 26.4,
+      "total": 1874.4,
+      "invoice_date": "2026-07-23"
+    },
+    {
+      "invoice_number": "BLS-INV-26098",
+      "po_number": "451700518",
+      "item_sku": "BLS-1003",
+      "quantity": 78,
+      "unit_price": 33.0,
+      "total": 2574.0,
+      "invoice_date": "2026-08-14"
+    },
+    {
+      "invoice_number": "BLS-INV-26105",
+      "po_number": "451700555",
+      "item_sku": "BLS-1004",
+      "quantity": 85,
+      "unit_price": 30.0,
+      "total": 2550.0,
+      "invoice_date": "2026-08-15"
+    },
+    {
+      "invoice_number": "BLS-INV-26112",
+      "po_number": "451700592",
+      "item_sku": "BLS-1001",
+      "quantity": 92,
+      "unit_price": 22.82,
+      "total": 2099.44,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26119",
+      "po_number": "451700629",
+      "item_sku": "BLS-1003",
+      "quantity": 99,
+      "unit_price": 26.4,
+      "total": 2613.6,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26126",
+      "po_number": "451700666",
+      "item_sku": "BLS-1003",
+      "quantity": 46,
+      "unit_price": 33.0,
+      "total": 1518.0,
+      "invoice_date": "2026-09-01"
+    },
+    {
+      "invoice_number": "BLS-INV-26133",
+      "po_number": "451700703",
+      "item_sku": "BLS-1004",
+      "quantity": 53,
+      "unit_price": 30.0,
+      "total": 1590.0,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26140",
+      "po_number": "451700740",
+      "item_sku": "BLS-1001",
+      "quantity": 60,
+      "unit_price": 21.6,
+      "total": 1296.0,
+      "invoice_date": "2026-07-24"
+    },
+    {
+      "invoice_number": "BLS-INV-26147",
+      "po_number": "451700777",
+      "item_sku": "BLS-1002",
+      "quantity": 67,
+      "unit_price": 26.4,
+      "total": 1768.8,
+      "invoice_date": "2024-09-06"
+    },
+    {
+      "invoice_number": "BLS-INV-26154",
+      "po_number": "451700814",
+      "item_sku": "BLS-1003",
+      "quantity": 74,
+      "unit_price": 33.0,
+      "total": 2442.0,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26161",
+      "po_number": "451700851",
+      "item_sku": "BLS-1004",
+      "quantity": 81,
+      "unit_price": 30.0,
+      "total": 2430.0,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26168",
+      "po_number": "8K3464QX",
+      "item_sku": "BLS-1001",
+      "quantity": 88,
+      "unit_price": 21.6,
+      "total": 1900.8,
+      "invoice_date": "2026-08-28"
+    },
+    {
+      "invoice_number": "BLS-INV-26175",
+      "po_number": "8K3475QX",
+      "item_sku": "BLS-1002",
+      "quantity": 95,
+      "unit_price": 26.4,
+      "total": 2508.0,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26182",
+      "po_number": "8K3486QX",
+      "item_sku": "BLS-1003",
+      "quantity": 42,
+      "unit_price": 33.0,
+      "total": 1386.0,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26189",
+      "po_number": "8K3497QX",
+      "item_sku": "BLS-1004",
+      "quantity": 49,
+      "unit_price": 30.0,
+      "total": 1470.0,
+      "invoice_date": "2026-08-24"
+    },
+    {
+      "invoice_number": "BLS-INV-26196",
+      "po_number": "8K3508QX",
+      "item_sku": "BLS-1001",
+      "quantity": 56,
+      "unit_price": 21.6,
+      "total": 1209.6,
+      "invoice_date": "2026-08-17"
+    },
+    {
+      "invoice_number": "BLS-INV-26203",
+      "po_number": "8K3519QX",
+      "item_sku": "BLS-1002",
+      "quantity": 63,
+      "unit_price": 26.4,
+      "total": 1663.2,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26210",
+      "po_number": "8K3530QX",
+      "item_sku": "BLS-1003",
+      "quantity": 70,
+      "unit_price": 33.0,
+      "total": 2310.0,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26217",
+      "po_number": "8K3541QX",
+      "item_sku": "BLS-1004",
+      "quantity": 77,
+      "unit_price": 30.0,
+      "total": 2310.0,
+      "invoice_date": "2026-08-31"
+    },
+    {
+      "invoice_number": "BLS-INV-26224",
+      "po_number": "8K3552QX",
+      "item_sku": "BLS-1001",
+      "quantity": 84,
+      "unit_price": 21.6,
+      "total": 1814.4,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26231",
+      "po_number": "8K3563QX",
+      "item_sku": "BLS-1002",
+      "quantity": 91,
+      "unit_price": 26.4,
+      "total": 2402.4,
+      "invoice_date": "2026-08-26"
+    },
+    {
+      "invoice_number": "BLS-INV-26238",
+      "po_number": "8K3574QX",
+      "item_sku": "BLS-1003",
+      "quantity": 98,
+      "unit_price": 33.0,
+      "total": 3234.0,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26245",
+      "po_number": "8K3585QX",
+      "item_sku": "BLS-1004",
+      "quantity": 45,
+      "unit_price": 30.0,
+      "total": 1350.0,
+      "invoice_date": "2026-08-22"
+    },
+    {
+      "invoice_number": "BLS-INV-26252",
+      "po_number": "8K3596QX",
+      "item_sku": "BLS-1001",
+      "quantity": 52,
+      "unit_price": 21.6,
+      "total": 1123.2,
+      "invoice_date": "2026-06-22"
+    },
+    {
+      "invoice_number": "BLS-INV-26259",
+      "po_number": "8K3607QX",
+      "item_sku": "BLS-1002",
+      "quantity": 59,
+      "unit_price": 26.4,
+      "total": 1557.6,
+      "invoice_date": "2026-09-23"
+    },
+    {
+      "invoice_number": "BLS-INV-26266",
+      "po_number": "8K3618QX",
+      "item_sku": "BLS-1003",
+      "quantity": 66,
+      "unit_price": 33.0,
+      "total": 2178.0,
+      "invoice_date": "2026-09-03"
+    },
+    {
+      "invoice_number": "BLS-INV-26273",
+      "po_number": "8K3629QX",
+      "item_sku": "BLS-1004",
+      "quantity": 73,
+      "unit_price": 30.0,
+      "total": 2190.0,
+      "invoice_date": "2026-09-03"
+    }
+  ],
+  "shipments": [
+    {
+      "id": "SHP-WMT-001",
+      "po_number": "451700000",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO48213",
+      "ship_date": "2026-07-21",
+      "delivery_date": "2026-07-24"
+    },
+    {
+      "id": "SHP-WMT-002",
+      "po_number": "451700037",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO48310",
+      "ship_date": "2026-08-27",
+      "delivery_date": "2026-08-30"
+    },
+    {
+      "id": "SHP-WMT-003",
+      "po_number": "451700074",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO48407",
+      "ship_date": "2026-09-13",
+      "delivery_date": "2026-09-16"
+    },
+    {
+      "id": "SHP-WMT-004",
+      "po_number": "451700111",
+      "terms": "collect",
+      "carrier_id": "summit",
+      "pro_number": "PRO48504",
+      "ship_date": "2026-08-26",
+      "delivery_date": "2026-08-29"
+    },
+    {
+      "id": "SHP-WMT-005",
+      "po_number": "451700148",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO48601",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-WMT-006",
+      "po_number": "451700185",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO48698",
+      "ship_date": "2026-07-09",
+      "delivery_date": "2026-07-12"
+    },
+    {
+      "id": "SHP-WMT-007",
+      "po_number": "451700222",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO48795",
+      "ship_date": "2026-07-18",
+      "delivery_date": "2026-07-21"
+    },
+    {
+      "id": "SHP-WMT-008",
+      "po_number": "451700259",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO48892",
+      "ship_date": "2026-09-02",
+      "delivery_date": "2026-09-05"
+    },
+    {
+      "id": "SHP-WMT-009",
+      "po_number": "451700296",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO48989",
+      "ship_date": "2026-08-09",
+      "delivery_date": "2026-08-12"
+    },
+    {
+      "id": "SHP-WMT-010",
+      "po_number": "451700333",
+      "terms": "collect",
+      "carrier_id": "bluewater",
+      "pro_number": "PRO49086",
+      "ship_date": "2026-07-30",
+      "delivery_date": "2026-08-02"
+    },
+    {
+      "id": "SHP-WMT-011",
+      "po_number": "451700370",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO49183",
+      "ship_date": "2026-07-22",
+      "delivery_date": "2026-07-25"
+    },
+    {
+      "id": "SHP-WMT-012",
+      "po_number": "451700407",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO49280",
+      "ship_date": "2026-08-13",
+      "delivery_date": "2026-08-16"
+    },
+    {
+      "id": "SHP-WMT-013",
+      "po_number": "451700444",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO49377",
+      "ship_date": "2026-08-20",
+      "delivery_date": "2026-08-23"
+    },
+    {
+      "id": "SHP-WMT-014",
+      "po_number": "451700481",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO49474",
+      "ship_date": "2026-07-23",
+      "delivery_date": "2026-07-26"
+    },
+    {
+      "id": "SHP-WMT-015",
+      "po_number": "451700518",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO49571",
+      "ship_date": "2026-08-14",
+      "delivery_date": "2026-08-17"
+    },
+    {
+      "id": "SHP-WMT-016",
+      "po_number": "451700555",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO49668",
+      "ship_date": "2026-08-15",
+      "delivery_date": "2026-08-18"
+    },
+    {
+      "id": "SHP-WMT-017",
+      "po_number": "451700592",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO49765",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-WMT-018",
+      "po_number": "451700629",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO49862",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-WMT-019",
+      "po_number": "451700666",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO49959",
+      "ship_date": "2026-09-01",
+      "delivery_date": "2026-09-04"
+    },
+    {
+      "id": "SHP-WMT-020",
+      "po_number": "451700703",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO50056",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-WMT-021",
+      "po_number": "451700740",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO50153",
+      "ship_date": "2026-07-24",
+      "delivery_date": "2026-07-27"
+    },
+    {
+      "id": "SHP-WMT-022",
+      "po_number": "451700777",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO50250",
+      "ship_date": "2024-09-06",
+      "delivery_date": "2024-09-09"
+    },
+    {
+      "id": "SHP-WMT-023",
+      "po_number": "451700814",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO50347",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-WMT-024",
+      "po_number": "451700851",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO50444",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-AMZ-001",
+      "po_number": "8K3464QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO50541",
+      "ship_date": "2026-08-28",
+      "delivery_date": "2026-08-31"
+    },
+    {
+      "id": "SHP-AMZ-002",
+      "po_number": "8K3475QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO50638",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-AMZ-003",
+      "po_number": "8K3486QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO50735",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-AMZ-004",
+      "po_number": "8K3497QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO50832",
+      "ship_date": "2026-08-24",
+      "delivery_date": "2026-08-27"
+    },
+    {
+      "id": "SHP-AMZ-005",
+      "po_number": "8K3508QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO50929",
+      "ship_date": "2026-08-17",
+      "delivery_date": "2026-08-20"
+    },
+    {
+      "id": "SHP-AMZ-006",
+      "po_number": "8K3519QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO51026",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-AMZ-007",
+      "po_number": "8K3530QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO51123",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-AMZ-008",
+      "po_number": "8K3541QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO51220",
+      "ship_date": "2026-08-31",
+      "delivery_date": "2026-09-03"
+    },
+    {
+      "id": "SHP-AMZ-009",
+      "po_number": "8K3552QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO51317",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-AMZ-010",
+      "po_number": "8K3563QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO51414",
+      "ship_date": "2026-08-26",
+      "delivery_date": "2026-08-29"
+    },
+    {
+      "id": "SHP-AMZ-011",
+      "po_number": "8K3574QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO51511",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-AMZ-012",
+      "po_number": "8K3585QX",
+      "terms": "prepaid",
+      "carrier_id": "bluewater",
+      "pro_number": "PRO51608",
+      "ship_date": "2026-08-22",
+      "delivery_date": "2026-08-25"
+    },
+    {
+      "id": "SHP-AMZ-013",
+      "po_number": "8K3596QX",
+      "terms": "prepaid",
+      "carrier_id": "bluewater",
+      "pro_number": "PRO51705",
+      "ship_date": "2026-06-22",
+      "delivery_date": "2026-06-25"
+    },
+    {
+      "id": "SHP-AMZ-014",
+      "po_number": "8K3607QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO51802",
+      "ship_date": "2026-09-23",
+      "delivery_date": "2026-09-26"
+    },
+    {
+      "id": "SHP-AMZ-015",
+      "po_number": "8K3618QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO51899",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    },
+    {
+      "id": "SHP-AMZ-016",
+      "po_number": "8K3629QX",
+      "terms": "prepaid",
+      "carrier_id": "ridgeline",
+      "pro_number": "PRO51996",
+      "ship_date": "2026-09-03",
+      "delivery_date": "2026-09-06"
+    }
+  ],
+  "asns": [
+    {
+      "id": "ASN-WMT-001",
+      "po_number": "451700000",
+      "sent_at": "2026-07-23T03:00:00Z",
+      "received_at": "2026-07-24T09:00:00Z",
+      "carton_count": 6,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-002",
+      "po_number": "451700037",
+      "sent_at": "2026-08-29T03:00:00Z",
+      "received_at": "2026-08-30T09:00:00Z",
+      "carton_count": 7,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-003",
+      "po_number": "451700074",
+      "sent_at": "2026-09-15T03:00:00Z",
+      "received_at": "2026-09-16T09:00:00Z",
+      "carton_count": 8,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-004",
+      "po_number": "451700111",
+      "sent_at": "2026-08-28T03:00:00Z",
+      "received_at": "2026-08-29T09:00:00Z",
+      "carton_count": 9,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-005",
+      "po_number": "451700148",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 10,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-006",
+      "po_number": "451700185",
+      "sent_at": "2026-07-11T03:00:00Z",
+      "received_at": "2026-07-12T09:00:00Z",
+      "carton_count": 6,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-007",
+      "po_number": "451700222",
+      "sent_at": "2026-07-20T03:00:00Z",
+      "received_at": "2026-07-21T09:00:00Z",
+      "carton_count": 7,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-008",
+      "po_number": "451700259",
+      "sent_at": "2026-09-04T03:00:00Z",
+      "received_at": "2026-09-05T09:00:00Z",
+      "carton_count": 8,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-009",
+      "po_number": "451700296",
+      "sent_at": "2026-08-11T03:00:00Z",
+      "received_at": "2026-08-12T09:00:00Z",
+      "carton_count": 9,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-010",
+      "po_number": "451700333",
+      "sent_at": "2026-08-01T03:00:00Z",
+      "received_at": "2026-08-02T09:00:00Z",
+      "carton_count": 10,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-011",
+      "po_number": "451700370",
+      "sent_at": "2026-07-24T03:00:00Z",
+      "received_at": "2026-07-25T09:00:00Z",
+      "carton_count": 6,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-012",
+      "po_number": "451700407",
+      "sent_at": "2026-08-15T03:00:00Z",
+      "received_at": "2026-08-16T09:00:00Z",
+      "carton_count": 7,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-013",
+      "po_number": "451700444",
+      "sent_at": "2026-08-22T03:00:00Z",
+      "received_at": "2026-08-23T09:00:00Z",
+      "carton_count": 8,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-014",
+      "po_number": "451700481",
+      "sent_at": "2026-07-25T03:00:00Z",
+      "received_at": "2026-07-26T09:00:00Z",
+      "carton_count": 9,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-015",
+      "po_number": "451700518",
+      "sent_at": "2026-08-16T03:00:00Z",
+      "received_at": "2026-08-17T09:00:00Z",
+      "carton_count": 10,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-016",
+      "po_number": "451700555",
+      "sent_at": "2026-08-17T03:00:00Z",
+      "received_at": "2026-08-18T09:00:00Z",
+      "carton_count": 6,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-017",
+      "po_number": "451700592",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 7,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-018",
+      "po_number": "451700629",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 8,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-019",
+      "po_number": "451700666",
+      "sent_at": "2026-09-03T03:00:00Z",
+      "received_at": "2026-09-04T09:00:00Z",
+      "carton_count": 9,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-020",
+      "po_number": "451700703",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 10,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-021",
+      "po_number": "451700740",
+      "sent_at": "2026-07-26T03:00:00Z",
+      "received_at": "2026-07-27T09:00:00Z",
+      "carton_count": 6,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-022",
+      "po_number": "451700777",
+      "sent_at": "2024-09-08T03:00:00Z",
+      "received_at": "2024-09-09T09:00:00Z",
+      "carton_count": 7,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-023",
+      "po_number": "451700814",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 8,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-WMT-024",
+      "po_number": "451700851",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 9,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-001",
+      "po_number": "8K3464QX",
+      "sent_at": "2026-08-30T03:00:00Z",
+      "received_at": "2026-08-31T09:00:00Z",
+      "carton_count": 10,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-002",
+      "po_number": "8K3475QX",
+      "sent_at": "2026-09-06T14:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 6,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-003",
+      "po_number": "8K3486QX",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 7,
+      "carton_ids_present": false
+    },
+    {
+      "id": "ASN-AMZ-004",
+      "po_number": "8K3497QX",
+      "sent_at": "2026-08-26T03:00:00Z",
+      "received_at": "2026-08-27T09:00:00Z",
+      "carton_count": 8,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-005",
+      "po_number": "8K3508QX",
+      "sent_at": "2026-08-19T03:00:00Z",
+      "received_at": "2026-08-20T09:00:00Z",
+      "carton_count": 9,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-006",
+      "po_number": "8K3519QX",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 10,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-007",
+      "po_number": "8K3530QX",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 6,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-008",
+      "po_number": "8K3541QX",
+      "sent_at": "2026-09-02T03:00:00Z",
+      "received_at": "2026-09-03T09:00:00Z",
+      "carton_count": 7,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-009",
+      "po_number": "8K3552QX",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 8,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-010",
+      "po_number": "8K3563QX",
+      "sent_at": "2026-08-28T03:00:00Z",
+      "received_at": "2026-08-29T09:00:00Z",
+      "carton_count": 9,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-011",
+      "po_number": "8K3574QX",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 10,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-012",
+      "po_number": "8K3585QX",
+      "sent_at": "2026-08-24T03:00:00Z",
+      "received_at": "2026-08-25T09:00:00Z",
+      "carton_count": 6,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-013",
+      "po_number": "8K3596QX",
+      "sent_at": "2026-06-24T03:00:00Z",
+      "received_at": "2026-06-25T09:00:00Z",
+      "carton_count": 7,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-014",
+      "po_number": "8K3607QX",
+      "sent_at": "2026-09-25T03:00:00Z",
+      "received_at": "2026-09-26T09:00:00Z",
+      "carton_count": 8,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-015",
+      "po_number": "8K3618QX",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 9,
+      "carton_ids_present": true
+    },
+    {
+      "id": "ASN-AMZ-016",
+      "po_number": "8K3629QX",
+      "sent_at": "2026-09-05T03:00:00Z",
+      "received_at": "2026-09-06T09:00:00Z",
+      "carton_count": 10,
+      "carton_ids_present": true
+    }
+  ],
+  "deductions": [
+    {
+      "id": "WMT-001",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "HERO 1: unstamped POD, evidence expiring in 6 days",
+      "po_number": "451700000",
+      "invoice_number": "BLS-INV-26000",
+      "amount": 4800.0,
+      "dispute_amount": 4800.0,
+      "issued_date": "2026-09-26",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": 1
+    },
+    {
+      "id": "WMT-002",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Clean prepaid shortage, everything in order",
+      "po_number": "451700037",
+      "invoice_number": "BLS-INV-26007",
+      "amount": 1250.0,
+      "dispute_amount": 1250.0,
+      "issued_date": "2026-09-20",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-003",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "POD shows wrong PO number (non-fatal)",
+      "po_number": "451700074",
+      "invoice_number": "BLS-INV-26014",
+      "amount": 640.0,
+      "dispute_amount": 640.0,
+      "issued_date": "2026-09-26",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-004",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Collect shipment but only a POD attached; BOL missing",
+      "po_number": "451700111",
+      "invoice_number": "BLS-INV-26021",
+      "amount": 2900.0,
+      "dispute_amount": 2900.0,
+      "issued_date": "2026-09-26",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-005",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "PO and ship-to mismatched, not settled: lands on 79",
+      "po_number": "451700148",
+      "invoice_number": "BLS-INV-26028",
+      "amount": 980.0,
+      "dispute_amount": 980.0,
+      "issued_date": "2026-09-26",
+      "settled": false,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-006",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Re-dispute: last denied for missing stamp, now stamped",
+      "po_number": "451700185",
+      "invoice_number": "BLS-INV-26035",
+      "amount": 3400.0,
+      "dispute_amount": 3400.0,
+      "issued_date": "2026-08-02",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 1,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-007",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Re-dispute: denied for missing stamp, still missing; 3 days",
+      "po_number": "451700222",
+      "invoice_number": "BLS-INV-26042",
+      "amount": 1560.0,
+      "dispute_amount": 1560.0,
+      "issued_date": "2026-09-26",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 1,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-008",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-24",
+      "raw_code": "24",
+      "title": "Signed-short claim with good stamped POD",
+      "po_number": "451700259",
+      "invoice_number": "BLS-INV-26049",
+      "amount": 410.0,
+      "dispute_amount": 410.0,
+      "issued_date": "2026-09-26",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-009",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-24",
+      "raw_code": "24",
+      "title": "Blurry, illegible POD scan",
+      "po_number": "451700296",
+      "invoice_number": "BLS-INV-26056",
+      "amount": 1140.0,
+      "dispute_amount": 1140.0,
+      "issued_date": "2026-09-26",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-010",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-24",
+      "raw_code": "24",
+      "title": "Collect: signed BOL, but PO and ship-to wrong, not settled",
+      "po_number": "451700333",
+      "invoice_number": "BLS-INV-26063",
+      "amount": 1875.0,
+      "dispute_amount": 1875.0,
+      "issued_date": "2026-09-26",
+      "settled": false,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-011",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-25",
+      "raw_code": "25",
+      "title": "Nothing received claim, no POD at all, exactly 7 days",
+      "po_number": "451700370",
+      "invoice_number": "BLS-INV-26070",
+      "amount": 6200.0,
+      "dispute_amount": 6200.0,
+      "issued_date": "2026-09-26",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-012",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-25",
+      "raw_code": "25",
+      "title": "Nothing received claim, good POD, high value",
+      "po_number": "451700407",
+      "invoice_number": "BLS-INV-26077",
+      "amount": 5400.0,
+      "dispute_amount": 5400.0,
+      "issued_date": "2026-09-06",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-013",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Dispute amount a few cents off",
+      "po_number": "451700444",
+      "invoice_number": "BLS-INV-26084",
+      "amount": 2310.04,
+      "dispute_amount": 2310.4,
+      "issued_date": "2026-09-13",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-014",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Boundary: 8 days left (not Critical), needs work",
+      "po_number": "451700481",
+      "invoice_number": "BLS-INV-26091",
+      "amount": 1330.0,
+      "dispute_amount": 1330.0,
+      "issued_date": "2026-09-26",
+      "settled": false,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-015",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Boundary: exactly 30 days; re-dispute, prior PO issue not fixed",
+      "po_number": "451700518",
+      "invoice_number": "BLS-INV-26098",
+      "amount": 870.0,
+      "dispute_amount": 870.0,
+      "issued_date": "2026-09-26",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 1,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-016",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Boundary: 31 days (not High)",
+      "po_number": "451700555",
+      "invoice_number": "BLS-INV-26105",
+      "amount": 720.0,
+      "dispute_amount": 720.0,
+      "issued_date": "2026-09-26",
+      "settled": false,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-017",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-11",
+      "raw_code": "11",
+      "title": "HERO 3: invoiced above PO price; deduction is valid",
+      "po_number": "451700592",
+      "invoice_number": "BLS-INV-26112",
+      "amount": 112.0,
+      "dispute_amount": 112.0,
+      "issued_date": "2026-09-28",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": 3
+    },
+    {
+      "id": "WMT-018",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-11",
+      "raw_code": "11",
+      "title": "Pricing: item and claim PO mismatched, no summary, not settled",
+      "po_number": "451700629",
+      "invoice_number": "BLS-INV-26119",
+      "amount": 860.0,
+      "dispute_amount": 860.0,
+      "issued_date": "2026-10-04",
+      "settled": false,
+      "grouped": true,
+      "dispute_summary": null,
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-019",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-11",
+      "raw_code": "11",
+      "title": "Pricing: claim document missing",
+      "po_number": "451700666",
+      "invoice_number": "BLS-INV-26126",
+      "amount": 1320.0,
+      "dispute_amount": 1320.0,
+      "issued_date": "2026-09-25",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-020",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Tiny deduction, perfect evidence, below write-off threshold",
+      "po_number": "451700703",
+      "invoice_number": "BLS-INV-26133",
+      "amount": 84.0,
+      "dispute_amount": 84.0,
+      "issued_date": "2026-10-07",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-021",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Walmart asked for more info; 7-day response clock, 2 days left",
+      "po_number": "451700740",
+      "invoice_number": "BLS-INV-26140",
+      "amount": 1100.0,
+      "dispute_amount": 1100.0,
+      "issued_date": "2026-08-17",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 1,
+      "status": "supplier_action",
+      "returned_on": "2026-10-11",
+      "response_due": "2026-10-18",
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-022",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-22",
+      "raw_code": "22",
+      "title": "Filing window closed (issued over two years ago)",
+      "po_number": "451700777",
+      "invoice_number": "BLS-INV-26147",
+      "amount": 1490.0,
+      "dispute_amount": 1490.0,
+      "issued_date": "2024-09-30",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-023",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-87",
+      "raw_code": "87",
+      "title": "Code 87 'Other': no template, needs human review",
+      "po_number": "451700814",
+      "invoice_number": "BLS-INV-26154",
+      "amount": 450.0,
+      "dispute_amount": 450.0,
+      "issued_date": "2026-10-01",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "WMT-024",
+      "retailer_id": "walmart",
+      "code_mapping_id": "WMT-OTIF",
+      "raw_code": "OTIF",
+      "title": "OTIF fine: routed to HighRadius or buyer",
+      "po_number": "451700851",
+      "invoice_number": "BLS-INV-26161",
+      "amount": 3150.0,
+      "dispute_amount": 3150.0,
+      "issued_date": "2026-10-02",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-001",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-ASN",
+      "raw_code": "ASN Accuracy",
+      "title": "HERO 2: ASN sent on time, 5 days left, ready in one click",
+      "po_number": "8K3464QX",
+      "invoice_number": "BLS-INV-26168",
+      "amount": 1450.0,
+      "dispute_amount": 1450.0,
+      "issued_date": "2026-09-21",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": 2
+    },
+    {
+      "id": "AMZ-002",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-ASN",
+      "raw_code": "ASN Accuracy",
+      "title": "ASN sent after receipt: chargeback probably valid",
+      "po_number": "8K3475QX",
+      "invoice_number": "BLS-INV-26175",
+      "amount": 2050.0,
+      "dispute_amount": 2050.0,
+      "issued_date": "2026-10-01",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-003",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-ASN",
+      "raw_code": "ASN Accuracy",
+      "title": "Carton IDs missing from ASN (non-fatal)",
+      "po_number": "8K3486QX",
+      "invoice_number": "BLS-INV-26182",
+      "amount": 880.0,
+      "dispute_amount": 880.0,
+      "issued_date": "2026-10-10",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-004",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-ASN",
+      "raw_code": "ASN Accuracy",
+      "title": "No ASN file attached; 1 day left",
+      "po_number": "8K3497QX",
+      "invoice_number": "BLS-INV-26189",
+      "amount": 1720.0,
+      "dispute_amount": 1720.0,
+      "issued_date": "2026-09-17",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-005",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-ASN",
+      "raw_code": "ASN Accuracy",
+      "title": "30-day window passed",
+      "po_number": "8K3508QX",
+      "invoice_number": "BLS-INV-26196",
+      "amount": 930.0,
+      "dispute_amount": 930.0,
+      "issued_date": "2026-09-10",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-006",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-ASN",
+      "raw_code": "ASN Accuracy",
+      "title": "Disputed and denied twice: final",
+      "po_number": "8K3519QX",
+      "invoice_number": "BLS-INV-26203",
+      "amount": 1210.0,
+      "dispute_amount": 1210.0,
+      "issued_date": "2026-10-05",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 2,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-007",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-CARTON",
+      "raw_code": "Carton Content Accuracy",
+      "title": "Good opened-carton photos",
+      "po_number": "8K3530QX",
+      "invoice_number": "BLS-INV-26210",
+      "amount": 640.0,
+      "dispute_amount": 640.0,
+      "issued_date": "2026-10-06",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-008",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-CARTON",
+      "raw_code": "Carton Content Accuracy",
+      "title": "Sealed-carton photo, re-dispute: last attempt left",
+      "po_number": "8K3541QX",
+      "invoice_number": "BLS-INV-26217",
+      "amount": 1980.0,
+      "dispute_amount": 1980.0,
+      "issued_date": "2026-09-24",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 1,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-009",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-CARTON",
+      "raw_code": "Carton Content Accuracy",
+      "title": "Re-dispute: barcode still unreadable, not grouped",
+      "po_number": "8K3552QX",
+      "invoice_number": "BLS-INV-26224",
+      "amount": 920.0,
+      "dispute_amount": 920.0,
+      "issued_date": "2026-10-12",
+      "settled": true,
+      "grouped": false,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 1,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-010",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-CARTON",
+      "raw_code": "Carton Content Accuracy",
+      "title": "No photos at all; 3 days left",
+      "po_number": "8K3563QX",
+      "invoice_number": "BLS-INV-26231",
+      "amount": 1260.0,
+      "dispute_amount": 1260.0,
+      "issued_date": "2026-09-19",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-011",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-CARTON",
+      "raw_code": "Carton Content Accuracy",
+      "title": "Re-dispute: new photo now shows units",
+      "po_number": "8K3574QX",
+      "invoice_number": "BLS-INV-26238",
+      "amount": 2300.0,
+      "dispute_amount": 2300.0,
+      "issued_date": "2026-09-28",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 1,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-012",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-PQV",
+      "raw_code": "PQV",
+      "title": "Shortage claim with full delivery confirmation",
+      "po_number": "8K3585QX",
+      "invoice_number": "BLS-INV-26245",
+      "amount": 2640.0,
+      "dispute_amount": 2640.0,
+      "issued_date": "2026-09-15",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-013",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-PQV",
+      "raw_code": "PQV",
+      "title": "Shortage: long window, but carrier proof expires in 7 days",
+      "po_number": "8K3596QX",
+      "invoice_number": "BLS-INV-26252",
+      "amount": 780.0,
+      "dispute_amount": 780.0,
+      "issued_date": "2026-09-26",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-014",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-PQV",
+      "raw_code": "PQV",
+      "title": "Small shortage: PO and FC mismatch, not grouped, no summary",
+      "po_number": "8K3607QX",
+      "invoice_number": "BLS-INV-26259",
+      "amount": 190.0,
+      "dispute_amount": 190.0,
+      "issued_date": "2026-09-26",
+      "settled": true,
+      "grouped": false,
+      "dispute_summary": null,
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-015",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-PQV",
+      "raw_code": "PQV",
+      "title": "Carrier confirmation shows short delivery: claim is valid",
+      "po_number": "8K3618QX",
+      "invoice_number": "BLS-INV-26266",
+      "amount": 330.0,
+      "dispute_amount": 330.0,
+      "issued_date": "2026-10-02",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    },
+    {
+      "id": "AMZ-016",
+      "retailer_id": "amazon",
+      "code_mapping_id": "AMZ-OTHER",
+      "raw_code": "Prep: Overweight Carton",
+      "title": "Unmapped chargeback type: human review",
+      "po_number": "8K3629QX",
+      "invoice_number": "BLS-INV-26273",
+      "amount": 270.0,
+      "dispute_amount": 270.0,
+      "issued_date": "2026-10-08",
+      "settled": true,
+      "grouped": true,
+      "dispute_summary": "Shipment delivered in full; signed delivery receipt and invoice attached.",
+      "attempts_used": 0,
+      "status": "open",
+      "returned_on": null,
+      "response_due": null,
+      "assigned_to": "u_priya",
+      "hero": null
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-WMT-001-pod",
+      "deduction_id": "WMT-001",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-001/pod.pdf",
+      "variant": "unsigned",
+      "extracted": {
+        "po_number": "451700000",
+        "ship_to": "Walmart DC 6012, Searcy, AR",
+        "stamp_or_signature": false,
+        "delivery_date": "2026-07-24",
+        "pro_number": "PRO48213",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-002-pod",
+      "deduction_id": "WMT-002",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-002/pod.pdf",
+      "variant": "good",
+      "extracted": {
+        "po_number": "451700037",
+        "ship_to": "Walmart DC 6094, Bentonville, AR",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-08-30",
+        "pro_number": "PRO48310",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-003-pod",
+      "deduction_id": "WMT-003",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-003/pod.pdf",
+      "variant": "wrong_po",
+      "extracted": {
+        "po_number": "451700099",
+        "ship_to": "Walmart DC 7034, Smyrna, DE",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-09-16",
+        "pro_number": "PRO48407",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-004-pod",
+      "deduction_id": "WMT-004",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-004/pod.pdf",
+      "variant": "good",
+      "extracted": {
+        "po_number": "451700111",
+        "ship_to": "Walmart DC 6012, Searcy, AR",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-08-29",
+        "pro_number": "PRO48504",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-005-pod",
+      "deduction_id": "WMT-005",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-005/pod.pdf",
+      "variant": "wrong_po",
+      "extracted": {
+        "po_number": "451700199",
+        "ship_to": "Walmart DC 7034, Smyrna, DE",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-09-06",
+        "pro_number": "PRO48601",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-006-pod",
+      "deduction_id": "WMT-006",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-006/pod.pdf",
+      "variant": "good",
+      "extracted": {
+        "po_number": "451700185",
+        "ship_to": "Walmart DC 7034, Smyrna, DE",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-07-12",
+        "pro_number": "PRO48698",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-007-pod",
+      "deduction_id": "WMT-007",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-007/pod.pdf",
+      "variant": "unsigned",
+      "extracted": {
+        "po_number": "451700222",
+        "ship_to": "Walmart DC 6012, Searcy, AR",
+        "stamp_or_signature": false,
+        "delivery_date": "2026-07-21",
+        "pro_number": "PRO48795",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-008-pod",
+      "deduction_id": "WMT-008",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-008/pod.pdf",
+      "variant": "good",
+      "extracted": {
+        "po_number": "451700259",
+        "ship_to": "Walmart DC 6094, Bentonville, AR",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-09-05",
+        "pro_number": "PRO48892",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-009-pod",
+      "deduction_id": "WMT-009",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-009/pod.pdf",
+      "variant": "illegible",
+      "extracted": {
+        "po_number": null,
+        "ship_to": null,
+        "stamp_or_signature": null,
+        "delivery_date": null,
+        "pro_number": null,
+        "legible": false
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-010-bol",
+      "deduction_id": "WMT-010",
+      "doc_type": "bol",
+      "storage_path": "evidence/WMT-010/bol.pdf",
+      "variant": "wrong_po",
+      "extracted": {
+        "po_number": "451700399",
+        "ship_to": "Walmart DC 6094, Bentonville, AR",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-08-02",
+        "pro_number": "PRO49086",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-012-pod",
+      "deduction_id": "WMT-012",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-012/pod.pdf",
+      "variant": "good",
+      "extracted": {
+        "po_number": "451700407",
+        "ship_to": "Walmart DC 7034, Smyrna, DE",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-08-16",
+        "pro_number": "PRO49280",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-013-pod",
+      "deduction_id": "WMT-013",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-013/pod.pdf",
+      "variant": "good",
+      "extracted": {
+        "po_number": "451700444",
+        "ship_to": "Walmart DC 6012, Searcy, AR",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-08-23",
+        "pro_number": "PRO49377",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-014-pod",
+      "deduction_id": "WMT-014",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-014/pod.pdf",
+      "variant": "wrong_po",
+      "extracted": {
+        "po_number": "451700499",
+        "ship_to": "Walmart DC 7034, Smyrna, DE",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-07-26",
+        "pro_number": "PRO49474",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-015-pod",
+      "deduction_id": "WMT-015",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-015/pod.pdf",
+      "variant": "wrong_po",
+      "extracted": {
+        "po_number": "451700599",
+        "ship_to": "Walmart DC 7034, Smyrna, DE",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-08-17",
+        "pro_number": "PRO49571",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-016-pod",
+      "deduction_id": "WMT-016",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-016/pod.pdf",
+      "variant": "wrong_shipto",
+      "extracted": {
+        "po_number": "451700555",
+        "ship_to": "Walmart DC 6094, Bentonville, AR",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-08-18",
+        "pro_number": "PRO49668",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-017-claim",
+      "deduction_id": "WMT-017",
+      "doc_type": "claim",
+      "storage_path": "evidence/WMT-017/claim.pdf",
+      "variant": "good",
+      "extracted": {
+        "claim_number": "CLM-900208",
+        "po_number": "451700592",
+        "amount": 112.0,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-018-claim",
+      "deduction_id": "WMT-018",
+      "doc_type": "claim",
+      "storage_path": "evidence/WMT-018/claim.pdf",
+      "variant": "wrong_po",
+      "extracted": {
+        "claim_number": "CLM-900221",
+        "po_number": "451700611",
+        "amount": 860.0,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-020-pod",
+      "deduction_id": "WMT-020",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-020/pod.pdf",
+      "variant": "good",
+      "extracted": {
+        "po_number": "451700703",
+        "ship_to": "Walmart DC 6094, Bentonville, AR",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-09-06",
+        "pro_number": "PRO50056",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-021-pod",
+      "deduction_id": "WMT-021",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-021/pod.pdf",
+      "variant": "good",
+      "extracted": {
+        "po_number": "451700740",
+        "ship_to": "Walmart DC 7034, Smyrna, DE",
+        "stamp_or_signature": true,
+        "delivery_date": "2026-07-27",
+        "pro_number": "PRO50153",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-WMT-022-pod",
+      "deduction_id": "WMT-022",
+      "doc_type": "pod",
+      "storage_path": "evidence/WMT-022/pod.pdf",
+      "variant": "good",
+      "extracted": {
+        "po_number": "451700777",
+        "ship_to": "Walmart DC 6012, Searcy, AR",
+        "stamp_or_signature": true,
+        "delivery_date": "2024-09-09",
+        "pro_number": "PRO50250",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-001-asn_file",
+      "deduction_id": "AMZ-001",
+      "doc_type": "asn_file",
+      "storage_path": "evidence/AMZ-001/asn_file.txt",
+      "variant": "on_time",
+      "extracted": {
+        "po_number": "8K3464QX",
+        "sent_at": "2026-08-30T03:00:00Z",
+        "carton_ids_present": true,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-002-asn_file",
+      "deduction_id": "AMZ-002",
+      "doc_type": "asn_file",
+      "storage_path": "evidence/AMZ-002/asn_file.txt",
+      "variant": "late",
+      "extracted": {
+        "po_number": "8K3475QX",
+        "sent_at": "2026-09-06T14:00:00Z",
+        "carton_ids_present": true,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-003-asn_file",
+      "deduction_id": "AMZ-003",
+      "doc_type": "asn_file",
+      "storage_path": "evidence/AMZ-003/asn_file.txt",
+      "variant": "on_time",
+      "extracted": {
+        "po_number": "8K3486QX",
+        "sent_at": "2026-09-05T03:00:00Z",
+        "carton_ids_present": false,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-005-asn_file",
+      "deduction_id": "AMZ-005",
+      "doc_type": "asn_file",
+      "storage_path": "evidence/AMZ-005/asn_file.txt",
+      "variant": "on_time",
+      "extracted": {
+        "po_number": "8K3508QX",
+        "sent_at": "2026-08-19T03:00:00Z",
+        "carton_ids_present": true,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-006-asn_file",
+      "deduction_id": "AMZ-006",
+      "doc_type": "asn_file",
+      "storage_path": "evidence/AMZ-006/asn_file.txt",
+      "variant": "on_time",
+      "extracted": {
+        "po_number": "8K3519QX",
+        "sent_at": "2026-09-05T03:00:00Z",
+        "carton_ids_present": true,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-007-carton_photo",
+      "deduction_id": "AMZ-007",
+      "doc_type": "carton_photo",
+      "storage_path": "evidence/AMZ-007/carton_photo.png",
+      "variant": "opened",
+      "extracted": {
+        "carton_opened": true,
+        "units_visible": true,
+        "barcode_legible": true,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-008-carton_photo",
+      "deduction_id": "AMZ-008",
+      "doc_type": "carton_photo",
+      "storage_path": "evidence/AMZ-008/carton_photo.png",
+      "variant": "sealed",
+      "extracted": {
+        "carton_opened": false,
+        "units_visible": false,
+        "barcode_legible": true,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-009-carton_photo",
+      "deduction_id": "AMZ-009",
+      "doc_type": "carton_photo",
+      "storage_path": "evidence/AMZ-009/carton_photo.png",
+      "variant": "barcode_blurry",
+      "extracted": {
+        "carton_opened": true,
+        "units_visible": true,
+        "barcode_legible": false,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-011-carton_photo",
+      "deduction_id": "AMZ-011",
+      "doc_type": "carton_photo",
+      "storage_path": "evidence/AMZ-011/carton_photo.png",
+      "variant": "opened",
+      "extracted": {
+        "carton_opened": true,
+        "units_visible": true,
+        "barcode_legible": true,
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-012-delivery_confirmation",
+      "deduction_id": "AMZ-012",
+      "doc_type": "delivery_confirmation",
+      "storage_path": "evidence/AMZ-012/delivery_confirmation.pdf",
+      "variant": "good",
+      "extracted": {
+        "po_number": "8K3585QX",
+        "ship_to": "Amazon FC RDU9, Garner, NC",
+        "delivered": true,
+        "cartons_delivered": null,
+        "tracking": "PRO51608",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-014-delivery_confirmation",
+      "deduction_id": "AMZ-014",
+      "doc_type": "delivery_confirmation",
+      "storage_path": "evidence/AMZ-014/delivery_confirmation.pdf",
+      "variant": "mismatch",
+      "extracted": {
+        "po_number": "8K3607QZ",
+        "ship_to": "Amazon FC TPA4, Tracy, CA",
+        "delivered": true,
+        "cartons_delivered": null,
+        "tracking": "PRO51802",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    },
+    {
+      "id": "EV-AMZ-015-delivery_confirmation",
+      "deduction_id": "AMZ-015",
+      "doc_type": "delivery_confirmation",
+      "storage_path": "evidence/AMZ-015/delivery_confirmation.pdf",
+      "variant": "short_delivery",
+      "extracted": {
+        "po_number": "8K3618QX",
+        "ship_to": "Amazon FC TPA4, Tracy, CA",
+        "delivered": false,
+        "cartons_delivered": "7 of 9",
+        "tracking": "PRO51899",
+        "legible": true
+      },
+      "extraction_note": "Pre-computed for the demo; shown as 'AI-read, please verify'"
+    }
+  ],
+  "dispute_history": [
+    {
+      "id": "H-WMT-006-1",
+      "deduction_id": "WMT-006",
+      "attempt_no": 1,
+      "submitted_on": "2026-08-07",
+      "outcome": "denied",
+      "denial_reason": "POD not stamped by DC",
+      "denial_check_key": "proof_signed"
+    },
+    {
+      "id": "H-WMT-007-1",
+      "deduction_id": "WMT-007",
+      "attempt_no": 1,
+      "submitted_on": "2026-10-01",
+      "outcome": "denied",
+      "denial_reason": "POD not stamped by DC",
+      "denial_check_key": "proof_signed"
+    },
+    {
+      "id": "H-WMT-015-1",
+      "deduction_id": "WMT-015",
+      "attempt_no": 1,
+      "submitted_on": "2026-10-01",
+      "outcome": "denied",
+      "denial_reason": "PO number on POD does not match claim",
+      "denial_check_key": "po_matches"
+    },
+    {
+      "id": "H-WMT-021-1",
+      "deduction_id": "WMT-021",
+      "attempt_no": 1,
+      "submitted_on": "2026-09-29",
+      "outcome": "returned_for_info",
+      "denial_reason": "Walmart requested the delivery receipt for store 2241 split",
+      "denial_check_key": null
+    },
+    {
+      "id": "H-AMZ-006-1",
+      "deduction_id": "AMZ-006",
+      "attempt_no": 1,
+      "submitted_on": "2026-10-10",
+      "outcome": "denied",
+      "denial_reason": "ASN received after shipment arrival",
+      "denial_check_key": "sent_before_receipt"
+    },
+    {
+      "id": "H-AMZ-006-2",
+      "deduction_id": "AMZ-006",
+      "attempt_no": 2,
+      "submitted_on": "2026-10-20",
+      "outcome": "denied",
+      "denial_reason": "ASN received after shipment arrival",
+      "denial_check_key": "sent_before_receipt"
+    },
+    {
+      "id": "H-AMZ-008-1",
+      "deduction_id": "AMZ-008",
+      "attempt_no": 1,
+      "submitted_on": "2026-09-29",
+      "outcome": "denied",
+      "denial_reason": "Photo does not show carton contents",
+      "denial_check_key": "carton_opened"
+    },
+    {
+      "id": "H-AMZ-009-1",
+      "deduction_id": "AMZ-009",
+      "attempt_no": 1,
+      "submitted_on": "2026-10-17",
+      "outcome": "denied",
+      "denial_reason": "Barcode not legible in photo",
+      "denial_check_key": "barcode_legible"
+    },
+    {
+      "id": "H-AMZ-011-1",
+      "deduction_id": "AMZ-011",
+      "attempt_no": 1,
+      "submitted_on": "2026-10-03",
+      "outcome": "denied",
+      "denial_reason": "Inner packs and units not visible",
+      "denial_check_key": "units_visible"
+    }
+  ],
+  "outcomes_archive": [
+    {
+      "id": "OUT-01",
+      "retailer_id": "walmart",
+      "raw_code": "22",
+      "amount": 2140.0,
+      "outcome": "won",
+      "denial_reason": null,
+      "closed_on": "2026-03-02"
+    },
+    {
+      "id": "OUT-02",
+      "retailer_id": "walmart",
+      "raw_code": "22",
+      "amount": 880.0,
+      "outcome": "denied",
+      "denial_reason": "POD not stamped by DC",
+      "closed_on": "2026-03-19"
+    },
+    {
+      "id": "OUT-03",
+      "retailer_id": "walmart",
+      "raw_code": "22",
+      "amount": 1310.0,
+      "outcome": "denied",
+      "denial_reason": "POD not stamped by DC",
+      "closed_on": "2026-04-07"
+    },
+    {
+      "id": "OUT-04",
+      "retailer_id": "walmart",
+      "raw_code": "24",
+      "amount": 460.0,
+      "outcome": "won",
+      "denial_reason": null,
+      "closed_on": "2026-04-22"
+    },
+    {
+      "id": "OUT-05",
+      "retailer_id": "walmart",
+      "raw_code": "25",
+      "amount": 5120.0,
+      "outcome": "won",
+      "denial_reason": null,
+      "closed_on": "2026-05-11"
+    },
+    {
+      "id": "OUT-06",
+      "retailer_id": "walmart",
+      "raw_code": "11",
+      "amount": 230.0,
+      "outcome": "written_off",
+      "denial_reason": "Invoice price above PO price",
+      "closed_on": "2026-05-30"
+    },
+    {
+      "id": "OUT-07",
+      "retailer_id": "walmart",
+      "raw_code": "22",
+      "amount": 990.0,
+      "outcome": "denied",
+      "denial_reason": "Dispute amount did not match backup",
+      "closed_on": "2026-06-14"
+    },
+    {
+      "id": "OUT-08",
+      "retailer_id": "amazon",
+      "raw_code": "ASN Accuracy",
+      "amount": 1540.0,
+      "outcome": "won",
+      "denial_reason": null,
+      "closed_on": "2026-06-28"
+    },
+    {
+      "id": "OUT-09",
+      "retailer_id": "amazon",
+      "raw_code": "Carton Content Accuracy",
+      "amount": 760.0,
+      "outcome": "denied",
+      "denial_reason": "Photo does not show carton contents",
+      "closed_on": "2026-07-15"
+    },
+    {
+      "id": "OUT-10",
+      "retailer_id": "amazon",
+      "raw_code": "Carton Content Accuracy",
+      "amount": 1180.0,
+      "outcome": "won",
+      "denial_reason": null,
+      "closed_on": "2026-08-03"
+    },
+    {
+      "id": "OUT-11",
+      "retailer_id": "amazon",
+      "raw_code": "PQV",
+      "amount": 2210.0,
+      "outcome": "won",
+      "denial_reason": null,
+      "closed_on": "2026-08-21"
+    },
+    {
+      "id": "OUT-12",
+      "retailer_id": "walmart",
+      "raw_code": "22",
+      "amount": 1675.0,
+      "outcome": "expired",
+      "denial_reason": "Filed after carrier purged the POD",
+      "closed_on": "2026-09-09"
+    }
+  ],
+  "audit_log": [
+    {
+      "id": "A-WMT-001-1",
+      "deduction_id": "WMT-001",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-002-1",
+      "deduction_id": "WMT-002",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-21T00:00:00"
+    },
+    {
+      "id": "A-WMT-003-1",
+      "deduction_id": "WMT-003",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-004-1",
+      "deduction_id": "WMT-004",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-005-1",
+      "deduction_id": "WMT-005",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-006-1",
+      "deduction_id": "WMT-006",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-08-03T00:00:00"
+    },
+    {
+      "id": "A-WMT-007-1",
+      "deduction_id": "WMT-007",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-008-1",
+      "deduction_id": "WMT-008",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-009-1",
+      "deduction_id": "WMT-009",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-010-1",
+      "deduction_id": "WMT-010",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-011-1",
+      "deduction_id": "WMT-011",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-012-1",
+      "deduction_id": "WMT-012",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-07T00:00:00"
+    },
+    {
+      "id": "A-WMT-013-1",
+      "deduction_id": "WMT-013",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-14T00:00:00"
+    },
+    {
+      "id": "A-WMT-014-1",
+      "deduction_id": "WMT-014",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-015-1",
+      "deduction_id": "WMT-015",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-016-1",
+      "deduction_id": "WMT-016",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-WMT-017-1",
+      "deduction_id": "WMT-017",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-29T00:00:00"
+    },
+    {
+      "id": "A-WMT-018-1",
+      "deduction_id": "WMT-018",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-10-05T00:00:00"
+    },
+    {
+      "id": "A-WMT-019-1",
+      "deduction_id": "WMT-019",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-09-26T00:00:00"
+    },
+    {
+      "id": "A-WMT-020-1",
+      "deduction_id": "WMT-020",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-10-08T00:00:00"
+    },
+    {
+      "id": "A-WMT-021-1",
+      "deduction_id": "WMT-021",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-08-18T00:00:00"
+    },
+    {
+      "id": "A-WMT-022-1",
+      "deduction_id": "WMT-022",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2024-10-01T00:00:00"
+    },
+    {
+      "id": "A-WMT-023-1",
+      "deduction_id": "WMT-023",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from APDP (Retail Link)",
+      "at": "2026-10-02T00:00:00"
+    },
+    {
+      "id": "A-WMT-024-1",
+      "deduction_id": "WMT-024",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from HighRadius portal or Walmart buyer",
+      "at": "2026-10-03T00:00:00"
+    },
+    {
+      "id": "A-AMZ-001-1",
+      "deduction_id": "AMZ-001",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-09-22T00:00:00"
+    },
+    {
+      "id": "A-AMZ-002-1",
+      "deduction_id": "AMZ-002",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-10-02T00:00:00"
+    },
+    {
+      "id": "A-AMZ-003-1",
+      "deduction_id": "AMZ-003",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-10-11T00:00:00"
+    },
+    {
+      "id": "A-AMZ-004-1",
+      "deduction_id": "AMZ-004",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-09-18T00:00:00"
+    },
+    {
+      "id": "A-AMZ-005-1",
+      "deduction_id": "AMZ-005",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-09-11T00:00:00"
+    },
+    {
+      "id": "A-AMZ-006-1",
+      "deduction_id": "AMZ-006",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-10-06T00:00:00"
+    },
+    {
+      "id": "A-AMZ-007-1",
+      "deduction_id": "AMZ-007",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-10-07T00:00:00"
+    },
+    {
+      "id": "A-AMZ-008-1",
+      "deduction_id": "AMZ-008",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-09-25T00:00:00"
+    },
+    {
+      "id": "A-AMZ-009-1",
+      "deduction_id": "AMZ-009",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-10-13T00:00:00"
+    },
+    {
+      "id": "A-AMZ-010-1",
+      "deduction_id": "AMZ-010",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-09-20T00:00:00"
+    },
+    {
+      "id": "A-AMZ-011-1",
+      "deduction_id": "AMZ-011",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-09-29T00:00:00"
+    },
+    {
+      "id": "A-AMZ-012-1",
+      "deduction_id": "AMZ-012",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-09-16T00:00:00"
+    },
+    {
+      "id": "A-AMZ-013-1",
+      "deduction_id": "AMZ-013",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-AMZ-014-1",
+      "deduction_id": "AMZ-014",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-09-27T00:00:00"
+    },
+    {
+      "id": "A-AMZ-015-1",
+      "deduction_id": "AMZ-015",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-10-03T00:00:00"
+    },
+    {
+      "id": "A-AMZ-016-1",
+      "deduction_id": "AMZ-016",
+      "actor": "system",
+      "action": "imported",
+      "note": "Imported from Vendor Central",
+      "at": "2026-10-09T00:00:00"
+    }
+  ]
+}

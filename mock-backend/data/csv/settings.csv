@@ -1,0 +1,10 @@
+key,value
+demo_today,2026-10-16
+write_off_threshold,250
+high_value_threshold,2500
+critical_days,7
+high_days,30
+cap_score,40
+band_ready_min,80
+band_needs_work_min,50
+manager_approval_write_off_above,1000

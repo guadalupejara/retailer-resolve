@@ -1,0 +1,10 @@
+id,deduction_id,attempt_no,submitted_on,outcome,denial_reason,denial_check_key
+H-WMT-006-1,WMT-006,1,2026-08-07,denied,POD not stamped by DC,proof_signed
+H-WMT-007-1,WMT-007,1,2026-10-01,denied,POD not stamped by DC,proof_signed
+H-WMT-015-1,WMT-015,1,2026-10-01,denied,PO number on POD does not match claim,po_matches
+H-WMT-021-1,WMT-021,1,2026-09-29,returned_for_info,Walmart requested the delivery receipt for store 2241 split,
+H-AMZ-006-1,AMZ-006,1,2026-10-10,denied,ASN received after shipment arrival,sent_before_receipt
+H-AMZ-006-2,AMZ-006,2,2026-10-20,denied,ASN received after shipment arrival,sent_before_receipt
+H-AMZ-008-1,AMZ-008,1,2026-09-29,denied,Photo does not show carton contents,carton_opened
+H-AMZ-009-1,AMZ-009,1,2026-10-17,denied,Barcode not legible in photo,barcode_legible
+H-AMZ-011-1,AMZ-011,1,2026-10-03,denied,Inner packs and units not visible,units_visible

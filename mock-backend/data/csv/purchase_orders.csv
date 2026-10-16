@@ -1,0 +1,41 @@
+po_number,retailer_id,ship_to,item_sku,item_description,quantity,unit_price,order_date
+451700000,walmart,"Walmart DC 6012, Searcy, AR",BLS-1001,"Sea Salt Kettle Chips 8oz, case of 12",40,21.6,2026-07-12
+451700037,walmart,"Walmart DC 6094, Bentonville, AR",BLS-1002,"Rosemary Crackers 6oz, case of 12",47,26.4,2026-08-18
+451700074,walmart,"Walmart DC 7034, Smyrna, DE",BLS-1003,"Trail Mix Pouches 10ct, case of 6",54,33.0,2026-09-04
+451700111,walmart,"Walmart DC 6012, Searcy, AR",BLS-1004,"Dark Chocolate Pretzels 7oz, case of 12",61,30.0,2026-08-17
+451700148,walmart,"Walmart DC 6094, Bentonville, AR",BLS-1001,"Sea Salt Kettle Chips 8oz, case of 12",68,21.6,2026-08-25
+451700185,walmart,"Walmart DC 7034, Smyrna, DE",BLS-1002,"Rosemary Crackers 6oz, case of 12",75,26.4,2026-06-30
+451700222,walmart,"Walmart DC 6012, Searcy, AR",BLS-1003,"Trail Mix Pouches 10ct, case of 6",82,33.0,2026-07-09
+451700259,walmart,"Walmart DC 6094, Bentonville, AR",BLS-1004,"Dark Chocolate Pretzels 7oz, case of 12",89,30.0,2026-08-24
+451700296,walmart,"Walmart DC 7034, Smyrna, DE",BLS-1001,"Sea Salt Kettle Chips 8oz, case of 12",96,21.6,2026-07-31
+451700333,walmart,"Walmart DC 6012, Searcy, AR",BLS-1002,"Rosemary Crackers 6oz, case of 12",43,26.4,2026-07-21
+451700370,walmart,"Walmart DC 6094, Bentonville, AR",BLS-1003,"Trail Mix Pouches 10ct, case of 6",50,33.0,2026-07-13
+451700407,walmart,"Walmart DC 7034, Smyrna, DE",BLS-1004,"Dark Chocolate Pretzels 7oz, case of 12",57,30.0,2026-08-04
+451700444,walmart,"Walmart DC 6012, Searcy, AR",BLS-1001,"Sea Salt Kettle Chips 8oz, case of 12",64,21.6,2026-08-11
+451700481,walmart,"Walmart DC 6094, Bentonville, AR",BLS-1002,"Rosemary Crackers 6oz, case of 12",71,26.4,2026-07-14
+451700518,walmart,"Walmart DC 7034, Smyrna, DE",BLS-1003,"Trail Mix Pouches 10ct, case of 6",78,33.0,2026-08-05
+451700555,walmart,"Walmart DC 6012, Searcy, AR",BLS-1004,"Dark Chocolate Pretzels 7oz, case of 12",85,30.0,2026-08-06
+451700592,walmart,"Walmart DC 6094, Bentonville, AR",BLS-1001,"Sea Salt Kettle Chips 8oz, case of 12",92,21.6,2026-08-25
+451700629,walmart,"Walmart DC 7034, Smyrna, DE",BLS-1002,"Rosemary Crackers 6oz, case of 12",99,26.4,2026-08-25
+451700666,walmart,"Walmart DC 6012, Searcy, AR",BLS-1003,"Trail Mix Pouches 10ct, case of 6",46,33.0,2026-08-23
+451700703,walmart,"Walmart DC 6094, Bentonville, AR",BLS-1004,"Dark Chocolate Pretzels 7oz, case of 12",53,30.0,2026-08-25
+451700740,walmart,"Walmart DC 7034, Smyrna, DE",BLS-1001,"Sea Salt Kettle Chips 8oz, case of 12",60,21.6,2026-07-15
+451700777,walmart,"Walmart DC 6012, Searcy, AR",BLS-1002,"Rosemary Crackers 6oz, case of 12",67,26.4,2024-08-28
+451700814,walmart,"Walmart DC 6094, Bentonville, AR",BLS-1003,"Trail Mix Pouches 10ct, case of 6",74,33.0,2026-08-25
+451700851,walmart,"Walmart DC 7034, Smyrna, DE",BLS-1004,"Dark Chocolate Pretzels 7oz, case of 12",81,30.0,2026-08-25
+8K3464QX,amazon,"Amazon FC TPA4, Tracy, CA",BLS-1001,"Sea Salt Kettle Chips 8oz, case of 12",88,21.6,2026-08-19
+8K3475QX,amazon,"Amazon FC RDU9, Garner, NC",BLS-1002,"Rosemary Crackers 6oz, case of 12",95,26.4,2026-08-25
+8K3486QX,amazon,"Amazon FC TPA4, Tracy, CA",BLS-1003,"Trail Mix Pouches 10ct, case of 6",42,33.0,2026-08-25
+8K3497QX,amazon,"Amazon FC RDU9, Garner, NC",BLS-1004,"Dark Chocolate Pretzels 7oz, case of 12",49,30.0,2026-08-15
+8K3508QX,amazon,"Amazon FC TPA4, Tracy, CA",BLS-1001,"Sea Salt Kettle Chips 8oz, case of 12",56,21.6,2026-08-08
+8K3519QX,amazon,"Amazon FC RDU9, Garner, NC",BLS-1002,"Rosemary Crackers 6oz, case of 12",63,26.4,2026-08-25
+8K3530QX,amazon,"Amazon FC TPA4, Tracy, CA",BLS-1003,"Trail Mix Pouches 10ct, case of 6",70,33.0,2026-08-25
+8K3541QX,amazon,"Amazon FC RDU9, Garner, NC",BLS-1004,"Dark Chocolate Pretzels 7oz, case of 12",77,30.0,2026-08-22
+8K3552QX,amazon,"Amazon FC TPA4, Tracy, CA",BLS-1001,"Sea Salt Kettle Chips 8oz, case of 12",84,21.6,2026-08-25
+8K3563QX,amazon,"Amazon FC RDU9, Garner, NC",BLS-1002,"Rosemary Crackers 6oz, case of 12",91,26.4,2026-08-17
+8K3574QX,amazon,"Amazon FC TPA4, Tracy, CA",BLS-1003,"Trail Mix Pouches 10ct, case of 6",98,33.0,2026-08-25
+8K3585QX,amazon,"Amazon FC RDU9, Garner, NC",BLS-1004,"Dark Chocolate Pretzels 7oz, case of 12",45,30.0,2026-08-13
+8K3596QX,amazon,"Amazon FC TPA4, Tracy, CA",BLS-1001,"Sea Salt Kettle Chips 8oz, case of 12",52,21.6,2026-06-13
+8K3607QX,amazon,"Amazon FC RDU9, Garner, NC",BLS-1002,"Rosemary Crackers 6oz, case of 12",59,26.4,2026-09-14
+8K3618QX,amazon,"Amazon FC TPA4, Tracy, CA",BLS-1003,"Trail Mix Pouches 10ct, case of 6",66,33.0,2026-08-25
+8K3629QX,amazon,"Amazon FC RDU9, Garner, NC",BLS-1004,"Dark Chocolate Pretzels 7oz, case of 12",73,30.0,2026-08-25

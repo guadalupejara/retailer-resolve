@@ -1,0 +1,41 @@
+id,deduction_id,actor,action,note,at
+A-WMT-001-1,WMT-001,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-002-1,WMT-002,system,imported,Imported from APDP (Retail Link),2026-09-21T00:00:00
+A-WMT-003-1,WMT-003,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-004-1,WMT-004,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-005-1,WMT-005,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-006-1,WMT-006,system,imported,Imported from APDP (Retail Link),2026-08-03T00:00:00
+A-WMT-007-1,WMT-007,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-008-1,WMT-008,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-009-1,WMT-009,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-010-1,WMT-010,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-011-1,WMT-011,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-012-1,WMT-012,system,imported,Imported from APDP (Retail Link),2026-09-07T00:00:00
+A-WMT-013-1,WMT-013,system,imported,Imported from APDP (Retail Link),2026-09-14T00:00:00
+A-WMT-014-1,WMT-014,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-015-1,WMT-015,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-016-1,WMT-016,system,imported,Imported from APDP (Retail Link),2026-09-27T00:00:00
+A-WMT-017-1,WMT-017,system,imported,Imported from APDP (Retail Link),2026-09-29T00:00:00
+A-WMT-018-1,WMT-018,system,imported,Imported from APDP (Retail Link),2026-10-05T00:00:00
+A-WMT-019-1,WMT-019,system,imported,Imported from APDP (Retail Link),2026-09-26T00:00:00
+A-WMT-020-1,WMT-020,system,imported,Imported from APDP (Retail Link),2026-10-08T00:00:00
+A-WMT-021-1,WMT-021,system,imported,Imported from APDP (Retail Link),2026-08-18T00:00:00
+A-WMT-022-1,WMT-022,system,imported,Imported from APDP (Retail Link),2024-10-01T00:00:00
+A-WMT-023-1,WMT-023,system,imported,Imported from APDP (Retail Link),2026-10-02T00:00:00
+A-WMT-024-1,WMT-024,system,imported,Imported from HighRadius portal or Walmart buyer,2026-10-03T00:00:00
+A-AMZ-001-1,AMZ-001,system,imported,Imported from Vendor Central,2026-09-22T00:00:00
+A-AMZ-002-1,AMZ-002,system,imported,Imported from Vendor Central,2026-10-02T00:00:00
+A-AMZ-003-1,AMZ-003,system,imported,Imported from Vendor Central,2026-10-11T00:00:00
+A-AMZ-004-1,AMZ-004,system,imported,Imported from Vendor Central,2026-09-18T00:00:00
+A-AMZ-005-1,AMZ-005,system,imported,Imported from Vendor Central,2026-09-11T00:00:00
+A-AMZ-006-1,AMZ-006,system,imported,Imported from Vendor Central,2026-10-06T00:00:00
+A-AMZ-007-1,AMZ-007,system,imported,Imported from Vendor Central,2026-10-07T00:00:00
+A-AMZ-008-1,AMZ-008,system,imported,Imported from Vendor Central,2026-09-25T00:00:00
+A-AMZ-009-1,AMZ-009,system,imported,Imported from Vendor Central,2026-10-13T00:00:00
+A-AMZ-010-1,AMZ-010,system,imported,Imported from Vendor Central,2026-09-20T00:00:00
+A-AMZ-011-1,AMZ-011,system,imported,Imported from Vendor Central,2026-09-29T00:00:00
+A-AMZ-012-1,AMZ-012,system,imported,Imported from Vendor Central,2026-09-16T00:00:00
+A-AMZ-013-1,AMZ-013,system,imported,Imported from Vendor Central,2026-09-27T00:00:00
+A-AMZ-014-1,AMZ-014,system,imported,Imported from Vendor Central,2026-09-27T00:00:00
+A-AMZ-015-1,AMZ-015,system,imported,Imported from Vendor Central,2026-10-03T00:00:00
+A-AMZ-016-1,AMZ-016,system,imported,Imported from Vendor Central,2026-10-09T00:00:00

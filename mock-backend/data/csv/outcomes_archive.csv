@@ -1,0 +1,13 @@
+id,retailer_id,raw_code,amount,outcome,denial_reason,closed_on
+OUT-01,walmart,22,2140.0,won,,2026-03-02
+OUT-02,walmart,22,880.0,denied,POD not stamped by DC,2026-03-19
+OUT-03,walmart,22,1310.0,denied,POD not stamped by DC,2026-04-07
+OUT-04,walmart,24,460.0,won,,2026-04-22
+OUT-05,walmart,25,5120.0,won,,2026-05-11
+OUT-06,walmart,11,230.0,written_off,Invoice price above PO price,2026-05-30
+OUT-07,walmart,22,990.0,denied,Dispute amount did not match backup,2026-06-14
+OUT-08,amazon,ASN Accuracy,1540.0,won,,2026-06-28
+OUT-09,amazon,Carton Content Accuracy,760.0,denied,Photo does not show carton contents,2026-07-15
+OUT-10,amazon,Carton Content Accuracy,1180.0,won,,2026-08-03
+OUT-11,amazon,PQV,2210.0,won,,2026-08-21
+OUT-12,walmart,22,1675.0,expired,Filed after carrier purged the POD,2026-09-09

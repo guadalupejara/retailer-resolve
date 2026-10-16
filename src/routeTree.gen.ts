@@ -10,19 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
-import { Route as AuthenticatedDisputesDeductionIdRouteImport } from './routes/_authenticated/disputes.$deductionId'
+import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
+import { Route as AuthenticatedCasesIndexRouteImport } from './routes/_authenticated/cases.index'
+import { Route as AuthenticatedCasesIdRouteImport } from './routes/_authenticated/cases.$id'
 import { Route as AuthenticatedRetailersRetailerIdRouteImport } from './routes/_authenticated/retailers.$retailerId'
+import { Route as AuthenticatedCasesIdPacketRouteImport } from './routes/_authenticated/cases.$id.packet'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -35,70 +32,96 @@ const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDisputesDeductionIdRoute =
-  AuthenticatedDisputesDeductionIdRouteImport.update({
-    id: '/disputes/$deductionId',
-    path: '/disputes/$deductionId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
+const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCasesIndexRoute = AuthenticatedCasesIndexRouteImport.update({
+  id: '/cases/',
+  path: '/cases/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCasesIdRoute = AuthenticatedCasesIdRouteImport.update({
+  id: '/cases/$id',
+  path: '/cases/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRetailersRetailerIdRoute =
   AuthenticatedRetailersRetailerIdRouteImport.update({
     id: '/retailers/$retailerId',
     path: '/retailers/$retailerId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCasesIdPacketRoute =
+  AuthenticatedCasesIdPacketRouteImport.update({
+    id: '/packet',
+    path: '/packet',
+    getParentRoute: () => AuthenticatedCasesIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
-  '/auth': typeof AuthRoute
   '/documents': typeof AuthenticatedDocumentsRoute
-  '/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
+  '/insights': typeof AuthenticatedInsightsRoute
+  '/cases/$id': typeof AuthenticatedCasesIdRouteWithChildren
   '/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
+  '/cases/': typeof AuthenticatedCasesIndexRoute
+  '/cases/$id/packet': typeof AuthenticatedCasesIdPacketRoute
 }
 export interface FileRoutesByTo {
-  '/auth': typeof AuthRoute
   '/documents': typeof AuthenticatedDocumentsRoute
+  '/insights': typeof AuthenticatedInsightsRoute
   '/': typeof AuthenticatedIndexRoute
-  '/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
+  '/cases/$id': typeof AuthenticatedCasesIdRouteWithChildren
   '/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
+  '/cases': typeof AuthenticatedCasesIndexRoute
+  '/cases/$id/packet': typeof AuthenticatedCasesIdPacketRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
+  '/_authenticated/insights': typeof AuthenticatedInsightsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/_authenticated/disputes/$deductionId': typeof AuthenticatedDisputesDeductionIdRoute
+  '/_authenticated/cases/$id': typeof AuthenticatedCasesIdRouteWithChildren
   '/_authenticated/retailers/$retailerId': typeof AuthenticatedRetailersRetailerIdRoute
+  '/_authenticated/cases/': typeof AuthenticatedCasesIndexRoute
+  '/_authenticated/cases/$id/packet': typeof AuthenticatedCasesIdPacketRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth'
     | '/documents'
-    | '/disputes/$deductionId'
+    | '/insights'
+    | '/cases/$id'
     | '/retailers/$retailerId'
+    | '/cases/'
+    | '/cases/$id/packet'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/auth'
     | '/documents'
+    | '/insights'
     | '/'
-    | '/disputes/$deductionId'
+    | '/cases/$id'
     | '/retailers/$retailerId'
+    | '/cases'
+    | '/cases/$id/packet'
   id:
     | '__root__'
     | '/_authenticated'
-    | '/auth'
     | '/_authenticated/documents'
+    | '/_authenticated/insights'
     | '/_authenticated/'
-    | '/_authenticated/disputes/$deductionId'
+    | '/_authenticated/cases/$id'
     | '/_authenticated/retailers/$retailerId'
+    | '/_authenticated/cases/'
+    | '/_authenticated/cases/$id/packet'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -108,13 +131,6 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -131,11 +147,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/disputes/$deductionId': {
-      id: '/_authenticated/disputes/$deductionId'
-      path: '/disputes/$deductionId'
-      fullPath: '/disputes/$deductionId'
-      preLoaderRoute: typeof AuthenticatedDisputesDeductionIdRouteImport
+    '/_authenticated/insights': {
+      id: '/_authenticated/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof AuthenticatedInsightsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cases/': {
+      id: '/_authenticated/cases/'
+      path: '/cases'
+      fullPath: '/cases/'
+      preLoaderRoute: typeof AuthenticatedCasesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cases/$id': {
+      id: '/_authenticated/cases/$id'
+      path: '/cases/$id'
+      fullPath: '/cases/$id'
+      preLoaderRoute: typeof AuthenticatedCasesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/retailers/$retailerId': {
@@ -145,21 +175,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRetailersRetailerIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cases/$id/packet': {
+      id: '/_authenticated/cases/$id/packet'
+      path: '/packet'
+      fullPath: '/cases/$id/packet'
+      preLoaderRoute: typeof AuthenticatedCasesIdPacketRouteImport
+      parentRoute: typeof AuthenticatedCasesIdRoute
+    }
   }
 }
 
+interface AuthenticatedCasesIdRouteChildren {
+  AuthenticatedCasesIdPacketRoute: typeof AuthenticatedCasesIdPacketRoute
+}
+
+const AuthenticatedCasesIdRouteChildren: AuthenticatedCasesIdRouteChildren = {
+  AuthenticatedCasesIdPacketRoute: AuthenticatedCasesIdPacketRoute,
+}
+
+const AuthenticatedCasesIdRouteWithChildren =
+  AuthenticatedCasesIdRoute._addFileChildren(AuthenticatedCasesIdRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
+  AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedDisputesDeductionIdRoute: typeof AuthenticatedDisputesDeductionIdRoute
+  AuthenticatedCasesIdRoute: typeof AuthenticatedCasesIdRouteWithChildren
   AuthenticatedRetailersRetailerIdRoute: typeof AuthenticatedRetailersRetailerIdRoute
+  AuthenticatedCasesIndexRoute: typeof AuthenticatedCasesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
+  AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedDisputesDeductionIdRoute: AuthenticatedDisputesDeductionIdRoute,
+  AuthenticatedCasesIdRoute: AuthenticatedCasesIdRouteWithChildren,
   AuthenticatedRetailersRetailerIdRoute: AuthenticatedRetailersRetailerIdRoute,
+  AuthenticatedCasesIndexRoute: AuthenticatedCasesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -167,7 +219,6 @@ const AuthenticatedRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

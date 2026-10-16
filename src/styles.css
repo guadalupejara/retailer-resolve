@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -32,6 +32,17 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-tertiary: var(--tertiary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-tint: var(--primary-tint);
+  --color-charcoal: var(--charcoal);
+  --color-sand: var(--sand);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-warning-soft: var(--warning-soft);
+  --color-success-soft: var(--success-soft);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-walmart: var(--walmart);
+  --color-amazon: var(--amazon);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-border: var(--border);
@@ -40,32 +51,56 @@
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.975 0.008 85);
-  --foreground: oklch(0.2 0.02 160);
-  --card: oklch(0.995 0.004 85);
-  --card-foreground: oklch(0.2 0.02 160);
-  --popover: oklch(0.995 0.004 85);
-  --popover-foreground: oklch(0.2 0.02 160);
-  --primary: oklch(0.36 0.07 160);
-  --primary-foreground: oklch(0.97 0.01 85);
-  --secondary: oklch(0.94 0.012 85);
-  --secondary-foreground: oklch(0.25 0.02 160);
-  --muted: oklch(0.94 0.012 85);
-  --muted-foreground: oklch(0.5 0.02 160);
-  --accent: oklch(0.88 0.08 130);
-  --accent-foreground: oklch(0.25 0.05 160);
-  --destructive: oklch(0.55 0.19 30);
-  --destructive-foreground: oklch(0.98 0.01 85);
-  --success: oklch(0.55 0.12 155);
-  --success-foreground: oklch(0.98 0.01 85);
-  --warning: oklch(0.75 0.14 75);
-  --warning-foreground: oklch(0.25 0.04 70);
-  --sidebar: oklch(0.24 0.03 160);
-  --sidebar-foreground: oklch(0.92 0.015 85);
-  --border: oklch(0.89 0.012 85);
-  --input: oklch(0.89 0.012 85);
-  --ring: oklch(0.36 0.07 160);
+  --radius: 0.625rem;
+  /* Neutrals: warm light grey page, white cards. Text: primary, secondary, tertiary. */
+  --background: #E9E8E3;
+  --foreground: #1F2421;
+  --card: #FFFFFF;
+  --card-foreground: #1F2421;
+  --popover: #FFFFFF;
+  --popover-foreground: #1F2421;
+  --secondary: #EEEDE8;
+  --secondary-foreground: #1F2421;
+  --muted: #EEEDE8;
+  --muted-foreground: #6B7069;
+  --tertiary: #9A9E97;
+  --border: #E6E5DF;
+  --input: #DCDBD4;
+  /* Brand: sage. Primary buttons, links, focus. */
+  --primary: #5B7B67;
+  --primary-foreground: #FFFFFF;
+  --primary-dark: #3F5A49;
+  --primary-tint: #E4ECE6;
+  --accent: #E4ECE6;
+  --accent-foreground: #3F5A49;
+  --ring: #5B7B67;
+  /* Dark action (circular icon buttons, active nav pill) and the warm accent (icon circles). */
+  --charcoal: #1F2421;
+  --sand: #F1E7D6;
+  /* Status: soft pills with dark text. Red = Critical/Weak/Denied, amber = High/Needs work, sage = Ready/Won. */
+  --destructive: #B4413C;
+  --destructive-foreground: #FFFFFF;
+  --destructive-soft: #F7E3E1;
+  --warning: #9A6B1F;
+  --warning-foreground: #9A6B1F;
+  --warning-soft: #F4EAD6;
+  --success: #3F5A49;
+  --success-foreground: #FFFFFF;
+  --success-soft: #E4ECE6;
+  --neutral-soft: #EEEDE8;
+  /* Retailer comparison, used in every chart. */
+  --walmart: #3F5A49;
+  --amazon: #A9C2B2;
+  /* Dashboard Walmart vs Amazon segments: soft band and priority colors. */
+  --band-ready: #5B7B67;
+  --band-needs-work: #C9A66B;
+  --band-weak: #C27A72;
+  --prio-critical: #C27A72;
+  --prio-high: #C9A66B;
+  --prio-normal: #9A9E97;
+  --prio-low: #CFD1CB;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #6B7069;
 }
 
 @layer base {
@@ -74,23 +109,37 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-size: 14px;
   }
-  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  /* DM Sans everywhere; numbers use tabular figures (.num). */
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; }
+  th { font-size: 12px; font-weight: 500; color: var(--color-muted-foreground); }
+  /* Charts (recharts accessibilityLayer): a visible ring for keyboard focus, none for mouse clicks. */
+  .recharts-wrapper:focus-visible, .recharts-surface:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 3px; border-radius: 8px; }
+  .recharts-wrapper:focus:not(:focus-visible), .recharts-surface:focus:not(:focus-visible),
+  .recharts-sector:focus, .recharts-rectangle:focus { outline: none; }
 }
 
-@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none; }
-@utility chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none; }
+@utility chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium; }
 
 @layer components {
-  .btn-primary { @apply btn bg-primary text-primary-foreground hover:bg-primary/90; }
+  .btn-primary { @apply btn bg-primary text-primary-foreground shadow-sm hover:bg-primary/90; }
   .btn-outline { @apply btn border border-border bg-card text-foreground hover:bg-secondary; }
   .btn-ghost { @apply btn text-muted-foreground hover:bg-secondary hover:text-foreground; }
-  .panel { @apply rounded-lg border border-border bg-card; }
-  .chip-open { @apply chip bg-warning/20 text-warning-foreground; }
-  .chip-disputed { @apply chip bg-primary/10 text-primary; }
-  .chip-won { @apply chip bg-success/15 text-success; }
-  .chip-lost { @apply chip bg-destructive/10 text-destructive; }
-  .input { @apply w-full rounded-md border border-input bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring/30; }
-  .eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground; }
-  .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .btn-dark { @apply btn bg-charcoal text-primary-foreground hover:bg-charcoal/85; }
+  .panel { @apply rounded-[20px] bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]; }
+  .chip-open { @apply chip bg-warning-soft text-warning; }
+  .chip-disputed { @apply chip bg-primary-tint text-primary-dark; }
+  .chip-won { @apply chip bg-success-soft text-success; }
+  .chip-lost { @apply chip bg-destructive-soft text-destructive; }
+  .chip-neutral { @apply chip bg-neutral-soft text-muted-foreground; }
+  .input { @apply w-full rounded-[10px] border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20; }
+  .eyebrow { @apply text-[13px] font-medium text-muted-foreground; }
+  .num { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+  /* Type scale */
+  .page-title { @apply font-display text-[28px] leading-tight font-semibold tracking-[-0.02em]; }
+  .section-title { @apply font-display text-[18px] leading-snug font-semibold tracking-[-0.02em]; }
+  .wordmark { @apply font-display text-xl font-bold tracking-[-0.02em]; }
+  .kpi-num { @apply text-[32px] leading-none font-semibold tracking-[-0.02em]; }
 }
